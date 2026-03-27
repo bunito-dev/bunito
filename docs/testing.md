@@ -104,5 +104,5 @@ When fixing a bug:
 3. run the full validation set
 
 If a behavior is known to be unfinished rather than clearly broken, prefer
-documenting it in [`TODO.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/TODO.md)
+documenting it in [`TODO.md`](./TODO.md)
 or a decision/roadmap doc instead of locking in accidental behavior with tests.

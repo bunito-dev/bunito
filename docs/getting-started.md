@@ -141,9 +141,9 @@ After the minimal app is working, the best next references are:
 
 - [`architecture.md`](./architecture.md)
 - [`testing.md`](./testing.md)
-- [`../packages/core/README.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/packages/core/README.md)
-- [`../packages/http/README.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/packages/http/README.md)
-- [`../example/src/main.ts`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/example/src/main.ts)
+- [`../packages/core/README.md`](./packages/core/README.md)
+- [`../packages/http/README.md`](./packages/http/README.md)
+- [`../example/src/main.ts`](./example/src/main.ts)
 
 ## Current Limits
 

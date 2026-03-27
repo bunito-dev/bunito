@@ -30,10 +30,10 @@ This directory contains project-level documentation for Bunito.
 
 ## Suggested Reading Order
 
-1. [`../README.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/README.md)
+1. [`../README.md`](./README.md)
 2. [`getting-started.md`](./getting-started.md)
 3. [`architecture.md`](./architecture.md)
-4. [`../CONTRIBUTING.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/CONTRIBUTING.md)
+4. [`../CONTRIBUTING.md`](./CONTRIBUTING.md)
 5. [`testing.md`](./testing.md)
 6. [`roadmap.md`](./roadmap.md)
-7. [`../TODO.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/TODO.md)
+7. [`../TODO.md`](./TODO.md)

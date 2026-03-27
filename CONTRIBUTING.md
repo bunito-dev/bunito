@@ -63,9 +63,9 @@ Coverage is intentionally enforced at `100%` for functions and lines.
 
 When relevant, update:
 
-- [`README.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/README.md)
-- [`AGENTS.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/AGENTS.md)
-- [`TODO.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/TODO.md)
+- [`README.md`](./README.md)
+- [`AGENTS.md`](./AGENTS.md)
+- [`TODO.md`](./TODO.md)
 - package README files in `packages/*`
 - architecture or decision docs in `docs/`
 
