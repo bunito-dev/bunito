@@ -1,0 +1,16 @@
+telemetry = false
+
+[install]
+exact = true
+auto = "disable"
+
+[test]
+coverageThreshold = 1.0
+coverageReporter = ["text", "lcov"]
+coverageDir = "coverage"
+
+[test.reporter]
+junit = "test-results.xml"
+
+[debug]
+editor = "webstorm"

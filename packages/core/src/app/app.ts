@@ -1,0 +1,77 @@
+import type { Class, Fn } from '@bunito/common';
+import type { ModuleRef, ResolveToken } from '../container';
+import { Container } from '../container';
+import { Logger } from '../logger';
+
+export class App {
+  static async create(name: string, moduleRef: ModuleRef): Promise<App> {
+    const container = new Container(moduleRef);
+
+    const logger = await container.tryResolveProvider(Logger);
+    const app = new App(name, logger, container);
+
+    logger?.trace('Stetting up...');
+    await container.setupEntrypoints();
+    logger?.info('Ready!');
+
+    return app;
+  }
+
+  constructor(
+    name: string,
+    readonly logger: Logger | undefined,
+    private readonly container: Container,
+  ) {
+    logger?.setContext(`App(${name})`);
+    container.setInstance(App, this);
+  }
+
+  resolve<TToken extends Class | Fn>(token: TToken): Promise<ResolveToken<TToken>>;
+  resolve<TInstance = unknown>(token: symbol | string): Promise<TInstance>;
+  resolve(token: unknown): Promise<unknown> {
+    return this.container.resolveProvider(token);
+  }
+
+  tryResolve<TToken extends Class | Fn>(
+    token: TToken,
+  ): Promise<ResolveToken<TToken> | undefined>;
+  tryResolve<TInstance = unknown>(token: symbol | string): Promise<TInstance | undefined>;
+  tryResolve(token: unknown): Promise<unknown> {
+    return this.container.tryResolveProvider(token);
+  }
+
+  async bootstrap(): Promise<boolean> {
+    return this.wrapPromise(
+      this.container.bootstrapEntrypoints(),
+      'Bootstrapping...',
+      'Bootstrapped!',
+    );
+  }
+
+  async teardown(): Promise<boolean> {
+    return this.wrapPromise(
+      this.container.destroyScopes(),
+      'Tearing down...',
+      'Teared down!',
+    );
+  }
+
+  protected async wrapPromise(
+    promise: Promise<void>,
+    traceMessage: string,
+    infoMessage: string,
+  ): Promise<boolean> {
+    this.logger?.trace(traceMessage);
+
+    try {
+      await promise;
+    } catch (error) {
+      this.logger?.error(error);
+      return false;
+    }
+
+    this.logger?.info(infoMessage);
+
+    return true;
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@bunito/http",
+  "version": "0.0.1",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "!src/**/*.test.ts",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@bunito/common": "workspace:*",
+    "@bunito/core": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
+  }
+}
