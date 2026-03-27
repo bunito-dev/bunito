@@ -120,5 +120,5 @@ If a change alters public behavior or intended semantics:
 
 - call it out explicitly in the PR description
 - update README and relevant package docs
-- update or add a decision record in `docs/decisions/` if the change affects
+- update or add a decision record in `specs/adr/` if the change affects
   architecture or framework philosophy

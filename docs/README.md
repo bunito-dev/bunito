@@ -24,16 +24,12 @@ This directory contains project-level documentation for Bunito.
   - current likely direction of the project
   - near-term and mid-term priorities
 
-- [`decisions/`](./decisions)
-  - architecture decision records
-  - intended semantics behind important implementation choices
 
 ## Suggested Reading Order
 
-1. [`../README.md`](./README.md)
-2. [`getting-started.md`](./getting-started.md)
-3. [`architecture.md`](./architecture.md)
-4. [`../CONTRIBUTING.md`](./CONTRIBUTING.md)
-5. [`testing.md`](./testing.md)
-6. [`roadmap.md`](./roadmap.md)
-7. [`../TODO.md`](./TODO.md)
+1. [`README.md`](../README.md)
+2. [`docs/getting-started.md`](./getting-started.md)
+3. [`docs/architecture.md`](./architecture.md)
+4. [`CONTRIBUTING.md`](../CONTRIBUTING.md)
+5. [`docs/testing.md`](./testing.md)
+6. [`docs/roadmap.md`](./roadmap.md)

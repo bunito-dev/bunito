@@ -118,7 +118,7 @@ Additional project documentation lives in:
 - [`docs/architecture.md`](./docs/architecture.md)
 - [`docs/testing.md`](./docs/testing.md)
 - [`docs/roadmap.md`](./docs/roadmap.md)
-- [`docs/decisions/`](./docs/decisions)
+- [`specs/`](./specs)
 
 Suggested reading order for new contributors:
 

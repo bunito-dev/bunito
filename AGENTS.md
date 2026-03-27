@@ -245,3 +245,10 @@ Current baseline:
 
 If you introduce new commands, packages, or runtime flows, update this file so the
 next agent can quickly orient itself without re-discovering the project structure.
+
+## Specifications And ADRs
+
+- Long-lived technical specs and ADRs live in `specs/`.
+- Architecture Decision Records should go under `specs/adr/`.
+- Use `specs/adr/template.md` as the starting point for new ADRs.
+- Existing accepted decisions live under `specs/adr/accepted/`.
