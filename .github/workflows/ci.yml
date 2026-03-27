@@ -54,12 +54,14 @@ jobs:
 
       - name: Run tests
         run: |
+          mkdir -p artifacts
           bun test \
           --reporter=junit \
           --reporter-outfile=artifacts/test-results.xml
 
       - name: Enforce coverage
-        run: | 
+        run: |
+          mkdir -p artifacts
           bun test \
           --coverage \
           --coverage-reporter=text \
