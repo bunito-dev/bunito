@@ -61,7 +61,7 @@ jobs:
       - name: Enforce coverage
         run: | 
           bun test \
-          --coverage \ 
+          --coverage \
           --coverage-reporter=text \
           --coverage-reporter=lcov \
           --coverage-dir=artifacts/coverage-report
