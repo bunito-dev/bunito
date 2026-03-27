@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the current runtime model of Bunito.
+This document describes the current runtime model of bunito.
 
 The framework is split into three packages:
 

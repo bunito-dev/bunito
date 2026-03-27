@@ -1,7 +1,7 @@
 {
   "name": "@bunito/common",
   "version": "0.0.1",
-  "description": "Shared metadata helpers, predicates, decorators utilities, and base exceptions for Bunito.",
+  "description": "Shared metadata helpers, predicates, decorators utilities, and base exceptions for bunito.",
   "keywords": [
     "bunito",
     "bun",

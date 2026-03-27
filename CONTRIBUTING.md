@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for contributing to Bunito.
+Thank you for contributing to bunito.
 
 This repository is intentionally small and modular. The main goal when making
 changes is to preserve that quality: simple runtime behavior, a compact public

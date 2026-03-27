@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide walks through a minimal Bunito application using `@bunito/core` and
+This guide walks through a minimal bunito application using `@bunito/core` and
 `@bunito/http`.
 
 ## Prerequisites
@@ -26,7 +26,7 @@ export class HelloController {
   @Get('/')
   hello() {
     return {
-      message: 'Hello from Bunito',
+      message: 'Hello from bunito',
     };
   }
 }
@@ -60,7 +60,7 @@ const app = await App.create('my-app', AppModule);
 await app.bootstrap();
 ```
 
-At this point, Bunito will:
+At this point, bunito will:
 
 1. compile the module graph
 2. construct the container

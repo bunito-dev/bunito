@@ -1,6 +1,6 @@
 # @bunito/core
 
-`@bunito/core` provides the runtime foundation of Bunito: application bootstrap,
+`@bunito/core` provides the runtime foundation of bunito: application bootstrap,
 dependency injection, module compilation/runtime, configuration, and logging.
 
 ## What It Provides

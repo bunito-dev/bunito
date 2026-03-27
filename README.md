@@ -1,4 +1,4 @@
-# Bunito
+# bunito
 
 `bunito` is a small Bun-first TypeScript framework split into focused packages.
 It is built around a simple idea: keep the runtime model easy to follow, keep the
@@ -15,7 +15,7 @@ An `example/` workspace demonstrates how the pieces fit together in a running ap
 
 ## Philosophy
 
-Bunito is intentionally small and explicit.
+bunito is intentionally small and explicit.
 
 - Bun-native: the framework is designed around Bun runtime features such as `bun:test`
   and `Bun.serve`
@@ -148,7 +148,7 @@ logging, and HTTP routing. At the same time, some areas are intentionally early:
 - custom HTTP error shaping is still minimal
 - the module `extends` story is not finalized yet
 
-That balance is intentional: Bunito aims to grow from a small, reliable runtime
+That balance is intentional: bunito aims to grow from a small, reliable runtime
 core rather than from a large premature API surface.
 
 ## License

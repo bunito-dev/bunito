@@ -1,7 +1,7 @@
 {
   "name": "@bunito/core",
   "version": "0.0.1",
-  "description": "Core runtime for Bunito with app bootstrap, dependency injection, modules, config, and logger support.",
+  "description": "Core runtime for bunito with app bootstrap, dependency injection, modules, config, and logger support.",
   "keywords": [
     "bunito",
     "bun",

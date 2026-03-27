@@ -1,6 +1,6 @@
 # Docs
 
-This directory contains project-level documentation for Bunito.
+This directory contains project-level documentation for bunito.
 
 ## Contents
 

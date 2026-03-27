@@ -17,7 +17,7 @@ contexts.
 
 ### HttpModule
 
-`HttpModule` plugs the HTTP layer into the Bunito module lifecycle.
+`HttpModule` plugs the HTTP layer into the bunito module lifecycle.
 
 - during setup, `HttpService` discovers registered controller handlers
 - during bootstrap, the Bun server is started
