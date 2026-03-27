@@ -61,7 +61,7 @@ HTTP support built on top of `@bunito/core`.
 
 ## Example
 
-The runnable example lives in [`example/`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/example).
+The runnable example lives in [`example/`](./example).
 It shows:
 
 - application composition through `App.create()`
@@ -98,7 +98,7 @@ bun run coverage
 The repository currently keeps full automated coverage for `common`, `core`, and
 `http`, so `bun run coverage` is expected to remain green. Coverage enforcement is
 handled natively by Bun through `coverageThreshold` settings in
-[`bunfig.toml`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/bunfig.toml),
+[`bunfig.toml`](./bunfig.toml),
 so the same command is enough both locally and in CI. The repo also generates:
 
 - `coverage/lcov.info`
@@ -110,24 +110,24 @@ These reports are uploaded as GitHub Actions artifacts in CI.
 
 Additional project documentation lives in:
 
-- [`CONTRIBUTING.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/CONTRIBUTING.md)
-- [`AGENTS.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/AGENTS.md)
-- [`TODO.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/TODO.md)
-- [`docs/README.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/README.md)
-- [`docs/getting-started.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/getting-started.md)
-- [`docs/architecture.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/architecture.md)
-- [`docs/testing.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/testing.md)
-- [`docs/roadmap.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/roadmap.md)
-- [`docs/decisions/`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/decisions)
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- [`AGENTS.md`](./AGENTS.md)
+- [`TODO.md`](./TODO.md)
+- [`docs/README.md`](./docs/README.md)
+- [`docs/getting-started.md`](./docs/getting-started.md)
+- [`docs/architecture.md`](./docs/architecture.md)
+- [`docs/testing.md`](./docs/testing.md)
+- [`docs/roadmap.md`](./docs/roadmap.md)
+- [`docs/decisions/`](./docs/decisions)
 
 Suggested reading order for new contributors:
 
-1. [`README.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/README.md)
-2. [`docs/getting-started.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/getting-started.md)
-3. [`docs/architecture.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/architecture.md)
-4. [`CONTRIBUTING.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/CONTRIBUTING.md)
-5. [`docs/testing.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/testing.md)
-6. [`TODO.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/TODO.md)
+1. [`README.md`](./README.md)
+2. [`docs/getting-started.md`](./docs/getting-started.md)
+3. [`docs/architecture.md`](./docs/architecture.md)
+4. [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+5. [`docs/testing.md`](./docs/testing.md)
+6. [`TODO.md`](./TODO.md)
 
 ## Repository Structure
 

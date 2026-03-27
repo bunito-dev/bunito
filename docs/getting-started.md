@@ -139,8 +139,8 @@ export class AppModule {}
 
 After the minimal app is working, the best next references are:
 
-- [`architecture.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/architecture.md)
-- [`testing.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/docs/testing.md)
+- [`architecture.md`](./architecture.md)
+- [`testing.md`](./testing.md)
 - [`../packages/core/README.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/packages/core/README.md)
 - [`../packages/http/README.md`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/packages/http/README.md)
 - [`../example/src/main.ts`](/Users/staszek/Workspace/stanislaw-glogowski/bunito/example/src/main.ts)
