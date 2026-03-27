@@ -1,8 +1,7 @@
 {
   "name": "bunito",
   "private": true,
-  "version": "0.0.1",
-  "license": "MIT",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "test": "bun test",
@@ -26,5 +25,8 @@
     "@biomejs/biome": "2.4.9",
     "@types/bun": "1.3.11",
     "typescript": "6.0.2"
+  },
+  "engines": {
+    "bun": ">=1.3.11"
   }
 }

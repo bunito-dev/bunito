@@ -53,6 +53,7 @@ Use Bun for package management and script execution.
 - Lint the repo: `bun run lint`
 - Format the repo: `bun run format`
 - Run full coverage: `bun run coverage`
+- Sync package versions with the root manifest: `./scripts/sync-versions.sh`
 - Run the example app:
   - from repo root: `cd example && bun run start`
 - Run tests for a specific package:
