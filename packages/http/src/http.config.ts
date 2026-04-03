@@ -1,6 +1,6 @@
-import { registerConfig } from '@bunito/core';
+import { defineConfig } from '@bunito/core';
 
-export const httpConfig = registerConfig<{
+export const HttpConfig = defineConfig<{
   port: number | string;
 }>('http', ({ getEnv }) => {
   return {

@@ -6,6 +6,7 @@ export const LOG_LEVELS = {
   error: 50,
   warn: 40,
   info: 30,
+  ok: 30,
   trace: 20,
   debug: 10,
   verbose: 0,

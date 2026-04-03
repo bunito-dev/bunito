@@ -1,3 +1,3 @@
-import { createMethodDecorator } from './utils';
+import { createRequestDecorator } from './create-request-decorator';
 
-export const Put = createMethodDecorator('PUT');
+export const Put = createRequestDecorator('PUT');

@@ -1,8 +1,8 @@
-import type { ProviderInjectionOptions, Token } from '../types';
+import type { InjectionOptions, Token } from '../types';
 
-export function optional(token: Token): ProviderInjectionOptions {
+export function optional(token: Token): InjectionOptions {
   return {
-    optional: true,
     token,
+    optional: true,
   };
 }

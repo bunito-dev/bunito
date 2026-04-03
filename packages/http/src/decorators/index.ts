@@ -1,9 +1,7 @@
 export * from './delete';
 export * from './get';
-export * from './head';
-export * from './options';
-export * from './patch';
+export * from './on-request';
+export * from './on-response';
 export * from './post';
 export * from './put';
-export * from './route';
-export type { MethodDecoratorOptions } from './utils';
+export * from './uses-path';

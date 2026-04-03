@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { Bootstrap, Destroy, Module, Provider, Setup } from '../container';
+import { Module, OnBoot, OnDestroy, OnInit, Provider } from '../container';
 import { Logger, LoggerModule } from '../logger';
 import { App } from './app';
 
@@ -30,21 +30,21 @@ class GreetingService {
   providers: [GreetingService],
 })
 class AppModule {
-  setupRuns = 0;
-  bootstrapRuns = 0;
+  initRuns = 0;
+  bootRuns = 0;
   destroyRuns = 0;
 
-  @Setup()
-  onSetup(): void {
-    this.setupRuns += 1;
+  @OnInit()
+  onInit(): void {
+    this.initRuns += 1;
   }
 
-  @Bootstrap()
-  onBootstrap(): void {
-    this.bootstrapRuns += 1;
+  @OnBoot()
+  onBoot(): void {
+    this.bootRuns += 1;
   }
 
-  @Destroy()
+  @OnDestroy()
   onDestroy(): void {
     this.destroyRuns += 1;
   }
@@ -52,9 +52,14 @@ class AppModule {
 
 @Module()
 class BrokenModule {
-  @Setup()
-  onSetup(): void {
+  @OnInit()
+  onInit(): void {
     throw new Error('setup failed');
+  }
+
+  @OnBoot()
+  onBoot(): void {
+    //
   }
 }
 
@@ -70,20 +75,20 @@ describe('App integration', () => {
     const logger = await app.resolve(Logger);
 
     expect(app.logger).toBeDefined();
-    expect(moduleInstance.setupRuns).toBe(1);
-    expect(moduleInstance.bootstrapRuns).toBe(0);
+    expect(moduleInstance.initRuns).toBe(1);
+    expect(moduleInstance.bootRuns).toBe(0);
     expect(moduleInstance.destroyRuns).toBe(0);
     expect(greetingService.message).toBe('hello');
     expect(logger).toBeInstanceOf(Logger);
 
-    expect(await app.bootstrap()).toBeTrue();
-    expect(moduleInstance.bootstrapRuns).toBe(1);
+    expect(await app.boot()).toBeTrue();
+    expect(moduleInstance.bootRuns).toBe(1);
 
-    expect(await app.teardown()).toBeTrue();
+    expect(await app.destroy()).toBeTrue();
     expect(moduleInstance.destroyRuns).toBe(1);
   });
 
-  it('should reject app creation when setup entrypoints fail', async () => {
+  it('should reject app creation when setup fails during eager provider resolution', async () => {
     expect(App.create('Broken', BrokenModule)).rejects.toThrow('setup failed');
   });
 });

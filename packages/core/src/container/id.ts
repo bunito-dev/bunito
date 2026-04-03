@@ -1,4 +1,4 @@
-import { resolveName } from '@bunito/common';
+import { resolveObjectName, resolveSymbolKey } from '@bunito/common';
 import type { Token } from './types';
 
 export class Id {
@@ -19,7 +19,7 @@ export class Id {
         let id = Id.objectIds.get(token);
 
         if (!id) {
-          id = new Id(resolveName(token));
+          id = new Id(resolveObjectName(token) ?? 'anonymous');
           Id.objectIds.set(token, id);
         }
 
@@ -28,19 +28,16 @@ export class Id {
 
       case 'string':
       case 'symbol': {
-        const key = typeof token === 'string' ? Symbol.for(token) : token;
-        let id = Id.symbolIds.get(key);
+        const sym = typeof token === 'string' ? Symbol.for(token) : token;
+        let id = Id.symbolIds.get(sym);
 
         if (!id) {
-          id = new Id(resolveName(token));
-          Id.symbolIds.set(key, id);
+          id = new Id(resolveSymbolKey(sym) ?? 'unknown');
+          Id.symbolIds.set(sym, id);
         }
 
         return id;
       }
-
-      default:
-        return new Id(resolveName(token));
     }
   }
 

@@ -1,8 +1,7 @@
-import type { Any, Class } from '../utils';
-import type { ExceptionOptions } from './types';
+import type { Class } from '../helpers';
 
-export class Exception<TData = never> extends Error {
-  static isInstance<TSelf extends Class<Exception<Any>>>(
+export class Exception extends Error {
+  static isInstance<TSelf extends Class<Exception>>(
     this: TSelf,
     error: unknown,
   ): error is InstanceType<TSelf> {
@@ -14,30 +13,16 @@ export class Exception<TData = never> extends Error {
 
   override name = 'UnknownException';
 
-  readonly data?: TData;
+  readonly data?: Record<string, unknown>;
 
-  constructor(optionsLike?: ExceptionOptions<TData> | string, cause?: unknown) {
+  constructor(message?: string, data?: Record<string, unknown>, cause?: unknown) {
     super();
 
-    switch (typeof optionsLike) {
-      case 'string':
-        if (optionsLike) {
-          this.message = optionsLike;
-        }
-        this.cause = cause;
-        break;
-
-      case 'object': {
-        const { message, data, cause } = optionsLike;
-
-        if (message) {
-          this.message = message;
-        }
-
-        this.data = data;
-        this.cause = cause;
-        break;
-      }
+    if (message) {
+      this.message = message;
     }
+
+    this.cause = cause;
+    this.data = data;
   }
 }

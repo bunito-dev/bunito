@@ -1,7 +1,7 @@
 {
   "name": "@bunito/core",
   "version": "0.0.2",
-  "description": "Core runtime for bunito with app bootstrap, dependency injection, modules, config, and logger support.",
+  "description": "Core bunito runtime with app lifecycle, dependency injection, modules, config, and logger support.",
   "keywords": [
     "bunito",
     "bun",
@@ -11,7 +11,9 @@
     "di",
     "modules",
     "config",
-    "logger"
+    "logger",
+    "container",
+    "lifecycle"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",
@@ -28,6 +30,7 @@
     "access": "public"
   },
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },

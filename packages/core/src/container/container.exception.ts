@@ -1,10 +1,13 @@
-import type { ExceptionOptions } from '@bunito/common';
 import { Exception } from '@bunito/common';
 
-export class ContainerException<TData = never> extends Exception<TData> {
+export class ContainerException extends Exception {
   // biome-ignore lint/complexity/noUselessConstructor: Explicit constructor keeps Bun function coverage accurate
-  constructor(optionsLike?: ExceptionOptions<TData> | string, cause?: unknown) {
-    super(optionsLike, cause);
+  constructor(
+    message: string,
+    data?: Record<string, unknown>,
+    cause?: unknown,
+  ) {
+    super(message, data, cause);
   }
 
   override name = 'ContainerException';

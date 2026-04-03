@@ -7,6 +7,7 @@ describe('logger constants', () => {
     expect(LOG_LEVELS.fatal).toBeGreaterThan(LOG_LEVELS.error);
     expect(LOG_LEVELS.error).toBeGreaterThan(LOG_LEVELS.warn);
     expect(LOG_LEVELS.warn).toBeGreaterThan(LOG_LEVELS.info);
+    expect(LOG_LEVELS.ok).toBe(LOG_LEVELS.info);
     expect(LOG_LEVELS.info).toBeGreaterThan(LOG_LEVELS.trace);
     expect(LOG_LEVELS.trace).toBeGreaterThan(LOG_LEVELS.debug);
     expect(LOG_LEVELS.debug).toBeGreaterThan(LOG_LEVELS.verbose);

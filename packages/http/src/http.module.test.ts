@@ -6,7 +6,7 @@ import {
   PROVIDER_HOOK_METADATA_KEYS,
   PROVIDER_METADATA_KEY,
 } from '../../core/src/container/constants';
-import { httpConfig } from './http.config';
+import { HttpConfig } from './httpConfig';
 import { HttpModule } from './http.module';
 import { HttpService } from './http.service';
 
@@ -14,7 +14,7 @@ describe('HttpModule', () => {
   it('should register module metadata and provider hooks', () => {
     expect(getDecoratorMetadata<unknown>(HttpModule, MODULE_METADATA_KEY)).toEqual({
       imports: [LoggerModule, configModule],
-      providers: [HttpService, httpConfig],
+      providers: [HttpService, HttpConfig],
       exports: [HttpService],
     });
     expect(getDecoratorMetadata<unknown>(HttpModule, PROVIDER_METADATA_KEY)).toEqual({

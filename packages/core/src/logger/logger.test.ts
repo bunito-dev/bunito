@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { PROVIDER_METADATA_KEY } from '../container/constants';
+import { getDecoratorMetadata } from '@bunito/common';
+import { DECORATOR_METADATA_KEYS } from '../container/constants';
 import { LOG_FORMATTERS } from './constants';
 import { Logger } from './logger';
+import { LoggerConfig } from './logger.config';
 
 type FakeStdout = {
   output: string;
@@ -30,10 +32,14 @@ afterEach(() => {
 
 describe('Logger', () => {
   it('should be registered as a transient provider injecting LoggerConfig', () => {
-    expect(Logger[Symbol.metadata]?.[PROVIDER_METADATA_KEY]).toEqual({
+    expect(
+      getDecoratorMetadata<{
+        scope: string;
+        injects: Array<typeof LoggerConfig>;
+      }>(Logger, DECORATOR_METADATA_KEYS.provider),
+    ).toEqual({
       scope: 'transient',
-      injects: [expect.any(Object)],
-      useClass: Logger,
+      injects: [LoggerConfig],
     });
   });
 
@@ -100,15 +106,23 @@ describe('Logger', () => {
 
     logger.setContext('App');
     expect(logger.warn('hello', 123)).toBe('hello');
+    expect(logger.info('info-message')).toBe('info-message');
+    expect(logger.ok('ok-message')).toBe('ok-message');
+    expect(logger.trace('trace-message')).toBe('trace-message');
     expect(logger.debug({ foo: 'bar' }, 'extra')).toEqual({ foo: 'bar' });
+    expect(logger.verbose('verbose-message', 3)).toBe('verbose-message');
 
     expect(calls).toEqual([
       [process.stdout, 'App', 'warn', 'hello', [123]],
+      [process.stdout, 'App', 'info', 'info-message', []],
+      [process.stdout, 'App', 'ok', 'ok-message', []],
+      [process.stdout, 'App', 'trace', 'trace-message', []],
       [process.stdout, 'App', 'debug', { foo: 'bar' }, ['extra']],
+      [process.stdout, 'App', 'verbose', 'verbose-message', [3]],
     ]);
   });
 
-  it('should route fatal, error and verbose messages through the logger pipeline', () => {
+  it('should route fatal and error messages through the logger pipeline', () => {
     const calls: Array<unknown> = [];
 
     LOG_FORMATTERS.json = (...args) => {
@@ -122,12 +136,10 @@ describe('Logger', () => {
 
     logger.fatal('fatal-message', 1);
     logger.error('error-message', 2);
-    expect(logger.verbose('verbose-message', 3)).toBe('verbose-message');
 
     expect(calls).toEqual([
       [process.stdout, undefined, 'fatal', 'fatal-message', [1]],
       [process.stdout, undefined, 'error', 'error-message', [2]],
-      [process.stdout, undefined, 'verbose', 'verbose-message', [3]],
     ]);
   });
 });

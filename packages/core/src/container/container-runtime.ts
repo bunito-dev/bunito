@@ -1,23 +1,26 @@
-import type { Class } from '@bunito/common';
-import { getDecoratorMetadata, isFn, isObject, resolveName } from '@bunito/common';
-import { PROVIDER_HOOK_METADATA_KEYS } from './constants';
+import { isObject, str } from '@bunito/common';
 import { Container } from './container';
 import type { ContainerCompiler } from './container-compiler';
 import { ContainerRuntimeException } from './container-runtime.exception';
 import { Id } from './id';
 import type {
-  ProviderHook,
+  CallableInstance,
+  CompiledInjection,
+  LifecycleHandler,
+  LifecycleHandlers,
+  LifecycleProps,
   ProviderId,
-  ProviderInjection,
-  ProviderInstance,
   ResolveProviderOptions,
+  ScopedInstance,
   ScopeId,
 } from './types';
 
 export class ContainerRuntime {
+  private readonly bootstrap: Array<LifecycleHandler> = [];
+
   private readonly globalInstances = new Map<ProviderId, unknown>();
 
-  private readonly scopedInstances = new Map<ScopeId, Map<ProviderId, unknown>>();
+  private readonly scopedInstances = new Map<ScopeId, Map<ProviderId, ScopedInstance>>();
 
   constructor(private readonly compiler: ContainerCompiler) {
     this.globalInstances.set(Id.for(Container), this);
@@ -41,28 +44,20 @@ export class ContainerRuntime {
       return;
     }
 
-    for (const instance of instances.values()) {
-      await this.triggerProviderHook(instance, 'destroy');
+    for (const { onDestroy } of instances.values()) {
+      if (onDestroy) {
+        await onDestroy();
+      }
     }
+
     this.scopedInstances.delete(scopeId);
   }
 
-  async resolveProvider<TInstance>(
-    providerId: ProviderId,
-    options: ResolveProviderOptions,
-  ): Promise<TInstance> {
-    const provider = await this.tryResolveProvider<TInstance>(providerId, options);
-
-    if (!provider) {
-      throw new ContainerRuntimeException(
-        `Provider ${providerId} not found in ${options.moduleId} module`,
-      );
-    }
-
-    return provider;
+  async triggerBootstrap(): Promise<void> {
+    await Promise.all(this.bootstrap.map((handler) => handler()));
   }
 
-  async tryResolveProvider<TInstance>(
+  async resolveProvider<TInstance>(
     providerId: ProviderId,
     options: ResolveProviderOptions,
   ): Promise<TInstance | undefined> {
@@ -74,7 +69,7 @@ export class ContainerRuntime {
 
     const { moduleId, requestId } = options;
 
-    const providerMatch = this.compiler.tryLocateProvider(providerId, moduleId);
+    const providerMatch = this.compiler.locateProvider(providerId, moduleId);
 
     if (!providerMatch) {
       return;
@@ -99,23 +94,31 @@ export class ContainerRuntime {
     }
 
     if (scopeId) {
-      instance = this.scopedInstances.get(scopeId)?.get(providerId);
-      if (instance !== undefined) {
+      const scopedInstance = this.scopedInstances.get(scopeId)?.get(providerId);
+
+      if (scopedInstance) {
+        const { onResolve, instance } = scopedInstance;
+
+        if (onResolve) {
+          await onResolve();
+        }
+
         return instance as TInstance;
       }
     }
 
+    let lifecycleHandlers: LifecycleHandlers;
+
     switch (provider.kind) {
       case 'class': {
-        const { useClass, injects } = provider;
+        const { useClass, injects, lifecycle } = provider;
         const params = await this.resolveProviderParams(providerId, injects, {
           moduleId: providerModuleId,
           requestId,
         });
 
         instance = new useClass(...params);
-
-        await this.triggerProviderHook(instance, 'setup');
+        lifecycleHandlers = this.processLifecycleHandlers(instance, lifecycle);
         break;
       }
 
@@ -127,6 +130,7 @@ export class ContainerRuntime {
         });
 
         instance = useFactory(...params);
+        lifecycleHandlers = {};
         break;
       }
 
@@ -134,62 +138,54 @@ export class ContainerRuntime {
         const { useValue } = provider;
 
         instance = useValue;
+        lifecycleHandlers = {};
         break;
       }
     }
 
+    const { onInit, onResolve, onDestroy } = lifecycleHandlers;
+
     if (scopeId && instance !== undefined) {
-      if (!this.scopedInstances.get(scopeId)?.set(providerId, instance)) {
-        this.scopedInstances.set(scopeId, new Map([[providerId, instance]]));
+      const scopedInstance: ScopedInstance = {
+        instance,
+        onResolve,
+        onDestroy,
+      };
+
+      if (!this.scopedInstances.get(scopeId)?.set(providerId, scopedInstance)) {
+        this.scopedInstances.set(scopeId, new Map([[providerId, scopedInstance]]));
       }
+    }
+
+    if (onInit) {
+      await onInit();
+    } else if (onResolve) {
+      await onResolve();
     }
 
     return instance as TInstance;
   }
 
-  async triggerProviderHook(instance: unknown, hook: ProviderHook): Promise<void> {
-    if (!isObject(instance)) {
-      return;
-    }
-
-    const props = getDecoratorMetadata<Set<PropertyKey>>(
-      instance.constructor as Class,
-      PROVIDER_HOOK_METADATA_KEYS[hook],
-    );
-
-    if (!props) {
-      return;
-    }
-
-    const provider = instance as ProviderInstance;
-
-    for (const prop of props) {
-      if (isFn(provider[prop])) {
-        await provider[prop]();
-
-        provider[prop] = () => {
-          throw new ContainerRuntimeException(
-            `Provider ${resolveName(instance)} hook ${hook} cannot be called twice`,
-          );
-        };
-      }
-    }
-  }
-
   private async resolveProviderParams(
     providerId: ProviderId,
-    injects: Array<ProviderInjection>,
+    injects: Array<CompiledInjection>,
     options: ResolveProviderOptions,
   ): Promise<Array<unknown>> {
     const params: Array<unknown> = [];
 
     for (const [index, { providerId: injectionId, optional }] of injects.entries()) {
-      let param = await this.tryResolveProvider(injectionId, options);
+      let param = await this.resolveProvider(injectionId, options);
 
       if (param === undefined) {
         if (!optional) {
           throw new ContainerRuntimeException(
-            `Injection ${injectionId} for ${providerId} provider not found at #${index} in ${options.moduleId}`,
+            str`Injection ${injectionId} for ${providerId} provider not found at #${index} in ${options.moduleId}`,
+            {
+              injectionId,
+              providerId,
+              index,
+              options,
+            },
           );
         }
 
@@ -200,5 +196,47 @@ export class ContainerRuntime {
     }
 
     return params;
+  }
+
+  private processLifecycleHandlers(
+    instance: unknown,
+    props: LifecycleProps | undefined,
+  ): LifecycleHandlers {
+    if (!isObject(instance) || !props) {
+      return {};
+    }
+
+    const callable = instance as CallableInstance;
+    const handlers: LifecycleHandlers = {};
+
+    for (const [event, propKey] of props) {
+      const handler = async () => {
+        if (callable[propKey]) {
+          await callable[propKey]();
+        }
+
+        if (event !== 'onResolve') {
+          callable[propKey] = () => {
+            throw new ContainerRuntimeException(
+              str`Provider ${instance} lifecycle event ${event} cannot be called twice`,
+              {
+                instance,
+                event,
+                propKey,
+              },
+            );
+          };
+        }
+      };
+
+      if (event === 'onBoot') {
+        this.bootstrap.push(handler);
+        props.delete(event);
+      } else {
+        handlers[event] = handler;
+      }
+    }
+
+    return handlers;
   }
 }

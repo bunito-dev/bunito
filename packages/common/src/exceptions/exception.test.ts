@@ -6,11 +6,11 @@ describe('Exception', () => {
     class TestException extends Exception {}
 
     it('should return true for an instance of the exception', () => {
-      expect(Exception.isInstance(new Exception())).toBeTrue();
+      expect(Exception.isInstance(new Exception('base error'))).toBeTrue();
     });
 
     it('should return true for an instance of a subclass of the exception', () => {
-      expect(Exception.isInstance(new TestException())).toBeTrue();
+      expect(Exception.isInstance(new TestException('subclass error'))).toBeTrue();
     });
 
     it('should return false for an instance of a different class', () => {
@@ -27,9 +27,7 @@ describe('Exception', () => {
 
     it('should set the data', () => {
       const data = { foo: 'bar' };
-      const exception = new Exception({
-        data,
-      });
+      const exception = new Exception('Test message', data);
       expect(exception.data).toBe(data);
     });
 
@@ -38,28 +36,24 @@ describe('Exception', () => {
       expect(exception.stack).toBeDefined();
     });
 
-    it('should keep default name and message when no options are provided', () => {
-      const exception = new Exception();
+    it('should keep the default message when an empty string is provided', () => {
+      const exception = new Exception('');
 
       expect(exception.name).toBe('UnknownException');
       expect(exception.message).toBe('Something went wrong!');
     });
 
-    it('should set cause passed as the second argument for string options', () => {
+    it('should set cause passed as the third argument', () => {
       const cause = new Error('root cause');
-      const exception = new Exception('Message', cause);
+      const exception = new Exception('Message', undefined, cause);
 
       expect(exception.cause).toBe(cause);
     });
 
-    it('should set message, data and cause from object options', () => {
+    it('should set message, data and cause from positional arguments', () => {
       const cause = new Error('root cause');
       const data = { code: 123 };
-      const exception = new Exception({
-        message: 'Failure',
-        data,
-        cause,
-      });
+      const exception = new Exception('Failure', data, cause);
 
       expect(exception.message).toBe('Failure');
       expect(exception.data).toBe(data);

@@ -1,17 +1,16 @@
 import type { Class, Fn } from '@bunito/common';
-import type { ModuleRef, ResolveToken } from '../container';
+import type { ModuleLike, ResolveToken } from '../container';
 import { Container } from '../container';
 import { Logger } from '../logger';
 
 export class App {
-  static async create(name: string, moduleRef: ModuleRef): Promise<App> {
-    const container = new Container(moduleRef);
-
-    const logger = await container.tryResolveProvider(Logger);
+  static async create(name: string, moduleLike: ModuleLike): Promise<App> {
+    const container = new Container(moduleLike);
+    const logger = await container.tryResolve(Logger);
     const app = new App(name, logger, container);
 
     logger?.trace('Stetting up...');
-    await container.setupEntrypoints();
+    await container.setup();
     logger?.info('Ready!');
 
     return app;
@@ -29,7 +28,7 @@ export class App {
   resolve<TToken extends Class | Fn>(token: TToken): Promise<ResolveToken<TToken>>;
   resolve<TInstance = unknown>(token: symbol | string): Promise<TInstance>;
   resolve(token: unknown): Promise<unknown> {
-    return this.container.resolveProvider(token);
+    return this.container.resolve(token);
   }
 
   tryResolve<TToken extends Class | Fn>(
@@ -37,40 +36,36 @@ export class App {
   ): Promise<ResolveToken<TToken> | undefined>;
   tryResolve<TInstance = unknown>(token: symbol | string): Promise<TInstance | undefined>;
   tryResolve(token: unknown): Promise<unknown> {
-    return this.container.tryResolveProvider(token);
+    return this.container.tryResolve(token);
   }
 
-  async bootstrap(): Promise<boolean> {
-    return this.wrapPromise(
-      this.container.bootstrapEntrypoints(),
-      'Bootstrapping...',
-      'Bootstrapped!',
-    );
+  async boot(): Promise<boolean> {
+    return this.wrapPromise(() => this.container.boot(), 'Booting...', 'Ready!');
   }
 
-  async teardown(): Promise<boolean> {
+  async destroy(): Promise<boolean> {
     return this.wrapPromise(
-      this.container.destroyScopes(),
-      'Tearing down...',
-      'Teared down!',
+      () => this.container.destroy(),
+      'Destroying...',
+      'Destroyed!',
     );
   }
 
   protected async wrapPromise(
-    promise: Promise<void>,
+    promiseFn: () => Promise<void>,
     traceMessage: string,
-    infoMessage: string,
+    successMessage: string,
   ): Promise<boolean> {
     this.logger?.trace(traceMessage);
 
     try {
-      await promise;
+      await promiseFn();
     } catch (error) {
       this.logger?.error(error);
       return false;
     }
 
-    this.logger?.info(infoMessage);
+    this.logger?.ok(successMessage);
 
     return true;
   }

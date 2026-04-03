@@ -1,8 +1,8 @@
-import { registerConfig } from '../config';
+import { defineConfig } from '../config';
 import { logFormatParser, logLevelParser } from './parsers';
 import type { LogFormat, LogLevel } from './types';
 
-export const LoggerConfig = registerConfig<{
+export const LoggerConfig = defineConfig<{
   level: LogLevel;
   format: LogFormat;
 }>('logger', ({ whenCI, getEnv }) => {

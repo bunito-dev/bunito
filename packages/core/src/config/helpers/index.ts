@@ -1,1 +1,1 @@
-export * from './register-config';
+export * from './define-config';

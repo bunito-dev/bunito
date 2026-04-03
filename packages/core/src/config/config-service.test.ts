@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { PROVIDER_METADATA_KEY } from '../container/constants';
+import { getDecoratorMetadata } from '@bunito/common';
+import { DECORATOR_METADATA_KEYS } from '../container/constants';
 import { ConfigService } from './config-service';
 
 const originalCi = process.env.CI;
@@ -21,9 +22,12 @@ afterEach(() => {
 
 describe('ConfigService', () => {
   it('should be registered as a provider', () => {
-    expect(ConfigService[Symbol.metadata]?.[PROVIDER_METADATA_KEY]).toEqual({
-      useClass: ConfigService,
-    });
+    expect(
+      getDecoratorMetadata<Record<string, never>>(
+        ConfigService,
+        DECORATOR_METADATA_KEYS.provider,
+      ),
+    ).toEqual({});
   });
 
   it('should bind public methods in the constructor', () => {

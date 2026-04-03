@@ -1,3 +1,3 @@
-import { createMethodDecorator } from './utils';
+import { createRequestDecorator } from './create-request-decorator';
 
-export const Delete = createMethodDecorator('DELETE');
+export const Delete = createRequestDecorator('DELETE');

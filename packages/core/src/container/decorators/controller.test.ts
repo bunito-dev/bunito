@@ -1,25 +1,21 @@
 import { describe, expect, it } from 'bun:test';
-import { PROVIDER_METADATA_KEY } from '../constants';
+import { DECORATOR_METADATA_KEYS } from '../constants';
+import type { ClassProviderMetadata } from '../types';
 import { Controller } from './controller';
 
-function createClassContext(metadata: DecoratorMetadataObject): ClassDecoratorContext {
-  return { metadata } as ClassDecoratorContext;
-}
-
 describe('Controller', () => {
-  it('should register the class as a request-scoped provider', () => {
+  it('should register controller and provider metadata with request scope by default', () => {
     class TestController {}
-
-    const metadata: DecoratorMetadataObject = {};
+    const metadata = {} as DecoratorMetadataObject;
 
     Controller({
       injects: ['dep'],
-    })(TestController, createClassContext(metadata));
+    })(TestController, { metadata } as ClassDecoratorContext);
 
-    expect(metadata[PROVIDER_METADATA_KEY]).toEqual({
+    expect(metadata[DECORATOR_METADATA_KEYS.controller]).toBeTrue();
+    expect(metadata[DECORATOR_METADATA_KEYS.provider] as ClassProviderMetadata).toEqual({
       scope: 'request',
       injects: ['dep'],
-      useClass: TestController,
     });
   });
 });

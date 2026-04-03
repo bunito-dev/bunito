@@ -1,35 +1,30 @@
 import { describe, expect, it } from 'bun:test';
-import { MODULE_METADATA_KEY, PROVIDER_METADATA_KEY } from '../constants';
+import { DECORATOR_METADATA_KEYS } from '../constants';
+import type { ClassProviderMetadata, ModuleOptions } from '../types';
 import { Module } from './module';
 
-function createClassContext(metadata: DecoratorMetadataObject): ClassDecoratorContext {
-  return { metadata } as ClassDecoratorContext;
-}
-
 describe('Module', () => {
-  it('should store module metadata and register the class as a module-scoped provider', () => {
+  it('should store module metadata and register the class as a provider', () => {
     class TestModule {}
-
-    const metadata: DecoratorMetadataObject = {};
+    const metadata = {} as DecoratorMetadataObject;
 
     Module({
       imports: [{ providers: [] }],
-      providers: [],
+      providers: ['dep'],
       controllers: [],
-      exports: [],
-      injects: ['dep'],
-    })(TestModule, createClassContext(metadata));
+      exports: ['dep'],
+      injects: ['service'],
+    })(TestModule, { metadata } as ClassDecoratorContext);
 
-    expect(metadata[MODULE_METADATA_KEY]).toEqual({
+    expect(metadata[DECORATOR_METADATA_KEYS.module] as ModuleOptions).toEqual({
       imports: [{ providers: [] }],
-      providers: [],
+      providers: ['dep', TestModule],
       controllers: [],
-      exports: [],
+      exports: ['dep'],
     });
-    expect(metadata[PROVIDER_METADATA_KEY]).toEqual({
-      scope: 'module',
-      injects: ['dep'],
-      useClass: TestModule,
+    expect(metadata[DECORATOR_METADATA_KEYS.provider] as ClassProviderMetadata).toEqual({
+      scope: 'singleton',
+      injects: ['service'],
     });
   });
 });

@@ -1,23 +1,24 @@
-import type { Class } from '@bunito/common';
-import { setDecoratorMetadata } from '@bunito/common';
-import { MODULE_METADATA_KEY } from '../constants';
-import type { ClassProviderOptions, ModuleOptions } from '../types';
-import { Provider } from './provider';
+import type { ClassDecorator } from '@bunito/common';
+import { createImmutableDecorator } from '@bunito/common';
+import { DECORATOR_METADATA_KEYS, DEFAULT_SCOPES } from '../constants';
+import type { ClassModuleOptions, ClassProviderMetadata, ModuleOptions } from '../types';
 
-export type ModuleDecoratorOptions = Omit<ModuleOptions, 'extends'> &
-  Pick<ClassProviderOptions, 'injects'>;
+export function Module(options: ClassModuleOptions = {}): ClassDecorator {
+  const {
+    scope = DEFAULT_SCOPES.module,
+    injects,
+    providers = [],
+    ...moduleOptions
+  } = options;
 
-export function Module(
-  options: ModuleDecoratorOptions = {},
-): <TTarget extends Class>(target: TTarget, context: ClassDecoratorContext) => TTarget {
-  const { injects, ...moduleOptions } = options;
-
-  return (target, context) => {
-    setDecoratorMetadata<ModuleOptions>(context, MODULE_METADATA_KEY, moduleOptions);
-
-    return Provider({
-      scope: 'module',
+  return createImmutableDecorator(({ metadata }, target) => {
+    metadata[DECORATOR_METADATA_KEYS.module] = {
+      ...moduleOptions,
+      providers: [...providers, target],
+    } satisfies ModuleOptions;
+    metadata[DECORATOR_METADATA_KEYS.provider] = {
+      scope,
       injects,
-    })(target, context);
-  };
+    } satisfies ClassProviderMetadata;
+  });
 }

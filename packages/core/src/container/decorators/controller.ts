@@ -1,18 +1,16 @@
-import type { Class } from '@bunito/common';
-import type { ClassProviderOptions } from '../types';
-import { Provider } from './provider';
+import type { ClassDecorator } from '@bunito/common';
+import { createImmutableDecorator } from '@bunito/common';
+import { DECORATOR_METADATA_KEYS, DEFAULT_SCOPES } from '../constants';
+import type { ClassProviderMetadata, ControllerOptions } from '../types';
 
-export type ControllerDecoratorOptions = Pick<ClassProviderOptions, 'injects'>;
+export function Controller(options: ControllerOptions = {}): ClassDecorator {
+  const { scope = DEFAULT_SCOPES.controller, injects } = options;
 
-export function Controller(
-  options: ControllerDecoratorOptions = {},
-): <TTarget extends Class>(target: TTarget, context: ClassDecoratorContext) => TTarget {
-  const { injects } = options;
-
-  return (target, context) => {
-    return Provider({
-      scope: 'request',
+  return createImmutableDecorator(({ metadata }) => {
+    metadata[DECORATOR_METADATA_KEYS.controller] = true;
+    metadata[DECORATOR_METADATA_KEYS.provider] = {
+      scope,
       injects,
-    })(target, context);
-  };
+    } satisfies ClassProviderMetadata;
+  });
 }

@@ -12,11 +12,12 @@ const LOG_LEVEL_THEMES: Record<
 > = {
   fatal: { icon: '☠', colorPrimary: 'redBright', colorSecondary: 'redBright' },
   error: { icon: '✘', colorPrimary: 'red', colorSecondary: 'red' },
-  warn: { icon: '➔', colorPrimary: 'yellow', colorSecondary: 'yellowBright' },
-  info: { icon: '➔', colorPrimary: 'blue', colorSecondary: 'blueBright' },
-  trace: { icon: '➔', colorPrimary: 'magenta', colorSecondary: 'magentaBright' },
-  debug: { icon: '➔', colorPrimary: 'cyan', colorSecondary: 'cyanBright' },
-  verbose: { icon: '➔', colorPrimary: 'gray', colorSecondary: 'gray' },
+  warn: { icon: '➥', colorPrimary: 'yellow', colorSecondary: 'yellowBright' },
+  info: { icon: '➥', colorPrimary: 'blue', colorSecondary: 'blueBright' },
+  ok: { icon: '✔', colorPrimary: 'green', colorSecondary: 'greenBright' },
+  trace: { icon: '➥', colorPrimary: 'magenta', colorSecondary: 'magentaBright' },
+  debug: { icon: '➥', colorPrimary: 'cyan', colorSecondary: 'cyanBright' },
+  verbose: { icon: '➥', colorPrimary: 'gray', colorSecondary: 'gray' },
 };
 
 function renderLevel(level: LogLevel): string {

@@ -1,36 +1,34 @@
-import type { ExceptionOptions } from '@bunito/common';
-import { Exception } from '@bunito/common';
-import { HTTP_STATUS_MESSAGES } from './constants';
-import type { HttpStatus } from './types';
+import { Exception, isString } from '@bunito/common';
+import { HTTP_ERROR_STATUS_CODES, HTTP_STATUS_MESSAGES } from './constants';
+import type { HttpErrorStatus } from './types';
 
 export class HttpException<
   TData extends Record<string, unknown> = Record<string, unknown>,
-> extends Exception<TData> {
+> extends Exception {
   static capture(err: unknown): HttpException {
     if (HttpException.isInstance(err)) {
       return err;
     }
 
-    return new HttpException(500, undefined, err);
+    return new HttpException('internalServerError', undefined, err);
   }
 
   constructor(
-    readonly status: HttpStatus,
-    messageOrData?: TData | string,
+    readonly status: HttpErrorStatus,
+    messageLike?: TData | string,
     cause?: unknown,
   ) {
-    const options: ExceptionOptions<TData> = {
-      cause,
-    };
+    let message: string | undefined;
+    let data: TData | undefined;
 
-    if (typeof messageOrData === 'string') {
-      options.message = messageOrData;
+    if (isString(messageLike)) {
+      message = messageLike;
     } else {
-      options.message = HTTP_STATUS_MESSAGES[status as HttpStatus];
-      options.data = messageOrData;
+      message = HTTP_STATUS_MESSAGES[status];
+      data = messageLike;
     }
 
-    super(options);
+    super(message, data, cause);
   }
 
   toResponse(): Response {
@@ -42,17 +40,12 @@ export class HttpException<
       responseData.error = this.message;
     }
 
-    return Response.json(
-      this.data
-        ? {
-            ...this.data,
-          }
-        : {
-            error: this.message,
-          },
-      {
-        status: this.status,
-      },
-    );
+    const a = new Response();
+
+    a.headers.set('Content-Type', 'application/json');
+
+    return Response.json(responseData, {
+      status: HTTP_ERROR_STATUS_CODES[this.status],
+    });
   }
 }

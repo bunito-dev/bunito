@@ -1,12 +1,13 @@
 import { ContainerException } from './container.exception';
 
-export class ContainerCompilerException extends ContainerException<unknown> {
+export class ContainerCompilerException extends ContainerException {
   // biome-ignore lint/complexity/noUselessConstructor: Explicit constructor keeps Bun function coverage accurate
   constructor(
-    optionsLike?: ConstructorParameters<typeof ContainerException>[0],
+    message: string,
+    data?: Record<string, unknown>,
     cause?: unknown,
   ) {
-    super(optionsLike, cause);
+    super(message, data, cause);
   }
 
   override name = 'ContainerCompilerException';

@@ -1,19 +1,10 @@
-import type { Class } from '@bunito/common';
-import { setDecoratorMetadata } from '@bunito/common';
-import { PROVIDER_METADATA_KEY } from '../constants';
-import type { ClassProviderOptions } from '../types';
+import type { ClassDecorator } from '@bunito/common';
+import { createImmutableDecorator } from '@bunito/common';
+import { DECORATOR_METADATA_KEYS } from '../constants';
+import type { ClassProviderMetadata } from '../types';
 
-export type ProviderDecoratorOptions = Omit<ClassProviderOptions, 'useClass'>;
-
-export function Provider(
-  options: ProviderDecoratorOptions = {},
-): <TTarget extends Class>(target: TTarget, context: ClassDecoratorContext) => TTarget {
-  return (target, context) => {
-    setDecoratorMetadata<ClassProviderOptions>(context, PROVIDER_METADATA_KEY, {
-      ...options,
-      useClass: target,
-    });
-
-    return target;
-  };
+export function Provider(options: ClassProviderMetadata = {}): ClassDecorator {
+  return createImmutableDecorator(({ metadata }) => {
+    metadata[DECORATOR_METADATA_KEYS.provider] = options;
+  });
 }

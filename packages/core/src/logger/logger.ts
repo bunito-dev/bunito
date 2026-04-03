@@ -46,6 +46,11 @@ export class Logger {
     return message;
   }
 
+  ok<TMessage>(message: TMessage, ...args: Array<unknown>): TMessage {
+    this.log('ok', message, ...args);
+    return message;
+  }
+
   trace<TMessage>(message: TMessage, ...args: Array<unknown>): TMessage {
     this.log('trace', message, ...args);
     return message;

@@ -6,28 +6,56 @@ primitives.
 
 ## What It Provides
 
-- decorator metadata helpers
-- a generic `Exception` base class
-- lightweight predicates and utility types
+- decorator utilities for immutable metadata-based decorators
+- a small `Exception` base class
+- lightweight runtime predicates and name helpers
+- shared TypeScript utility types
+- the `str` tagged template for readable runtime messages
+
+## Installation
+
+```bash
+bun add @bunito/common
+```
 
 ## Main Exports
 
-### Decorator Metadata
+### Decorators
 
-The metadata helpers are the foundation for decorator-driven features in `core`
-and `http`.
+The package exports small decorator-oriented primitives used by higher-level
+packages:
 
+- `createImmutableDecorator()`
 - `getDecoratorMetadata()`
-- `setDecoratorMetadata()`
-- `pushDecoratorMetadata()`
-- `addDecoratorMetadata()`
+- `Decorator`
+- `ClassDecorator`
+- `ClassMethodDecorator`
 
-These helpers read and write metadata using `Symbol.metadata`, keeping decorator
-declaration and runtime consumption loosely coupled.
+These helpers are built around `Symbol.metadata` and keep decorator writes small
+and explicit.
 
-### Exception Base Class
+```ts
+import {
+  createImmutableDecorator,
+  getDecoratorMetadata,
+} from '@bunito/common';
 
-`Exception<TData>` is a small framework-friendly error abstraction.
+const ROLE = Symbol('role');
+
+const Role = (value: string) =>
+  createImmutableDecorator(({ metadata }) => {
+    metadata[ROLE] = value;
+  });
+
+class UserService {}
+
+Role('admin')(UserService, { metadata: {} } as ClassDecoratorContext);
+getDecoratorMetadata(UserService, ROLE);
+```
+
+### Exception
+
+`Exception` is a framework-friendly error abstraction with a predictable shape.
 
 Features:
 
@@ -41,13 +69,12 @@ Example:
 ```ts
 import { Exception } from '@bunito/common';
 
-export class DomainException extends Exception<{ code: string }> {
+export class DomainException extends Exception {
   override name = 'DomainException';
 }
 
-throw new DomainException({
-  message: 'Invalid state',
-  data: { code: 'INVALID_STATE' },
+throw new DomainException('Invalid state', {
+  code: 'INVALID_STATE',
 });
 ```
 
@@ -57,15 +84,47 @@ The package also exports small helpers used across the framework:
 
 - `isClass()`
 - `isFn()`
+- `isNull()`
 - `isObject()`
+- `isUndefined()`
 - `notEmpty()`
-- `resolveName()`
+- `resolveObjectName()`
+- `resolveSymbolKey()`
 
-## Installation
+Example:
 
-```bash
-bun add @bunito/common
+```ts
+import { isClass, notEmpty, resolveObjectName } from '@bunito/common';
+
+const values = [1, null, 2].filter(notEmpty);
+const providerName = resolveObjectName(class UserService {});
+
+isClass(class UserService {});
 ```
+
+### Literals
+
+`str` is a small tagged template helper for building readable messages from
+runtime values such as classes, functions, symbols, and plain objects.
+
+```ts
+import { str } from '@bunito/common';
+
+class UserService {}
+
+const message = str`Cannot resolve ${UserService} for ${Symbol.for('request.id')}`;
+// "Cannot resolve UserService for request.id"
+```
+
+### Types
+
+Shared utility types exported by the package include:
+
+- `Any`
+- `Class`
+- `Fn`
+- `Optional`
+- `Mandatory`
 
 ## Design Notes
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { httpConfig } from './http.config';
+import { HttpConfig } from './http.config';
 
 describe('httpConfig', () => {
   it('should create a module-scoped config provider', async () => {
@@ -7,10 +7,10 @@ describe('httpConfig', () => {
       getEnv: () => undefined,
     };
 
-    expect(typeof httpConfig.token).toBe('symbol');
-    expect(String(httpConfig.token)).toBe('Symbol(config(http))');
-    expect(httpConfig.scope).toBe('module');
-    expect(await httpConfig.useFactory(service)).toEqual({
+    expect(typeof HttpConfig.token).toBe('symbol');
+    expect(String(HttpConfig.token)).toBe('Symbol(config(http))');
+    expect(HttpConfig.scope).toBe('module');
+    expect(await HttpConfig.useFactory(service)).toEqual({
       port: 3000,
     });
   });
@@ -28,7 +28,7 @@ describe('httpConfig', () => {
       },
     };
 
-    expect(await httpConfig.useFactory(service)).toEqual({
+    expect(await HttpConfig.useFactory(service)).toEqual({
       port: '4000',
     });
   });

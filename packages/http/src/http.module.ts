@@ -1,23 +1,11 @@
-import { Bootstrap, configModule, Destroy, LoggerModule, Module } from '@bunito/core';
-import { httpConfig } from './http.config';
+import type { ModuleOptions } from '@bunito/core';
+import { ConfigModule, LoggerModule } from '@bunito/core';
+import { HttpConfig } from './http.config';
+import { HttpRouter } from './http.router';
 import { HttpService } from './http.service';
 
-@Module({
-  imports: [LoggerModule, configModule],
-  providers: [HttpService, httpConfig],
-  exports: [HttpService],
-  injects: [HttpService],
-})
-export class HttpModule {
-  constructor(readonly httpService: HttpService) {}
-
-  @Bootstrap()
-  bootstrap(): void {
-    this.httpService.startServer();
-  }
-
-  @Destroy()
-  async destroy(): Promise<void> {
-    await this.httpService.stop();
-  }
-}
+export const HttpModule: ModuleOptions = {
+  imports: [LoggerModule, ConfigModule],
+  providers: [HttpConfig, HttpRouter, HttpService],
+  exports: [HttpRouter, HttpService],
+};

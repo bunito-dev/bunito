@@ -1,7 +1,7 @@
 {
   "name": "@bunito/common",
   "version": "0.0.2",
-  "description": "Shared metadata helpers, predicates, decorators utilities, and base exceptions for bunito.",
+  "description": "Dependency-free shared decorator helpers, exceptions, literals, types, and utilities for bunito.",
   "keywords": [
     "bunito",
     "bun",
@@ -10,7 +10,10 @@
     "decorators",
     "metadata",
     "exceptions",
-    "utilities"
+    "utilities",
+    "helpers",
+    "types",
+    "literals"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",
@@ -27,6 +30,7 @@
     "access": "public"
   },
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },

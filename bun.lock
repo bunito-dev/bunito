@@ -10,8 +10,8 @@
         "typescript": "6.0.2",
       },
     },
-    "example": {
-      "name": "@bunito/example",
+    "examples": {
+      "name": "@bunito/examples",
       "dependencies": {
         "@bunito/core": "workspace:*",
         "@bunito/http": "workspace:*",
@@ -23,14 +23,14 @@
     },
     "packages/common": {
       "name": "@bunito/common",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "devDependencies": {
         "@types/bun": "catalog:",
       },
     },
     "packages/core": {
       "name": "@bunito/core",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "dependencies": {
         "@bunito/common": "workspace:*",
       },
@@ -40,7 +40,7 @@
     },
     "packages/http": {
       "name": "@bunito/http",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "dependencies": {
         "@bunito/common": "workspace:*",
         "@bunito/core": "workspace:*",
@@ -78,7 +78,7 @@
 
     "@bunito/core": ["@bunito/core@workspace:packages/core"],
 
-    "@bunito/example": ["@bunito/example@workspace:example"],
+    "@bunito/examples": ["@bunito/examples@workspace:examples"],
 
     "@bunito/http": ["@bunito/http@workspace:packages/http"],
 

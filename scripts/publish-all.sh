@@ -8,6 +8,8 @@ source ./common.sh
 
 detect_commands "bun"
 
+bun whoami
+
 for pkg_dir in "$ROOT_DIR"/packages/*; do
   pkg_json="$(read_pkg_json "$pkg_dir")"
   pkg_private=$(jq ".private // false" <<< "$pkg_json")
@@ -19,7 +21,7 @@ for pkg_dir in "$ROOT_DIR"/packages/*; do
     continue
   fi
 
-  if output=$(bun publish --cwd "$pkg_dir" --no-summary --silent --quiet --tolerate-republish 2>&1); then
+  if output=$(bun publish --cwd "$pkg_dir" --dry-run --no-summary --silent --quiet --tolerate-republish 2>&1); then
     if echo "$output" | grep -qi "already"; then
       print_info "Package ${pkg_name}@${pkg_version} already published: skipping"
     else

@@ -1,28 +1,23 @@
 import { describe, expect, it } from 'bun:test';
-import { PROVIDER_METADATA_KEY } from '../constants';
+import { DECORATOR_METADATA_KEYS } from '../constants';
+import type { ClassProviderMetadata } from '../types';
 import { Provider } from './provider';
-
-function createClassContext(metadata: DecoratorMetadataObject): ClassDecoratorContext {
-  return { metadata } as ClassDecoratorContext;
-}
 
 describe('Provider', () => {
   it('should store provider metadata for the decorated class', () => {
     class TestProvider {}
-
-    const metadata: DecoratorMetadataObject = {};
+    const metadata = {} as DecoratorMetadataObject;
 
     Provider({
       scope: 'request',
       injects: ['dep'],
       token: 'token',
-    })(TestProvider, createClassContext(metadata));
+    })(TestProvider, { metadata } as ClassDecoratorContext);
 
-    expect(metadata[PROVIDER_METADATA_KEY]).toEqual({
+    expect(metadata[DECORATOR_METADATA_KEYS.provider] as ClassProviderMetadata).toEqual({
       scope: 'request',
       injects: ['dep'],
       token: 'token',
-      useClass: TestProvider,
     });
   });
 });

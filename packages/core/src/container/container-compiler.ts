@@ -5,53 +5,46 @@ import {
   isFn,
   isObject,
   notEmpty,
-  resolveName,
+  str,
 } from '@bunito/common';
-import {
-  DEFAULT_PROVIDER_SCOPE,
-  MODULE_METADATA_KEY,
-  PROVIDER_METADATA_KEY,
-} from './constants';
+import { DECORATOR_METADATA_KEYS, DEFAULT_SCOPES } from './constants';
 import { ContainerCompilerException } from './container-compiler.exception';
 import { Id } from './id';
 import type {
-  AnyProviderOptions,
+  ClassProviderMetadata,
+  CompiledInjection,
   CompiledModule,
+  CompiledProvider,
+  ControllerRef,
+  InjectionLike,
+  LifecycleProps,
+  ModuleDefinition,
   ModuleId,
+  ModuleLike,
   ModuleOptions,
-  ModuleOptionsNormalized,
-  ModuleRef,
   ProviderId,
-  ProviderInjection,
-  ProviderInjectionOptions,
+  ProviderLike,
   ProviderMatch,
-  ProviderOptionsNormalized,
-  ProviderRef,
+  ProviderOptions,
   Token,
 } from './types';
 
 export class ContainerCompiler {
   private readonly modules = new Map<ModuleId, CompiledModule>();
 
-  // biome-ignore lint/complexity/noUselessConstructor: Explicit constructor keeps Bun function coverage accurate
-  constructor() {
-    //
-  }
-
   getModule(moduleId: ModuleId): CompiledModule {
     const module = this.modules.get(moduleId);
 
     if (!module) {
-      throw new ContainerCompilerException(`Module ${moduleId} not found`);
+      throw new ContainerCompilerException(str`Module ${moduleId} not found`, {
+        moduleId,
+      });
     }
 
     return module;
   }
 
-  tryLocateProvider(
-    providerId: ProviderId,
-    moduleId: ModuleId,
-  ): ProviderMatch | undefined {
+  locateProvider(providerId: ProviderId, moduleId: ModuleId): ProviderMatch | undefined {
     const module = this.modules.get(moduleId);
 
     if (!module) {
@@ -89,12 +82,19 @@ export class ContainerCompiler {
     }
   }
 
-  compileModule(moduleRef: ModuleRef, parentStack: Set<ModuleId> = new Set()): ModuleId {
-    const moduleId = Id.for(moduleRef);
+  compileModule(
+    moduleLike: ModuleLike,
+    parentModuleIds: Set<ModuleId> = new Set(),
+  ): ModuleId {
+    const moduleId = Id.for(moduleLike);
 
-    if (parentStack.has(moduleId)) {
+    if (parentModuleIds.has(moduleId)) {
       throw new ContainerCompilerException(
-        `Circular dependency detected between modules ${[...parentStack, moduleId].join(' -> ')}`,
+        str`Circular dependency detected between in ${moduleId} module`,
+        {
+          moduleId,
+          parentModuleIds,
+        },
       );
     }
 
@@ -102,16 +102,11 @@ export class ContainerCompiler {
       return moduleId;
     }
 
-    const moduleStack = new Set([...parentStack, moduleId]);
-
-    const options = this.tryResolveModuleOptions(moduleRef);
-
-    if (!options) {
-      throw new ContainerCompilerException(`Missing module ${moduleId} metadata`);
-    }
+    const moduleIds = new Set([...parentModuleIds, moduleId]);
+    const definition = this.resolveModuleDefinition(moduleLike);
 
     const compiled: CompiledModule = {
-      entrypointId: undefined,
+      useClass: definition.useClass,
       imports: new Set(),
       providers: new Map(),
       controllers: new Set(),
@@ -120,69 +115,36 @@ export class ContainerCompiler {
 
     this.modules.set(moduleId, compiled);
 
-    // entrypoint
-
-    if (options.entrypointRef) {
-      const entrypointOptions = this.tryResolveProviderOptions(options.entrypointRef);
-
-      if (!entrypointOptions) {
-        throw new ContainerCompilerException(
-          `Missing module ${moduleId} entrypoint metadata`,
-        );
-      }
-
-      const { token, ...providerCompiled } = entrypointOptions;
-
-      const entrypointId = Id.for(token);
-
-      compiled.entrypointId = entrypointId;
-      compiled.providers.set(entrypointId, providerCompiled);
-    }
-
     // imports
 
-    for (const moduleRef of options.imports) {
-      compiled.imports.add(this.compileModule(moduleRef, moduleStack));
+    for (const moduleLike of definition.imports) {
+      compiled.imports.add(this.compileModule(moduleLike, moduleIds));
     }
 
     // controllers
 
-    for (const controllerRef of options.controllers) {
-      const providerOptions = this.tryResolveProviderOptions(controllerRef);
+    for (const controllerRef of definition.controllers) {
+      this.verifyController(controllerRef);
 
-      if (!providerOptions) {
-        throw new ContainerCompilerException(
-          `Missing module ${moduleId} controller ${resolveName(controllerRef)} metadata`,
-        );
-      }
-
-      const { token, ...providerCompiled } = providerOptions;
-
-      const controllerId = Id.for(token);
+      const compiledProvider = this.compileProvider(controllerRef);
+      const controllerId = Id.for(controllerRef);
 
       compiled.controllers.add(controllerId);
-      compiled.providers.set(controllerId, providerCompiled);
+      compiled.providers.set(controllerId, compiledProvider);
     }
 
     // providers
 
-    for (const providerRef of options.providers) {
-      const providerOptions = this.tryResolveProviderOptions(providerRef);
+    for (const providerLike of definition.providers) {
+      const compiledProvider = this.compileProvider(providerLike);
 
-      if (!providerOptions) {
-        throw new ContainerCompilerException(
-          `Missing module ${moduleId} provider ${resolveName(providerRef)} metadata`,
-        );
-      }
-
-      const { token, ...providerCompiled } = providerOptions;
-      compiled.providers.set(Id.for(token), providerCompiled);
+      compiled.providers.set(this.resolveProviderId(providerLike), compiledProvider);
     }
 
     // exports
 
-    for (const providerToken of options.exports) {
-      const providerId = this.resolveProviderToken(providerToken);
+    for (const providerToken of definition.exports) {
+      const providerId = this.resolveProviderId(providerToken);
 
       if (compiled.providers.has(providerId)) {
         compiled.exports.set(providerId, moduleId);
@@ -199,7 +161,11 @@ export class ContainerCompiler {
         if (providerModuleId) {
           if (exportModuleId) {
             throw new ContainerCompilerException(
-              `Provider ${providerId} is exported by multiple modules`,
+              str`Provider ${providerId} is exported by multiple modules`,
+              {
+                moduleId,
+                providerId,
+              },
             );
           }
 
@@ -209,7 +175,11 @@ export class ContainerCompiler {
 
       if (!exportModuleId) {
         throw new ContainerCompilerException(
-          `Provider ${providerId} not found in ${moduleId} module`,
+          str`Provider ${providerId} not found in ${moduleId} module`,
+          {
+            moduleId,
+            providerId,
+          },
         );
       }
 
@@ -219,26 +189,32 @@ export class ContainerCompiler {
     return moduleId;
   }
 
-  private tryResolveModuleOptions(
-    moduleRef: ModuleRef,
-  ): ModuleOptionsNormalized | undefined {
-    let entrypointRef: ProviderRef | undefined;
+  private resolveModuleDefinition(moduleLike: ModuleLike): ModuleDefinition {
     let options: ModuleOptions | undefined;
+    let useClass: Class | undefined;
 
-    if (isClass(moduleRef)) {
-      entrypointRef = moduleRef;
-      options = getDecoratorMetadata(moduleRef, MODULE_METADATA_KEY);
+    if (isClass(moduleLike)) {
+      options = getDecoratorMetadata<ModuleOptions>(
+        moduleLike,
+        DECORATOR_METADATA_KEYS.module,
+      );
 
       if (!options) {
-        return;
+        throw new ContainerCompilerException(
+          str`Missing module metadata for ${moduleLike} `,
+          {
+            moduleLike,
+          },
+        );
       }
+
+      useClass = moduleLike;
     } else {
-      options = moduleRef as ModuleOptions;
+      options = moduleLike as ModuleOptions;
     }
 
     return {
-      entrypointRef,
-      extends: options.extends,
+      useClass,
       imports: options.imports?.filter(notEmpty) ?? [],
       controllers: options.controllers?.filter(notEmpty) ?? [],
       providers: options.providers?.filter(notEmpty) ?? [],
@@ -246,86 +222,7 @@ export class ContainerCompiler {
     };
   }
 
-  private tryResolveProviderOptions(
-    providerRef: ProviderRef,
-  ): ProviderOptionsNormalized | undefined {
-    let options: AnyProviderOptions | undefined;
-
-    if (isClass(providerRef)) {
-      options = getDecoratorMetadata(providerRef, PROVIDER_METADATA_KEY);
-    } else if (isFn(providerRef)) {
-      options = { useFactory: providerRef };
-    } else {
-      options = providerRef as AnyProviderOptions;
-    }
-
-    if (!options) {
-      return;
-    }
-
-    if ('useClass' in options) {
-      const {
-        useClass, //
-        token = useClass,
-        scope = DEFAULT_PROVIDER_SCOPE,
-        injects = [],
-      } = options;
-
-      return {
-        token,
-        kind: 'class',
-        scope,
-        useClass,
-        injects: injects
-          .filter(notEmpty)
-          .map((options) => this.resolveProviderInjection(options)),
-      };
-    } else if ('useFactory' in options) {
-      const {
-        useFactory,
-        token = useFactory,
-        scope = DEFAULT_PROVIDER_SCOPE,
-        injects = [],
-      } = options;
-
-      return {
-        token,
-        kind: 'factory',
-        scope,
-        useFactory,
-        injects: injects
-          .filter(notEmpty)
-          .map((token) => this.resolveProviderInjection(token)),
-      };
-    } else if ('useValue' in options) {
-      const {
-        useValue, //
-        token,
-      } = options;
-
-      return {
-        token,
-        kind: 'value',
-        useValue,
-      };
-    }
-  }
-
-  private resolveProviderInjection(options: ProviderInjectionOptions): ProviderInjection {
-    if (isObject(options) && 'token' in options && 'optional' in options) {
-      return {
-        providerId: this.resolveProviderToken(options.token),
-        optional: options.optional,
-      };
-    }
-
-    return {
-      providerId: this.resolveProviderToken(options),
-      optional: false,
-    };
-  }
-
-  private resolveProviderToken(token: Token): Id {
+  private resolveProviderId(token: Token): Id {
     if (isObject(token)) {
       if ('token' in token) {
         return Id.for(token.token as symbol);
@@ -337,5 +234,103 @@ export class ContainerCompiler {
     }
 
     return Id.for(token);
+  }
+
+  private verifyController(controllerRef: ControllerRef): void {
+    if (!getDecoratorMetadata<true>(controllerRef, DECORATOR_METADATA_KEYS.controller)) {
+      throw new ContainerCompilerException(
+        str`Missing controller metadata for ${controllerRef}`,
+        {
+          controllerRef,
+        },
+      );
+    }
+  }
+
+  private compileProvider(providerLike: ProviderLike): CompiledProvider {
+    let options: ProviderOptions | undefined;
+
+    if (isClass(providerLike)) {
+      const metadata = getDecoratorMetadata<ClassProviderMetadata>(
+        providerLike,
+        DECORATOR_METADATA_KEYS.provider,
+      );
+
+      if (!metadata) {
+        throw new ContainerCompilerException(
+          str`Missing provider metadata for ${providerLike} `,
+          {
+            providerLike,
+          },
+        );
+      }
+
+      options = {
+        ...metadata,
+        useClass: providerLike,
+      };
+    } else if (isFn(providerLike)) {
+      options = {
+        useFactory: providerLike,
+      };
+    } else {
+      options = providerLike as ProviderOptions;
+    }
+
+    if ('useClass' in options) {
+      return {
+        kind: 'class',
+        scope: options.scope ?? DEFAULT_SCOPES.provider,
+        useClass: options.useClass,
+        injects: this.compileInjections(options.injects),
+        lifecycle: this.resolveLifecycleProps(options.useClass),
+      };
+    }
+
+    if ('useFactory' in options) {
+      return {
+        kind: 'factory',
+        scope: options.scope ?? DEFAULT_SCOPES.provider,
+        useFactory: options.useFactory,
+        injects: this.compileInjections(options.injects),
+      };
+    }
+
+    return {
+      kind: 'value',
+      useValue: options.useValue,
+    };
+  }
+
+  private compileInjections(
+    injections: Array<InjectionLike | null> | undefined,
+  ): Array<CompiledInjection> {
+    return (
+      injections?.filter(notEmpty).map((injectionLike): CompiledInjection => {
+        if (
+          isObject(injectionLike) &&
+          'token' in injectionLike &&
+          !('useClass' in injectionLike) &&
+          !('useFactory' in injectionLike) &&
+          !('useValue' in injectionLike)
+        ) {
+          return {
+            providerId: Id.for(injectionLike.token),
+            optional: injectionLike.optional ?? false,
+          };
+        }
+
+        return {
+          providerId: this.resolveProviderId(injectionLike),
+          optional: false,
+        };
+      }) ?? []
+    );
+  }
+
+  private resolveLifecycleProps(target: Class): LifecycleProps {
+    return new Map(
+      getDecoratorMetadata<LifecycleProps>(target, DECORATOR_METADATA_KEYS.lifecycle),
+    );
   }
 }

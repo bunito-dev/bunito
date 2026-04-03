@@ -1,19 +1,47 @@
-export const HTTP_CONTROLLER_METADATA_KEYS = {
-  path: Symbol('http(controller.path)'),
-  methods: Symbol('http(controller.methods)'),
-} as const;
+import type { HttpStatus } from './types';
+
+export const DECORATOR_METADATA_KEYS = {
+  path: Symbol('http(path)'),
+  request: Symbol('http(request)'),
+  response: Symbol('http(response)'),
+} as const satisfies Record<string, symbol>;
+
+export const HTTP_SUCCESS_STATUS_CODES = {
+  continue: 100,
+  ok: 200,
+  created: 201,
+  accepted: 202,
+  noContent: 204,
+} as const satisfies Record<string, number>;
+
+export const HTTP_ERROR_STATUS_CODES = {
+  badRequest: 400,
+  unauthorized: 401,
+  forbidden: 403,
+  notFound: 404,
+  methodNotAllowed: 405,
+  internalServerError: 500,
+  serviceUnavailable: 503,
+  gatewayTimeout: 504,
+} as const satisfies Record<string, number>;
 
 export const HTTP_STATUS_MESSAGES = {
-  100: 'Continue',
-  200: 'OK',
-  400: 'Bad Request',
-  401: 'Unauthorized',
-  403: 'Forbidden',
-  404: 'Not Found',
-  405: 'Method Not Allowed',
-  500: 'Internal Server Error',
-  503: 'Service Unavailable',
-  504: 'Gateway Timeout',
-  505: 'HTTP Version Not Supported',
-  1000: 'Unknown Error',
-} as const satisfies Record<number, string>;
+  continue: 'Continue',
+  ok: 'OK',
+  created: 'Created',
+  accepted: 'Accepted',
+  noContent: 'No Content',
+  badRequest: 'Bad Request',
+  unauthorized: 'Unauthorized',
+  forbidden: 'Forbidden',
+  notFound: 'Not Found',
+  methodNotAllowed: 'Method Not Allowed',
+  internalServerError: 'Internal Server Error',
+  serviceUnavailable: 'Service Unavailable',
+  gatewayTimeout: 'Gateway Timeout',
+} as const satisfies Record<HttpStatus, string>;
+
+export const HTTP_CONTENT_TYPES = {
+  json: 'application/json',
+  text: 'text/plain',
+} as const satisfies Record<string, string>;

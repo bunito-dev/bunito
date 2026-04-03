@@ -1,82 +1,61 @@
 import { describe, expect, it } from 'bun:test';
-import { MODULE_METADATA_KEY, PROVIDER_METADATA_KEY } from './constants';
 import { ContainerCompiler } from './container-compiler';
+import { Controller, Module, OnBoot, Provider } from './decorators';
 import { Id } from './id';
 import type { ModuleOptions } from './types';
 
-type ClassLike = abstract new (...args: never) => unknown;
-
-function defineMetadata(target: object, metadata: DecoratorMetadataObject): void {
-  Object.defineProperty(target, Symbol.metadata, {
-    value: metadata,
-    configurable: true,
-  });
-}
-
-function defineProvider(
-  target: ClassLike,
-  options: Record<PropertyKey, unknown> = {},
-): void {
-  defineMetadata(target, {
-    [PROVIDER_METADATA_KEY]: {
-      useClass: target,
-      ...options,
-    },
-  });
-}
-
-function defineModule(target: ClassLike, options: ModuleOptions = {}): void {
-  defineMetadata(target, {
-    [MODULE_METADATA_KEY]: options,
-    [PROVIDER_METADATA_KEY]: {
-      useClass: target,
-      scope: 'module',
-      injects: [],
-    },
-  });
-}
-
 describe('ContainerCompiler', () => {
-  it('should compile modules and normalize providers, controllers and exports', () => {
-    class EntryModule {}
+  it('should compile modules and normalize providers, controllers, exports and lifecycle metadata', () => {
+    @Controller({
+      injects: ['dep'],
+    })
     class ControllerClass {}
+
+    @Provider({
+      injects: ['dep', { token: 'optional-dep', optional: true }],
+    })
     class ClassProvider {}
 
-    defineModule(EntryModule, {
+    @Provider()
+    class BootProvider {
+      @OnBoot()
+      onBoot(): void {
+        //
+      }
+    }
+
+    @Module({
       providers: [
         ClassProvider,
+        BootProvider,
         () => 'factory-result',
         { token: 'value-token', useValue: 123 },
         null,
       ],
-      controllers: [ControllerClass, undefined],
-      exports: [ClassProvider, 'value-token', null],
-    });
-    defineProvider(ControllerClass, {
-      scope: 'request',
-      injects: ['dep'],
-    });
-    defineProvider(ClassProvider, {
-      injects: ['dep', { token: 'optional-dep', optional: true }],
-    });
+      controllers: [ControllerClass, null],
+      exports: [ClassProvider, BootProvider, 'value-token', null],
+    })
+    class EntryModule {}
 
     const compiler = new ContainerCompiler();
     const moduleId = compiler.compileModule(EntryModule);
     const compiled = compiler.getModule(moduleId);
 
-    expect(compiled.entrypointId).toBe(Id.for(EntryModule));
+    expect(compiled.useClass).toBe(EntryModule);
     expect(compiled.controllers.has(Id.for(ControllerClass))).toBeTrue();
     expect(compiled.providers.get(Id.for(EntryModule))).toEqual({
       kind: 'class',
-      scope: 'module',
+      scope: 'singleton',
       useClass: EntryModule,
       injects: [],
+      lifecycle: new Map(),
     });
     expect(compiled.providers.get(Id.for(ControllerClass))).toEqual({
       kind: 'class',
       scope: 'request',
       useClass: ControllerClass,
       injects: [{ providerId: Id.for('dep'), optional: false }],
+      lifecycle: new Map(),
     });
     expect(compiled.providers.get(Id.for(ClassProvider))).toEqual({
       kind: 'class',
@@ -86,19 +65,27 @@ describe('ContainerCompiler', () => {
         { providerId: Id.for('dep'), optional: false },
         { providerId: Id.for('optional-dep'), optional: true },
       ],
+      lifecycle: new Map(),
+    });
+    expect(compiled.providers.get(Id.for(BootProvider))).toEqual({
+      kind: 'class',
+      scope: 'singleton',
+      useClass: BootProvider,
+      injects: [],
+      lifecycle: new Map([['onBoot', 'onBoot']]),
     });
     expect(compiled.providers.get(Id.for('value-token'))).toEqual({
       kind: 'value',
       useValue: 123,
     });
     expect(compiled.exports.get(Id.for(ClassProvider))).toBe(moduleId);
+    expect(compiled.exports.get(Id.for(BootProvider))).toBe(moduleId);
     expect(compiled.exports.get(Id.for('value-token'))).toBe(moduleId);
   });
 
   it('should locate providers from the current module and imported exports', () => {
+    @Provider()
     class ExportedProvider {}
-
-    defineProvider(ExportedProvider);
 
     const importedModule = {
       providers: [ExportedProvider],
@@ -111,16 +98,17 @@ describe('ContainerCompiler', () => {
     const compiler = new ContainerCompiler();
     const rootModuleId = compiler.compileModule(rootModule);
 
-    expect(compiler.tryLocateProvider(Id.for(ExportedProvider), rootModuleId)).toEqual({
+    expect(compiler.locateProvider(Id.for(ExportedProvider), rootModuleId)).toEqual({
       moduleId: Id.for(importedModule),
       provider: {
         kind: 'class',
         scope: 'singleton',
         useClass: ExportedProvider,
         injects: [],
+        lifecycle: new Map(),
       },
     });
-    expect(compiler.tryLocateProvider(Id.for('missing'), rootModuleId)).toBeUndefined();
+    expect(compiler.locateProvider(Id.for('missing'), rootModuleId)).toBeUndefined();
   });
 
   it('should throw when reading a missing compiled module', () => {
@@ -135,11 +123,12 @@ describe('ContainerCompiler', () => {
     const compiler = new ContainerCompiler();
 
     expect(() => compiler.compileModule(MissingModuleMetadata)).toThrow(
-      `Missing module ${Id.for(MissingModuleMetadata)} metadata`,
+      'Missing module metadata',
     );
   });
 
-  it('should throw when a controller is missing provider metadata', () => {
+  it('should throw when a controller is missing controller metadata', () => {
+    @Provider()
     class UndecoratedController {}
 
     const compiler = new ContainerCompiler();
@@ -148,10 +137,10 @@ describe('ContainerCompiler', () => {
       compiler.compileModule({
         controllers: [UndecoratedController],
       }),
-    ).toThrow(`controller ${UndecoratedController.name} metadata`);
+    ).toThrow('Missing controller metadata');
   });
 
-  it('should throw when a provider is missing metadata', () => {
+  it('should throw when a provider is missing provider metadata', () => {
     class UndecoratedProvider {}
 
     const compiler = new ContainerCompiler();
@@ -160,7 +149,7 @@ describe('ContainerCompiler', () => {
       compiler.compileModule({
         providers: [UndecoratedProvider],
       }),
-    ).toThrow(`provider ${UndecoratedProvider.name} metadata`);
+    ).toThrow('Missing provider metadata');
   });
 
   it('should throw when the same export is re-exported by multiple imported modules', () => {
@@ -182,7 +171,7 @@ describe('ContainerCompiler', () => {
         imports: [moduleA, moduleB],
         exports: [token],
       }),
-    ).toThrow(`Provider ${Id.for(token)} is exported by multiple modules`);
+    ).toThrow('exported by multiple modules');
   });
 
   it('should detect circular dependencies between modules', () => {
@@ -196,108 +185,7 @@ describe('ContainerCompiler', () => {
     const compiler = new ContainerCompiler();
 
     expect(() => compiler.compileModule(moduleA)).toThrow(
-      'Circular dependency detected between modules',
+      'Circular dependency detected',
     );
-  });
-
-  it('should normalize provider options through internal helpers', () => {
-    class ClassProvider {}
-    class ClassModule {}
-    const factory = () => 'factory-result';
-
-    defineProvider(ClassProvider, {
-      token: 'class-token',
-      scope: 'request',
-      injects: ['dep'],
-    });
-    defineModule(ClassModule, {
-      imports: [{}],
-      providers: [ClassProvider],
-      controllers: [],
-      exports: ['class-token'],
-    });
-
-    const compiler = new ContainerCompiler() as unknown as {
-      tryResolveModuleOptions: (moduleRef: unknown) => unknown;
-      tryResolveProviderOptions: (providerRef: unknown) => unknown;
-      resolveProviderInjection: (options: unknown) => unknown;
-      resolveProviderToken: (token: unknown) => unknown;
-    };
-
-    expect(compiler.tryResolveModuleOptions(ClassModule)).toEqual({
-      entrypointRef: ClassModule,
-      extends: undefined,
-      imports: [{}],
-      providers: [ClassProvider],
-      controllers: [],
-      exports: ['class-token'],
-    });
-    expect(
-      compiler.tryResolveModuleOptions({
-        imports: [null, {}],
-        providers: [undefined, ClassProvider],
-        controllers: [null],
-        exports: [undefined, 'class-token'],
-      }),
-    ).toEqual({
-      entrypointRef: undefined,
-      extends: undefined,
-      imports: [{}],
-      providers: [ClassProvider],
-      controllers: [],
-      exports: ['class-token'],
-    });
-    expect(compiler.tryResolveProviderOptions(ClassProvider)).toEqual({
-      token: 'class-token',
-      kind: 'class',
-      scope: 'request',
-      useClass: ClassProvider,
-      injects: [{ providerId: Id.for('dep'), optional: false }],
-    });
-    expect(compiler.tryResolveProviderOptions(factory)).toEqual({
-      token: factory,
-      kind: 'factory',
-      scope: 'singleton',
-      useFactory: factory,
-      injects: [],
-    });
-    expect(
-      compiler.tryResolveProviderOptions({
-        token: 'value-token',
-        useValue: 123,
-      }),
-    ).toEqual({
-      token: 'value-token',
-      kind: 'value',
-      useValue: 123,
-    });
-    expect(compiler.resolveProviderInjection('dep')).toEqual({
-      providerId: Id.for('dep'),
-      optional: false,
-    });
-    expect(
-      compiler.resolveProviderInjection({
-        token: 'optional-dep',
-        optional: true,
-      }),
-    ).toEqual({
-      providerId: Id.for('optional-dep'),
-      optional: true,
-    });
-    expect(
-      compiler.resolveProviderToken({
-        token: Symbol.for('token-object'),
-      }),
-    ).toBe(Id.for(Symbol.for('token-object')));
-    expect(
-      compiler.resolveProviderToken({
-        useClass: ClassProvider,
-      }),
-    ).toBe(Id.for(ClassProvider));
-    expect(
-      compiler.resolveProviderToken({
-        useFactory: factory,
-      }),
-    ).toBe(Id.for(factory));
   });
 });

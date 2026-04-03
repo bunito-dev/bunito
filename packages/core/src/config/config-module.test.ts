@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test';
-import { configModule } from './config-module';
+import { ConfigModule } from './config-module';
 import { ConfigService } from './config-service';
 
-describe('configModule', () => {
+describe('ConfigModule', () => {
   it('should register and export ConfigService', () => {
-    expect(configModule).toEqual({
+    expect(ConfigModule).toEqual({
       providers: [ConfigService],
       exports: [ConfigService],
     });
