@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "start:001-core-basics": "bun ./001-core-basics/main.ts",
-    "start:002-http-basics": "bun ./002-http-basics/main.ts"
+    "start:002-http-basics": "bun --watch ./002-http-basics/main.ts"
   },
   "dependencies": {
     "@bunito/core": "workspace:*",

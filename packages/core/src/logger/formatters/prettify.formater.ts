@@ -73,7 +73,7 @@ export const prettifyFormatter: LogFormatter = (
     for (const item of data) {
       write(`∙`, theme.colorSecondary);
       write(' ');
-      write(inspect(item));
+      write(inspect(item, true, 10, true));
       write('\n');
     }
   }

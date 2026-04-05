@@ -9,5 +9,5 @@ export type LogFormatter = (
   context: string | undefined,
   level: LogLevel,
   message: unknown,
-  args: Array<unknown>,
+  args: unknown[],
 ) => void;

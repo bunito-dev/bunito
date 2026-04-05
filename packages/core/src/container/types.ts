@@ -6,7 +6,12 @@ export type CallableInstance<TResult = unknown> = Record<
   Fn<Promise<TResult> | TResult>
 >;
 
-export type Token = symbol | string | object;
+export type Token<TInner = unknown> =
+  | symbol
+  | string
+  | object
+  | Class<TInner>
+  | Fn<TInner>;
 
 export type ResolveToken<TToken> =
   TToken extends Class<infer TInstance>
@@ -69,10 +74,10 @@ export type ClassModuleOptions = ModuleOptions & {
 
 export type ModuleDefinition = {
   useClass: Class | undefined;
-  imports: Array<ModuleLike>;
-  providers: Array<ProviderLike>;
-  controllers: Array<ControllerRef>;
-  exports: Array<ProviderLike>;
+  imports: ModuleLike[];
+  providers: ProviderLike[];
+  controllers: ControllerRef[];
+  exports: ProviderLike[];
 };
 
 export type CompiledModule = {
@@ -96,7 +101,7 @@ export type ControllerOptions = {
 
 export type ControllerNode = {
   moduleId: ModuleId;
-  parentClasses: Array<Class>;
+  parentClasses: Class[];
   useClass: Class;
 };
 
@@ -115,7 +120,7 @@ export type ClassProviderOptions<
   token?: Token;
   scope?: ScopeKind;
   useClass: Class<TInstance>;
-  injects?: Array<TInjection>;
+  injects?: TInjection[];
 };
 
 export type FactoryProviderOptions<
@@ -125,7 +130,7 @@ export type FactoryProviderOptions<
   token?: Token;
   scope?: ScopeKind;
   useFactory: Fn<TResult>;
-  injects?: Array<TInjection>;
+  injects?: TInjection[];
 };
 
 export type ValueProviderOptions<TValue = unknown> = {

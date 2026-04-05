@@ -8,33 +8,54 @@ class BarService {
   }
 }
 
-@Controller()
+@Controller({
+  injects: [BarService],
+})
 @UsesPath('/foo')
-class FooController {
-  constructor(private readonly fooService: BarService) {
+class BarController {
+  constructor(private readonly barService: BarService) {
     //
   }
 
   @Get('/bar')
   bar(): string {
-    return this.fooService.bar();
+    return this.barService.bar();
+  }
+}
+
+@Controller()
+class FooController {
+  @OnResponse()
+  onResponse(data: unknown): Response {
+    return Response.json({
+      data,
+    });
+  }
+
+  @Get('/bar')
+  bar(): string {
+    return '';
+  }
+
+  @Get('/**')
+  bar1() {
+    return {
+      a: 'bla',
+    };
+  }
+
+  @Get('/bar/:a/:b')
+  bar2(): string {
+    return '';
   }
 }
 
 @Module({
-  controllers: [FooController],
+  controllers: [FooController, BarController],
   providers: [BarService],
 })
 @UsesPath('/v1')
-class FooModule {
-  @OnResponse({
-    path: '/**',
-  })
-  onResponse(response: Response): Response {
-    response.headers.set('X-Version', '1.0.0');
-    return response;
-  }
-}
+class FooModule {}
 
 const app = await App.create('example', {
   imports: [LoggerModule, HttpModule, FooModule],

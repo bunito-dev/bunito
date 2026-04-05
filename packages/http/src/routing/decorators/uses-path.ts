@@ -1,10 +1,10 @@
 import type { ClassDecorator } from '@bunito/common';
 import { createImmutableDecorator } from '@bunito/common';
 import { DECORATOR_METADATA_KEYS } from '../constants';
-import type { HttpPath } from '../types';
+import type { RoutePath } from '../types';
 
-export function UsesPath(path: HttpPath): ClassDecorator {
+export function UsesPath(path: RoutePath): ClassDecorator {
   return createImmutableDecorator(({ metadata }) => {
-    metadata[DECORATOR_METADATA_KEYS.path] = path;
+    metadata[DECORATOR_METADATA_KEYS.PATH] = path;
   });
 }

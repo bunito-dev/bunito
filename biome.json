@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**/*.ts", "**/*.tsx"]
+    "includes": ["**/*.ts"]
   },
   "assist": {
     "enabled": true,
@@ -38,6 +38,7 @@
             "style": "separatedType"
           }
         },
+        "useConsistentArrayType": "error",
         "useNodejsImportProtocol": "error",
         "useConst": "error",
         "noParameterAssign": "error"

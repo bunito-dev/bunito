@@ -1,4 +1,5 @@
-import type { Class, Fn } from '@bunito/common';
+import type { Class } from '@bunito/common';
+import { str } from '@bunito/common';
 import { ContainerException } from './container.exception';
 import { ContainerCompiler } from './container-compiler';
 import { ContainerRuntime } from './container-runtime';
@@ -14,7 +15,7 @@ import type {
 } from './types';
 
 export class Container {
-  readonly controllers: Array<ControllerNode> = [];
+  readonly controllers: ControllerNode[] = [];
 
   private readonly moduleId: ModuleId;
 
@@ -57,23 +58,22 @@ export class Container {
   }
 
   resolve<TInstance>(
-    token: symbol | string,
+    token: Token<TInstance>,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<TInstance>;
-  resolve<TToken extends Class | Fn>(
+  resolve<TToken extends Token>(
     token: TToken,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<ResolveToken<TToken>>;
-  resolve(token: unknown, options?: Partial<ResolveProviderOptions>): Promise<unknown>;
   async resolve(
     token: unknown,
     options: Partial<ResolveProviderOptions> = {},
   ): Promise<unknown> {
-    const instance = await this.tryResolve(token, options);
+    const instance = await this.tryResolve(token as Token, options);
 
     if (!instance) {
       throw new ContainerException(
-        `Could not resolve ${token} in ${this.moduleId} module`,
+        str`Could not resolve ${token} in ${this.moduleId} module`,
         {
           moduleId: this.moduleId,
           token,
@@ -85,14 +85,13 @@ export class Container {
   }
 
   tryResolve<TInstance>(
-    token: symbol | string,
+    token: Token<TInstance>,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<TInstance | undefined>;
-  tryResolve<TToken extends Class | Fn>(
+  tryResolve<TToken extends Token>(
     token: TToken,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<ResolveToken<TToken> | undefined>;
-  tryResolve(token: unknown, options?: Partial<ResolveProviderOptions>): Promise<unknown>;
   tryResolve(
     token: unknown,
     options: Partial<ResolveProviderOptions> = {},
@@ -105,9 +104,9 @@ export class Container {
 
   private processModule(
     moduleId: ModuleId,
-    requiredProviders: Array<[ProviderId, ModuleId]> = [],
-    parents: Array<Class> = [],
-  ): Array<[ProviderId, ModuleId]> {
+    requiredProviders: [ProviderId, ModuleId][] = [],
+    parents: Class[] = [],
+  ): [ProviderId, ModuleId][] {
     const { useClass, controllers, providers, imports } =
       this.compiler.getModule(moduleId);
 
@@ -131,7 +130,7 @@ export class Container {
       this.controllers.push({
         moduleId,
         useClass: provider.useClass,
-        parentClasses: [...parents],
+        parentClasses: parents,
       });
     }
 

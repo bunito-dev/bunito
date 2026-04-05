@@ -28,45 +28,45 @@ export class Logger {
     }
   }
 
-  fatal(message: unknown, ...args: Array<unknown>): void {
+  fatal(message: unknown, ...args: unknown[]): void {
     this.log('fatal', message, ...args);
   }
 
-  error(message: unknown, ...args: Array<unknown>): void {
+  error(message: unknown, ...args: unknown[]): void {
     this.log('error', message, ...args);
   }
 
-  warn<TMessage>(message: TMessage, ...args: Array<unknown>): TMessage {
+  warn<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
     this.log('warn', message, ...args);
     return message;
   }
 
-  info<TMessage>(message: TMessage, ...args: Array<unknown>): TMessage {
+  info<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
     this.log('info', message, ...args);
     return message;
   }
 
-  ok<TMessage>(message: TMessage, ...args: Array<unknown>): TMessage {
+  ok<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
     this.log('ok', message, ...args);
     return message;
   }
 
-  trace<TMessage>(message: TMessage, ...args: Array<unknown>): TMessage {
+  trace<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
     this.log('trace', message, ...args);
     return message;
   }
 
-  debug<TMessage>(message: TMessage, ...args: Array<unknown>): TMessage {
+  debug<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
     this.log('debug', message, ...args);
     return message;
   }
 
-  verbose<TMessage>(message: TMessage, ...args: Array<unknown>): TMessage {
+  verbose<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
     this.log('verbose', message, ...args);
     return message;
   }
 
-  protected log(level: LogLevel, message: unknown, ...args: Array<unknown>): void {
+  protected log(level: LogLevel, message: unknown, ...args: unknown[]): void {
     if (LOG_LEVELS[this.config.level] > LOG_LEVELS[level]) {
       return;
     }

@@ -10,41 +10,42 @@ export class HttpException<
       return err;
     }
 
-    return new HttpException('internalServerError', undefined, err);
+    return new HttpException('INTERNAL_SERVER_ERROR', undefined, err);
   }
+
+  override name = 'HttpException';
 
   constructor(
     readonly status: HttpErrorStatus,
-    messageLike?: TData | string,
+    optionsLike?: Partial<{ message: string; data: TData }> | string,
     cause?: unknown,
   ) {
     let message: string | undefined;
     let data: TData | undefined;
 
-    if (isString(messageLike)) {
-      message = messageLike;
-    } else {
+    if (isString(optionsLike)) {
+      message = optionsLike;
+    } else if (optionsLike) {
+      ({ message, data } = optionsLike);
+    }
+
+    if (!message) {
       message = HTTP_STATUS_MESSAGES[status];
-      data = messageLike;
     }
 
     super(message, data, cause);
   }
 
   toResponse(): Response {
-    const responseData: Record<string, unknown> = {};
+    const res: Record<string, unknown> = {};
 
     if (this.data) {
-      responseData.data = this.data;
+      res.data = this.data;
     } else {
-      responseData.error = this.message;
+      res.error = this.message;
     }
 
-    const a = new Response();
-
-    a.headers.set('Content-Type', 'application/json');
-
-    return Response.json(responseData, {
+    return Response.json(res, {
       status: HTTP_ERROR_STATUS_CODES[this.status],
     });
   }
