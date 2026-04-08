@@ -1,5 +1,13 @@
-import { App, Controller, LoggerModule, Module, Provider } from '@bunito/core';
-import { Get, HttpModule, OnResponse, UsesPath } from '@bunito/http';
+import { App, Controller, Logger, LoggerModule, Module, Provider } from '@bunito/core';
+import {
+  Get,
+  HttpModule,
+  OnRequest,
+  OnResponse,
+  RoutingModule,
+  RoutingService,
+  UsesPath,
+} from '@bunito/http';
 
 @Provider()
 class BarService {
@@ -25,6 +33,12 @@ class BarController {
 
 @Controller()
 class FooController {
+  @OnRequest() onRequest() {
+    return {
+      version: '1.0.0',
+    };
+  }
+
   @OnResponse()
   onResponse(data: unknown): Response {
     return Response.json({
@@ -58,7 +72,12 @@ class FooController {
 class FooModule {}
 
 const app = await App.create('example', {
-  imports: [LoggerModule, HttpModule, FooModule],
+  imports: [LoggerModule, HttpModule, FooModule, RoutingModule],
 });
+
+const router = await app.resolve(RoutingService);
+const logger = await app.resolve(Logger);
+
+logger.debug(router.inspectRoutes());
 
 await app.boot();

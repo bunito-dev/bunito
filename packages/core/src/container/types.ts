@@ -26,10 +26,10 @@ export type ScopeId = Id;
 
 export type ScopeKind = 'singleton' | 'module' | 'request' | 'transient';
 
-export type ScopedInstance = {
+export type ScopeInstance = {
   instance: unknown;
-  onResolve: LifecycleHandler | undefined;
-  onDestroy: LifecycleHandler | undefined;
+  onResolve?: LifecycleHandler;
+  onDestroy?: LifecycleHandler;
 };
 
 export type LifecycleEvent = 'onInit' | 'onResolve' | 'onBoot' | 'onDestroy';
@@ -61,13 +61,14 @@ export type ModuleId = Id;
 export type ModuleLike = Class | ModuleOptions;
 
 export type ModuleOptions = {
+  token?: Token;
   imports?: Array<ModuleLike | null>;
   providers?: Array<ProviderLike | null>;
   controllers?: Array<ControllerRef | null>;
   exports?: Array<ProviderLike | null>;
 };
 
-export type ClassModuleOptions = ModuleOptions & {
+export type ClassModuleOptions = Omit<ModuleOptions, 'token'> & {
   scope?: ScopeKind;
   injects?: Array<InjectionLike | null>;
 };

@@ -1,4 +1,5 @@
 import type { Class } from '../helpers';
+import { isString } from '../helpers';
 
 export class Exception extends Error {
   static isInstance<TSelf extends Class<Exception>>(
@@ -9,20 +10,24 @@ export class Exception extends Error {
     return error instanceof this;
   }
 
-  override message = 'Something went wrong!';
+  override message = 'Unknown Exception';
 
   override name = 'UnknownException';
 
-  readonly data?: Record<string, unknown>;
+  readonly data: Record<string, unknown> | undefined;
 
-  constructor(message?: string, data?: Record<string, unknown>, cause?: unknown) {
+  constructor(
+    message?: string | undefined,
+    data?: Record<string, unknown>,
+    cause?: unknown,
+  ) {
     super();
 
-    if (message) {
+    if (isString(message, false)) {
       this.message = message;
     }
 
-    this.cause = cause;
     this.data = data;
+    this.cause = cause;
   }
 }

@@ -3,22 +3,22 @@ import type { RouteSegment } from '../types';
 export function processTokenizedPath(...pathTokens: string[]): RouteSegment[] {
   return pathTokens.map((part): RouteSegment => {
     if (part === '*') {
-      return { kind: 'ANY' };
+      return { kind: 'any' };
     }
 
     if (part === '**') {
-      return { kind: 'WILDCARD' };
+      return { kind: 'wildcard' };
     }
 
     if (part.startsWith(':')) {
       return {
-        kind: 'PARAM',
+        kind: 'param',
         name: part.slice(1),
       };
     }
 
     return {
-      kind: 'STATIC',
+      kind: 'static',
       value: part,
     };
   });

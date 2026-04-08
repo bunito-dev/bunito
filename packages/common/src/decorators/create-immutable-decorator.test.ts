@@ -5,11 +5,13 @@ describe('createImmutableDecorator', () => {
   it('should forward target and context to the handler and return the same target', () => {
     const target = class TestTarget {};
     const metadata = {} as DecoratorMetadataObject;
-    const seen: Array<unknown> = [];
-    const decorator = createImmutableDecorator<ClassDecoratorContext>((context, value) => {
-      seen.push(context.metadata, value);
-      context.metadata.test = 'value';
-    });
+    const seen: unknown[] = [];
+    const decorator = createImmutableDecorator<ClassDecoratorContext>(
+      (context, value) => {
+        seen.push(context.metadata, value);
+        context.metadata.test = 'value';
+      },
+    );
 
     const result = decorator(target, { metadata } as ClassDecoratorContext);
 

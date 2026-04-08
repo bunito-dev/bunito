@@ -3,20 +3,68 @@ import type { HttpMethod } from '../types';
 
 export type RoutePath = `/${string}`;
 
+export type RouteParams = Record<string, string>;
+
+export type RouteHandler = (requestId: RequestId, ...args: unknown[]) => Promise<unknown>;
+
+export type RouteSegment =
+  | { kind: 'static'; value: string }
+  | { kind: 'param'; name: string }
+  | { kind: 'any' }
+  | { kind: 'wildcard' };
+
+export type RouteSegmentKind = RouteSegment['kind'];
+
+export type RouteNode = {
+  segment?: RouteSegment;
+  exact: boolean;
+  entities?: {
+    requests?: RouteRequestEntity[];
+    responses?: RouteResponseEntity[];
+    errors?: RouteErrorEntity[];
+  };
+  children?: Map<string, RouteNode>;
+};
+
+export type RouteMatches = {
+  requests: RouteRequestMatch[];
+  responses: RouteResponseMatch[];
+  errors: RouteErrorMatch[];
+};
+
 export type RouteBaseOptions = {
   method?: HttpMethod;
 };
+
+export type RouteBaseEntity<TOptions> = {
+  name: string;
+  options: Required<TOptions>;
+  handler: RouteHandler;
+};
+
+export type RouteBaseMatch<TEntity> = {
+  params: RouteParams;
+} & TEntity;
+
+// on request
 
 export type RouteRequestOptions = RouteBaseOptions & {
   path?: RoutePath;
 };
 
-export type RouteRequestOptionsLike = Omit<RouteRequestOptions, 'method'> | RoutePath;
+export type RouteRequestOptionsLike<TOmit extends keyof RouteRequestOptions = never> =
+  | Omit<RouteRequestOptions, TOmit>
+  | RoutePath;
 
 export type RouteRequestDefinition = {
   propKey: PropertyKey;
   options: Required<RouteRequestOptions>;
 };
+export type RouteRequestEntity = RouteBaseEntity<RouteRequestOptions>;
+
+export type RouteRequestMatch = RouteBaseMatch<RouteRequestEntity>;
+
+// on response
 
 export type RouteResponseOptions = RouteBaseOptions;
 
@@ -25,39 +73,37 @@ export type RouteResponseDefinition = {
   options: Required<RouteResponseOptions>;
 };
 
-export type RouteSegment =
-  | { kind: 'STATIC'; value: string }
-  | { kind: 'PARAM'; name: string }
-  | { kind: 'ANY' }
-  | { kind: 'WILDCARD' };
+export type RouteResponseEntity = RouteBaseEntity<RouteResponseOptions>;
 
-export type RouteSegmentKind = RouteSegment['kind'];
+export type RouteResponseMatch = RouteBaseMatch<RouteResponseEntity>;
 
-export type RouteHandler = (requestId: RequestId, ...args: unknown[]) => Promise<unknown>;
+// on error
 
-export type RouteNode = {
-  segment?: RouteSegment;
-  exact: boolean;
-  requests?: RouteNodeRequestEntity[];
-  responses?: RouteNodeResponseEntity[];
-  children?: Map<string, RouteNode>;
+export type RouteErrorOptions = RouteBaseOptions;
+
+export type RouteErrorDefinition = {
+  propKey: PropertyKey;
+  options: Required<RouteResponseOptions>;
 };
 
-export type RouteNodeBaseEntity<TOptions> = {
-  options: Required<TOptions>;
-  handler: RouteHandler;
+export type RouteErrorEntity = RouteBaseEntity<RouteErrorOptions>;
+
+export type RouteErrorMatch = RouteErrorEntity;
+
+export type RouteContext = {
+  request: Request;
+  path: RoutePath;
+  method: HttpMethod;
+  params: Record<string, string>;
+  query: Record<string, string | string[]>;
+  body: unknown;
+  data: Record<string, unknown>;
 };
 
-export type RouteNodeRequestEntity = RouteNodeBaseEntity<RouteRequestOptions>;
-
-export type RouteNodeResponseEntity = RouteNodeBaseEntity<RouteResponseOptions>;
-
-export type RouteParams = Record<string, string>;
-
-export type RouteBaseMatch<TEntity> = {
-  params: RouteParams;
-} & TEntity;
-
-export type RouteRequestMatch = RouteBaseMatch<RouteNodeRequestEntity>;
-
-export type RouteResponseMatch = RouteBaseMatch<RouteNodeResponseEntity>;
+export type InspectedRoute = {
+  path: RoutePath;
+  method: HttpMethod;
+  onRequest?: string[];
+  onResponse?: string[];
+  onError?: string[];
+};

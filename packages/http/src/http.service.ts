@@ -1,19 +1,18 @@
 import type { ResolveConfig } from '@bunito/core';
 import { Logger, OnBoot, OnDestroy, Provider } from '@bunito/core';
 import { HttpConfig } from './http.config';
-import { HttpException } from './http.exception';
 import { RoutingService } from './routing';
 
 @Provider({
-  injects: [HttpConfig, RoutingService, Logger],
+  injects: [HttpConfig, Logger, RoutingService],
 })
 export class HttpService {
   private server: Bun.Server<unknown> | undefined;
 
   constructor(
     private readonly config: ResolveConfig<typeof HttpConfig>,
-    private readonly router: RoutingService,
     private readonly logger: Logger,
+    private readonly router: RoutingService,
   ) {
     logger.setContext(HttpService);
   }
@@ -29,29 +28,10 @@ export class HttpService {
 
     this.server = Bun.serve({
       port,
-      fetch: async (request) => {
-        let exception: HttpException;
-
-        try {
-          const response = await this.router.processRequest(request);
-
-          if (response) {
-            return response;
-          }
-          exception = new HttpException('NOT_FOUND');
-        } catch (err) {
-          exception = HttpException.capture(err);
-
-          if (exception.cause) {
-            this.logger.error('Unhandled exception', exception.cause);
-          }
-        }
-
-        return exception.toResponse();
-      },
+      fetch: async (request) => this.router.handleRequest(request),
     });
 
-    this.logger.ok(`Server started: ${this.server.url}`);
+    this.logger.ok(`Server started at ${this.server.url}`);
   }
 
   @OnDestroy()

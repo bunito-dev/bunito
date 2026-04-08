@@ -8,7 +8,7 @@ describe('Container', () => {
   it('should resolve the container instance itself', async () => {
     const container = new Container({});
 
-    expect(await container.resolve(Container)).toBe(container);
+    expect(await container.resolveProvider(Container)).toBe(container);
   });
 
   it('should collect controller trees and eagerly resolve bootable providers from imported modules', async () => {
@@ -86,12 +86,12 @@ describe('Container', () => {
     }
 
     const container = new Container(AppModule);
-    const requestId = Id.unique('request');
+    const requestId = Id.create('request');
 
     await container.setup();
-    await container.resolve(RequestScopedService, { requestId });
+    await container.resolveProvider(RequestScopedService, { requestId });
     await container.boot();
-    expect((await container.resolve(AppModule)).bootRuns).toBe(1);
+    expect((await container.resolveProvider(AppModule)).bootRuns).toBe(1);
 
     expect(container.setup()).rejects.toThrow('cannot be called twice');
     expect(container.boot()).rejects.toThrow('cannot be called twice');
@@ -104,11 +104,11 @@ describe('Container', () => {
   it('should return undefined from tryResolveProvider when the provider does not exist', async () => {
     const container = new Container({});
 
-    expect(await container.tryResolve('missing')).toBeUndefined();
+    expect(await container.tryResolveProvider('missing')).toBeUndefined();
   });
 
   it('should tolerate missing or non-class controller matches while traversing modules', async () => {
-    const moduleId = Id.unique('module');
+    const moduleId = Id.create('module');
     const compiler = {
       compileModule: () => moduleId,
       getModule: () => ({

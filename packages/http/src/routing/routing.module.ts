@@ -1,9 +1,9 @@
-import type { ModuleOptions } from '@bunito/core';
-import { LoggerModule } from '@bunito/core';
+import { ConfigModule, defineModule, LoggerModule } from '@bunito/core';
+import { RoutingConfig } from './routing.config';
 import { RoutingService } from './routing.service';
 
-export const RoutingModule: ModuleOptions = {
-  imports: [LoggerModule],
-  providers: [RoutingService],
+export const RoutingModule = defineModule('RoutingModule', {
+  imports: [ConfigModule, LoggerModule],
+  providers: [RoutingConfig, RoutingService],
   exports: [RoutingService],
-};
+});

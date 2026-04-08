@@ -1,8 +1,8 @@
-import { isObject, str } from '@bunito/common';
-import { Container } from './container';
+import { isObject, NestedMap, str } from '@bunito/common';
 import type { ContainerCompiler } from './container-compiler';
 import { ContainerRuntimeException } from './container-runtime.exception';
 import { Id } from './id';
+import { MODULE_ID, REQUEST_ID } from './predefined';
 import type {
   CallableInstance,
   CompiledInjection,
@@ -11,46 +11,39 @@ import type {
   LifecycleProps,
   ProviderId,
   ResolveProviderOptions,
-  ScopedInstance,
   ScopeId,
+  ScopeInstance,
 } from './types';
 
 export class ContainerRuntime {
-  private readonly bootstrap: Array<LifecycleHandler> = [];
+  static SCOPE_ID = new Id('SCOPE_ID');
 
-  private readonly globalInstances = new Map<ProviderId, unknown>();
+  private readonly scopeInstances = new NestedMap<ScopeId, ProviderId, ScopeInstance>();
 
-  private readonly scopedInstances = new Map<ScopeId, Map<ProviderId, ScopedInstance>>();
+  private readonly bootstrap: LifecycleHandler[] = [];
 
-  constructor(private readonly compiler: ContainerCompiler) {
-    this.globalInstances.set(Id.for(Container), this);
-  }
+  constructor(private readonly compiler: ContainerCompiler) {}
 
   setInstance(providerId: ProviderId, instance: unknown): void {
-    this.globalInstances.set(providerId, instance);
+    this.scopeInstances.set(ContainerRuntime.SCOPE_ID, providerId, {
+      instance,
+    });
   }
 
   async destroyScope(scopeId?: ScopeId): Promise<void> {
     if (!scopeId) {
-      for (const scopeId of this.scopedInstances.keys()) {
+      for (const scopeId of this.scopeInstances.keys()) {
         await this.destroyScope(scopeId);
       }
+
       return;
     }
 
-    const instances = this.scopedInstances.get(scopeId);
-
-    if (!instances) {
-      return;
+    for (const { onDestroy } of this.scopeInstances.values(scopeId)) {
+      await onDestroy?.();
     }
 
-    for (const { onDestroy } of instances.values()) {
-      if (onDestroy) {
-        await onDestroy();
-      }
-    }
-
-    this.scopedInstances.delete(scopeId);
+    this.scopeInstances.delete(scopeId);
   }
 
   async triggerBootstrap(): Promise<void> {
@@ -61,10 +54,11 @@ export class ContainerRuntime {
     providerId: ProviderId,
     options: ResolveProviderOptions,
   ): Promise<TInstance | undefined> {
-    let instance = this.globalInstances.get(providerId);
+    const scopeInstance = this.scopeInstances.get(ContainerRuntime.SCOPE_ID, providerId);
 
-    if (instance !== undefined) {
-      return instance as TInstance;
+    if (scopeInstance) {
+      await scopeInstance.onResolve?.();
+      return scopeInstance.instance as TInstance;
     }
 
     const { moduleId, requestId } = options;
@@ -94,43 +88,41 @@ export class ContainerRuntime {
     }
 
     if (scopeId) {
-      const scopedInstance = this.scopedInstances.get(scopeId)?.get(providerId);
+      const scopeInstance = this.scopeInstances.get(scopeId, providerId);
 
-      if (scopedInstance) {
-        const { onResolve, instance } = scopedInstance;
-
-        if (onResolve) {
-          await onResolve();
-        }
-
-        return instance as TInstance;
+      if (scopeInstance) {
+        await scopeInstance.onResolve?.();
+        return scopeInstance.instance as TInstance;
       }
     }
 
-    let lifecycleHandlers: LifecycleHandlers;
+    let instance: unknown;
+    let handlers: LifecycleHandlers;
 
     switch (provider.kind) {
       case 'class': {
         const { useClass, injects, lifecycle } = provider;
+
         const params = await this.resolveProviderParams(providerId, injects, {
           moduleId: providerModuleId,
           requestId,
         });
 
         instance = new useClass(...params);
-        lifecycleHandlers = this.processLifecycleHandlers(instance, lifecycle);
+        handlers = this.processLifecycleHandlers(instance, lifecycle);
         break;
       }
 
       case 'factory': {
         const { useFactory, injects } = provider;
+
         const params = await this.resolveProviderParams(providerId, injects, {
           moduleId: providerModuleId,
           requestId,
         });
 
         instance = useFactory(...params);
-        lifecycleHandlers = {};
+        handlers = {};
         break;
       }
 
@@ -138,23 +130,19 @@ export class ContainerRuntime {
         const { useValue } = provider;
 
         instance = useValue;
-        lifecycleHandlers = {};
+        handlers = {};
         break;
       }
     }
 
-    const { onInit, onResolve, onDestroy } = lifecycleHandlers;
+    const { onInit, onResolve, onDestroy } = handlers;
 
     if (scopeId && instance !== undefined) {
-      const scopedInstance: ScopedInstance = {
+      this.scopeInstances.set(scopeId, providerId, {
         instance,
         onResolve,
         onDestroy,
-      };
-
-      if (!this.scopedInstances.get(scopeId)?.set(providerId, scopedInstance)) {
-        this.scopedInstances.set(scopeId, new Map([[providerId, scopedInstance]]));
-      }
+      });
     }
 
     if (onInit) {
@@ -168,18 +156,33 @@ export class ContainerRuntime {
 
   private async resolveProviderParams(
     providerId: ProviderId,
-    injects: Array<CompiledInjection>,
+    injects: CompiledInjection[],
     options: ResolveProviderOptions,
-  ): Promise<Array<unknown>> {
-    const params: Array<unknown> = [];
+  ): Promise<unknown[]> {
+    const params: unknown[] = [];
+
+    const { requestId, moduleId } = options;
 
     for (const [index, { providerId: injectionId, optional }] of injects.entries()) {
-      let param = await this.resolveProvider(injectionId, options);
+      let param: unknown;
+
+      switch (injectionId) {
+        case REQUEST_ID:
+          param = requestId;
+          break;
+
+        case MODULE_ID:
+          param = moduleId;
+          break;
+
+        default:
+          param = await this.resolveProvider(injectionId, options);
+      }
 
       if (param === undefined) {
         if (!optional) {
           throw new ContainerRuntimeException(
-            str`Injection ${injectionId} for ${providerId} provider not found at #${index} in ${options.moduleId}`,
+            str`Injection ${injectionId} for ${providerId} provider not found at #${index} in ${moduleId}`,
             {
               injectionId,
               providerId,

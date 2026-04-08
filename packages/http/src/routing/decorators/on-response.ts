@@ -13,8 +13,8 @@ export function OnResponse(options: RouteResponseOptions = {}): ClassMethodDecor
       },
     };
 
-    metadata[DECORATOR_METADATA_KEYS.RESPONSE] ??= [];
-    (metadata[DECORATOR_METADATA_KEYS.RESPONSE] as RouteResponseDefinition[]).push(
+    metadata[DECORATOR_METADATA_KEYS.ON_RESPONSE] ??= [];
+    (metadata[DECORATOR_METADATA_KEYS.ON_RESPONSE] as RouteResponseDefinition[]).push(
       definition,
     );
   });

@@ -1,6 +1,6 @@
-import { isClass, isNull, resolveObjectName, resolveSymbolKey } from '../helpers';
+import { isClass, resolveObjectName, resolveSymbolKey } from '../helpers';
 
-export function str(strings: TemplateStringsArray, ...args: Array<unknown>): string {
+export function str(strings: TemplateStringsArray, ...args: unknown[]): string {
   return strings.raw
     .map((prefix, index) => {
       const arg = args.at(index);
@@ -17,8 +17,10 @@ export function str(strings: TemplateStringsArray, ...args: Array<unknown>): str
           break;
 
         case 'object':
-          if (isNull(arg)) {
+          if (arg === null) {
             value = 'null';
+          } else if (Array.isArray(arg)) {
+            value = '[array]';
           } else {
             value = arg.toString();
 

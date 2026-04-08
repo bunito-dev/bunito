@@ -100,7 +100,7 @@ describe('ContainerCompiler', () => {
 
     expect(compiler.locateProvider(Id.for(ExportedProvider), rootModuleId)).toEqual({
       moduleId: Id.for(importedModule),
-      provider: {
+      PROVIDER: {
         kind: 'class',
         scope: 'singleton',
         useClass: ExportedProvider,
@@ -114,7 +114,7 @@ describe('ContainerCompiler', () => {
   it('should throw when reading a missing compiled module', () => {
     const compiler = new ContainerCompiler();
 
-    expect(() => compiler.getModule(Id.unique('missing'))).toThrow('not found');
+    expect(() => compiler.getModule(Id.create('missing'))).toThrow('not found');
   });
 
   it('should throw when a class module is missing metadata', () => {
@@ -184,8 +184,6 @@ describe('ContainerCompiler', () => {
 
     const compiler = new ContainerCompiler();
 
-    expect(() => compiler.compileModule(moduleA)).toThrow(
-      'Circular dependency detected',
-    );
+    expect(() => compiler.compileModule(moduleA)).toThrow('Circular dependency detected');
   });
 });

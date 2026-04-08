@@ -1,6 +1,6 @@
 import { Exception, isString } from '@bunito/common';
 import { HTTP_ERROR_STATUS_CODES, HTTP_STATUS_MESSAGES } from './constants';
-import type { HttpErrorStatus } from './types';
+import type { HttpContentType, HttpErrorStatus } from './types';
 
 export class HttpException<
   TData extends Record<string, unknown> = Record<string, unknown>,
@@ -36,7 +36,31 @@ export class HttpException<
     super(message, data, cause);
   }
 
-  toResponse(): Response {
+  get statusCode(): number {
+    return HTTP_ERROR_STATUS_CODES[this.status];
+  }
+
+  toResponse(contentType?: HttpContentType): Response {
+    switch (contentType) {
+      case 'application/json':
+        return new Response(JSON.stringify(this.toJSON()), {
+          status: this.statusCode,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+      default:
+        return new Response(this.message, {
+          status: this.statusCode,
+          headers: {
+            'Content-Type': 'text/plain',
+          },
+        });
+    }
+  }
+
+  toJSON(): Record<string, unknown> {
     const res: Record<string, unknown> = {};
 
     if (this.data) {
@@ -45,8 +69,12 @@ export class HttpException<
       res.error = this.message;
     }
 
-    return Response.json(res, {
-      status: HTTP_ERROR_STATUS_CODES[this.status],
-    });
+    return this.data
+      ? {
+          data: res,
+        }
+      : {
+          error: this.message,
+        };
   }
 }

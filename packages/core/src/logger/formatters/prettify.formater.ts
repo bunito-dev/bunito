@@ -1,82 +1,91 @@
 import type { InspectColor } from 'node:util';
 import { inspect, styleText } from 'node:util';
-import type { LogFormatter, LogLevel } from '../types';
+import { isString } from '@bunito/common';
+import type { ConfigService } from '../../config';
+import { LogFormatter } from '../decorators';
+import type { FormatLogOptions } from '../types';
+import { PRETTIFY_LEVEL_THEMES } from './constants';
+import type { PrettifyOptions } from './types';
 
-const LOG_LEVEL_THEMES: Record<
-  LogLevel,
-  {
-    icon: string;
-    colorPrimary: InspectColor;
-    colorSecondary: InspectColor;
+@LogFormatter('prettify')
+export class PrettifyFormater implements LogFormatter {
+  constructor(private readonly options: Partial<PrettifyOptions> = {}) {}
+
+  configure({ getEnvAs }: ConfigService): void {
+    this.options.useColors = getEnvAs('USE_LOG_COLORS', 'boolean') ?? true;
+    this.options.inspectDepth = getEnvAs('LOG_INSPECT_DEPTH', 'toInteger', [1, 20]) ?? 10;
   }
-> = {
-  fatal: { icon: '☠', colorPrimary: 'redBright', colorSecondary: 'redBright' },
-  error: { icon: '✘', colorPrimary: 'red', colorSecondary: 'red' },
-  warn: { icon: '➥', colorPrimary: 'yellow', colorSecondary: 'yellowBright' },
-  info: { icon: '➥', colorPrimary: 'blue', colorSecondary: 'blueBright' },
-  ok: { icon: '✔', colorPrimary: 'green', colorSecondary: 'greenBright' },
-  trace: { icon: '➥', colorPrimary: 'magenta', colorSecondary: 'magentaBright' },
-  debug: { icon: '➥', colorPrimary: 'cyan', colorSecondary: 'cyanBright' },
-  verbose: { icon: '➥', colorPrimary: 'gray', colorSecondary: 'gray' },
-};
 
-function renderLevel(level: LogLevel): string {
-  return `${level.toUpperCase()}`.padStart(7);
-}
+  formatLog(options: FormatLogOptions): string {
+    const { timestamp, context, level, message, data, error, traceId, duration } =
+      options;
 
-export const prettifyFormatter: LogFormatter = (
-  stdout,
-  context,
-  level,
-  message,
-  args,
-): void => {
-  const buffer: Array<string> = [];
+    const buffer: string[] = [];
 
-  const write = (text: string, ...colors: Array<InspectColor>): void => {
-    buffer.push(colors.length ? styleText(colors, text) : text);
-  };
+    const write = (text: string, ...colors: InspectColor[]): void => {
+      buffer.push(
+        this.options.useColors && colors.length ? styleText(colors, text) : text,
+      );
+    };
 
-  const theme = LOG_LEVEL_THEMES[level];
+    const levelTheme = PRETTIFY_LEVEL_THEMES[level.kind];
 
-  write(theme.icon, theme.colorSecondary);
-  write(' ');
+    write(levelTheme.icon, levelTheme.colorSecondary);
 
-  write(new Date().toISOString(), 'gray');
-  write(' ');
-  write(renderLevel(level), theme.colorPrimary);
-  write(' ');
-
-  if (context) {
-    write(`[${context}]`, theme.colorSecondary, 'bold');
     write(' ');
-  }
+    write(timestamp, 'gray');
 
-  const data: Array<unknown> = [...args];
+    write(' ');
+    write(`${level.kind}`.padStart(7), levelTheme.colorPrimary);
 
-  if (typeof message === 'string') {
-    write(message, theme.colorSecondary);
-  } else if (Error.isError(message)) {
-    write(message.message, theme.colorSecondary);
-  } else if (message !== undefined) {
-    data.unshift(message);
-  }
-
-  write('\n');
-
-  if (Error.isError(message)) {
-    write(inspect(message));
-    write('\n');
-  }
-
-  if (data.length > 0) {
-    for (const item of data) {
-      write(`∙`, theme.colorSecondary);
+    if (context) {
       write(' ');
-      write(inspect(item, true, 10, true));
+      write(`[${context}]`, levelTheme.colorSecondary, 'bold');
+    }
+
+    if (message) {
+      write(' ');
+      write(message, levelTheme.colorMessage);
+    }
+
+    if (traceId) {
+      write(' ');
+      write(`#${traceId}`, 'gray', 'bold');
+    }
+
+    if (duration) {
+      write(' ');
+      write(`+${duration}ms`, 'gray', 'bold');
+    }
+
+    write('\n');
+
+    if (error) {
+      write(inspect(error, false, this.options.inspectDepth, this.options.useColors));
       write('\n');
     }
-  }
 
-  stdout.write(buffer.join(''));
-};
+    if (data?.length) {
+      for (const item of data) {
+        let lines: string[];
+
+        if (isString(item, false)) {
+          lines = [item];
+        } else {
+          lines = inspect(item, false, this.options.inspectDepth, this.options.useColors)
+            .split('\n')
+            .filter(Boolean);
+        }
+
+        for (const line of lines) {
+          write(`∙`, levelTheme.colorSecondary);
+          write(' ');
+          write(line);
+          write('\n');
+        }
+      }
+    }
+
+    return buffer.join('');
+  }
+}

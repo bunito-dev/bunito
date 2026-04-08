@@ -1,7 +1,7 @@
-import type { ModuleOptions } from '../container';
+import { defineModule } from '../container';
 import { ConfigService } from './config-service';
 
-export const ConfigModule: ModuleOptions = {
+export const ConfigModule = defineModule('ConfigModule', {
   providers: [ConfigService],
   exports: [ConfigService],
-};
+});

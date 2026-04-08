@@ -57,26 +57,30 @@ export class Container {
     this.runtime.setInstance(Id.for(token), instance);
   }
 
-  resolve<TInstance>(
+  resolveProvider<TInstance>(
     token: Token<TInstance>,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<TInstance>;
-  resolve<TToken extends Token>(
+  resolveProvider<TToken extends Token>(
     token: TToken,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<ResolveToken<TToken>>;
-  async resolve(
+  resolveProvider(
+    token: unknown,
+    options?: Partial<ResolveProviderOptions>,
+  ): Promise<unknown>;
+  async resolveProvider(
     token: unknown,
     options: Partial<ResolveProviderOptions> = {},
   ): Promise<unknown> {
-    const instance = await this.tryResolve(token as Token, options);
+    const instance = await this.tryResolveProvider(token as Token, options);
 
     if (!instance) {
       throw new ContainerException(
-        str`Could not resolve ${token} in ${this.moduleId} module`,
+        str`Could not resolve ${token} in ${options.moduleId} module`,
         {
-          moduleId: this.moduleId,
           token,
+          ...options,
         },
       );
     }
@@ -84,15 +88,19 @@ export class Container {
     return instance;
   }
 
-  tryResolve<TInstance>(
+  tryResolveProvider<TInstance>(
     token: Token<TInstance>,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<TInstance | undefined>;
-  tryResolve<TToken extends Token>(
+  tryResolveProvider<TToken extends Token>(
     token: TToken,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<ResolveToken<TToken> | undefined>;
-  tryResolve(
+  tryResolveProvider(
+    token: unknown,
+    options?: Partial<ResolveProviderOptions>,
+  ): Promise<unknown>;
+  tryResolveProvider(
     token: unknown,
     options: Partial<ResolveProviderOptions> = {},
   ): Promise<unknown> {
@@ -104,7 +112,7 @@ export class Container {
 
   private processModule(
     moduleId: ModuleId,
-    requiredProviders: [ProviderId, ModuleId][] = [],
+    bootProviders: [ProviderId, ModuleId][] = [],
     parents: Class[] = [],
   ): [ProviderId, ModuleId][] {
     const { useClass, controllers, providers, imports } =
@@ -135,15 +143,15 @@ export class Container {
     }
 
     for (const importedModuleId of imports) {
-      this.processModule(importedModuleId, requiredProviders, [...parents]);
+      this.processModule(importedModuleId, bootProviders, [...parents]);
     }
 
     for (const [providerId, provider] of providers) {
       if (provider.kind === 'class' && provider.lifecycle?.has('onBoot')) {
-        requiredProviders.push([providerId, moduleId]);
+        bootProviders.push([providerId, moduleId]);
       }
     }
 
-    return requiredProviders;
+    return bootProviders;
   }
 }

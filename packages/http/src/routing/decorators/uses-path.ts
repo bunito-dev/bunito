@@ -5,6 +5,6 @@ import type { RoutePath } from '../types';
 
 export function UsesPath(path: RoutePath): ClassDecorator {
   return createImmutableDecorator(({ metadata }) => {
-    metadata[DECORATOR_METADATA_KEYS.PATH] = path;
+    metadata[DECORATOR_METADATA_KEYS.USES_PATH] = path;
   });
 }

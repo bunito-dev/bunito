@@ -13,7 +13,7 @@ describe('LoggerConfig', () => {
     expect(LoggerConfig.scope).toBe('module');
     expect(LoggerConfig.injects).toEqual([expect.any(Function)]);
     expect(await LoggerConfig.useFactory(service)).toEqual({
-      level: 'debug',
+      level: 'DEBUG',
       format: 'prettify',
     });
   });
@@ -33,7 +33,7 @@ describe('LoggerConfig', () => {
     };
 
     expect(await LoggerConfig.useFactory(service)).toEqual({
-      level: 'error',
+      level: 'ERROR',
       format: 'json',
     });
   });

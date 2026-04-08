@@ -1,82 +1,117 @@
-import type { Class } from '@bunito/common';
-import { isClass } from '@bunito/common';
-import type { ResolveConfig } from '../config';
-import { Provider } from '../container';
-import { LOG_FORMATTERS, LOG_LEVELS } from './constants';
-import { LoggerConfig } from './logger.config';
-import type { LogLevel } from './types';
+import type { Class, Fn } from '@bunito/common';
+import { isFn, isString, resolveObjectName } from '@bunito/common';
+import type { RequestId } from '../container';
+import { Provider, REQUEST_ID } from '../container';
+import { LoggerService } from './logger.service';
+import type { LogArgs, WriteLogOptions } from './types';
 
 @Provider({
-  scope: 'transient',
-  injects: [LoggerConfig],
+  scope: 'request',
+  injects: [
+    LoggerService,
+    {
+      optional: true,
+      token: REQUEST_ID,
+    },
+  ],
 })
 export class Logger {
-  private readonly stdout: NodeJS.WriteStream;
+  private context: string | undefined;
+  private readonly traceId: number | undefined;
 
   constructor(
-    private readonly config: ResolveConfig<typeof LoggerConfig>,
-    private context?: string,
+    private readonly loggerService: LoggerService,
+    requestId: RequestId | null = null,
   ) {
-    this.stdout = process.stdout;
+    this.traceId = requestId?.index;
   }
 
-  setContext(contextLike: string | Class): void {
-    if (isClass(contextLike)) {
-      this.context = contextLike.name;
-    } else if (typeof contextLike === 'string') {
+  setContext(contextLike: string | Class | Fn): void {
+    if (isFn(contextLike)) {
+      this.context = resolveObjectName(contextLike);
+      return;
+    }
+
+    if (isString(contextLike, true)) {
       this.context = contextLike;
     }
   }
 
-  fatal(message: unknown, ...args: unknown[]): void {
-    this.log('fatal', message, ...args);
+  fatal(...args: LogArgs): void {
+    this.writeLog({
+      level: 'ERROR',
+      args,
+    });
   }
 
-  error(message: unknown, ...args: unknown[]): void {
-    this.log('error', message, ...args);
+  error(...args: LogArgs): void {
+    this.writeLog({
+      level: 'FATAL',
+      args,
+    });
   }
 
-  warn<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
-    this.log('warn', message, ...args);
-    return message;
+  warn(...args: LogArgs): void {
+    this.writeLog({
+      level: 'WARN',
+      args,
+    });
   }
 
-  info<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
-    this.log('info', message, ...args);
-    return message;
+  info(...args: LogArgs): void {
+    this.writeLog({
+      level: 'INFO',
+      args,
+    });
   }
 
-  ok<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
-    this.log('ok', message, ...args);
-    return message;
+  ok(...args: LogArgs): void {
+    this.writeLog({
+      level: 'OK',
+      args,
+    });
   }
 
-  trace<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
-    this.log('trace', message, ...args);
-    return message;
+  trace(...args: LogArgs): void {
+    this.writeLog({
+      level: 'TRACE',
+      args,
+    });
   }
 
-  debug<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
-    this.log('debug', message, ...args);
-    return message;
+  track(): (...args: LogArgs) => void {
+    const now = Date.now();
+
+    return (...args: LogArgs) => {
+      this.writeLog({
+        level: 'TRACK',
+        args,
+        duration: Date.now() - now,
+      });
+    };
   }
 
-  verbose<TMessage>(message: TMessage, ...args: unknown[]): TMessage {
-    this.log('verbose', message, ...args);
-    return message;
+  debug<TArg0>(...args: LogArgs<TArg0>): TArg0 {
+    this.writeLog({
+      level: 'DEBUG',
+      args,
+    });
+
+    return args[0];
   }
 
-  protected log(level: LogLevel, message: unknown, ...args: unknown[]): void {
-    if (LOG_LEVELS[this.config.level] > LOG_LEVELS[level]) {
-      return;
-    }
+  verbose(...args: [unknown, ...unknown[]]): void {
+    this.writeLog({
+      level: 'VERBOSE',
+      args,
+    });
+  }
 
-    const formater = LOG_FORMATTERS[this.config.format];
-
-    if (!formater) {
-      return;
-    }
-
-    formater(this.stdout, this.context, level, message, args);
+  protected writeLog(options: WriteLogOptions): void {
+    this.loggerService.writeLog({
+      context: this.context,
+      traceId: this.traceId,
+      ...options,
+    });
   }
 }

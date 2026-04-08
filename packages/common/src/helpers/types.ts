@@ -1,11 +1,11 @@
 // biome-ignore lint/suspicious/noExplicitAny: Internal usage only
 export type Any = any;
 
-export type Class<TInstance = unknown, TArgs extends Array<Any> = Array<Any>> = new (
+export type Class<TInstance = unknown, TArgs extends Any[] = Any[]> = new (
   ...args: TArgs
 ) => TInstance;
 
-export type Fn<TResult = unknown, TArgs extends Array<Any> = Array<Any>> = (
+export type Fn<TResult = unknown, TArgs extends Any[] = Any[]> = (
   ...args: TArgs
 ) => TResult;
 

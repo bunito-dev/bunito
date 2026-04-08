@@ -3,8 +3,8 @@ import { Id } from './id';
 
 describe('Id', () => {
   it('should create unique ids with an incrementing suffix', () => {
-    const first = Id.unique('token');
-    const second = Id.unique('token');
+    const first = Id.create('token');
+    const second = Id.create('token');
 
     expect(first.name).toBe('token');
     expect(first.toString()).not.toBe(second.toString());

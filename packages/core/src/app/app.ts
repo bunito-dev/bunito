@@ -6,7 +6,7 @@ import { Logger } from '../logger';
 export class App {
   static async create(name: string, moduleLike: ModuleLike): Promise<App> {
     const container = new Container(moduleLike);
-    const logger = await container.tryResolve(Logger);
+    const logger = await container.tryResolveProvider(Logger);
     const app = new App(name, logger, container);
 
     logger?.trace('Stetting up...');
@@ -28,7 +28,7 @@ export class App {
   resolve<TToken extends Class | Fn>(token: TToken): Promise<ResolveToken<TToken>>;
   resolve<TInstance = unknown>(token: symbol | string): Promise<TInstance>;
   resolve(token: unknown): Promise<unknown> {
-    return this.container.resolve(token);
+    return this.container.resolveProvider(token);
   }
 
   tryResolve<TToken extends Class | Fn>(
@@ -36,7 +36,7 @@ export class App {
   ): Promise<ResolveToken<TToken> | undefined>;
   tryResolve<TInstance = unknown>(token: symbol | string): Promise<TInstance | undefined>;
   tryResolve(token: unknown): Promise<unknown> {
-    return this.container.tryResolve(token);
+    return this.container.tryResolveProvider(token);
   }
 
   async boot(): Promise<boolean> {

@@ -1,17 +1,16 @@
 import type { RouteSegmentKind } from './types';
 
-export const DECORATOR_METADATA_PREFIX = 'http#routing';
-
 export const DECORATOR_METADATA_KEYS = {
-  PATH: Symbol(`${DECORATOR_METADATA_PREFIX}:PATH`),
-  REQUEST: Symbol(`${DECORATOR_METADATA_PREFIX}:REQUEST`),
-  RESPONSE: Symbol(`${DECORATOR_METADATA_PREFIX}:RESPONSE`),
+  USES_PATH: Symbol('USES_PATH'),
+  ON_REQUEST: Symbol('ON_REQUEST'),
+  ON_RESPONSE: Symbol('ON_RESPONSE'),
+  ON_ERROR: Symbol('ON_ERROR'),
 } as const satisfies Record<string, symbol>;
 
 export const ROUTE_DYNAMIC_SEGMENT_ALIASES = {
-  PARAM: ':',
-  ANY: '*',
-  WILDCARD: '**',
-} as const satisfies Record<Exclude<RouteSegmentKind, 'STATIC'>, string>;
+  param: ':',
+  any: '*',
+  wildcard: '**',
+} as const satisfies Record<Exclude<RouteSegmentKind, 'static'>, string>;
 
 export const ROUTE_DYNAMIC_SEGMENT_KEYS = Object.keys(ROUTE_DYNAMIC_SEGMENT_ALIASES);

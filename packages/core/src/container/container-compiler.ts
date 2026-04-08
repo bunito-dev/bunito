@@ -1,4 +1,4 @@
-import type { Class, Fn } from '@bunito/common';
+import type { Class } from '@bunito/common';
 import {
   getDecoratorMetadata,
   isClass,
@@ -26,8 +26,8 @@ import type {
   ProviderLike,
   ProviderMatch,
   ProviderOptions,
-  Token,
 } from './types';
+import { resolveModuleId, resolveProviderId } from './utils';
 
 export class ContainerCompiler {
   private readonly modules = new Map<ModuleId, CompiledModule>();
@@ -86,11 +86,11 @@ export class ContainerCompiler {
     moduleLike: ModuleLike,
     parentModuleIds: Set<ModuleId> = new Set(),
   ): ModuleId {
-    const moduleId = Id.for(moduleLike);
+    const moduleId = resolveModuleId(moduleLike);
 
     if (parentModuleIds.has(moduleId)) {
       throw new ContainerCompilerException(
-        str`Circular dependency detected between in ${moduleId} module`,
+        str`Circular dependency detected between ${[...parentModuleIds].map((parentModuleId) => str`${parentModuleId}`).join(' → ')} in ${moduleId} module`,
         {
           moduleId,
           parentModuleIds,
@@ -138,13 +138,13 @@ export class ContainerCompiler {
     for (const providerLike of definition.providers) {
       const compiledProvider = this.compileProvider(providerLike);
 
-      compiled.providers.set(this.resolveProviderId(providerLike), compiledProvider);
+      compiled.providers.set(resolveProviderId(providerLike), compiledProvider);
     }
 
     // exports
 
     for (const providerToken of definition.exports) {
-      const providerId = this.resolveProviderId(providerToken);
+      const providerId = resolveProviderId(providerToken);
 
       if (compiled.providers.has(providerId)) {
         compiled.exports.set(providerId, moduleId);
@@ -196,7 +196,7 @@ export class ContainerCompiler {
     if (isClass(moduleLike)) {
       options = getDecoratorMetadata<ModuleOptions>(
         moduleLike,
-        DECORATOR_METADATA_KEYS.module,
+        DECORATOR_METADATA_KEYS.MODULE,
       );
 
       if (!options) {
@@ -222,22 +222,8 @@ export class ContainerCompiler {
     };
   }
 
-  private resolveProviderId(token: Token): Id {
-    if (isObject(token)) {
-      if ('token' in token) {
-        return Id.for(token.token as symbol);
-      } else if ('useClass' in token) {
-        return Id.for(token.useClass as Class);
-      } else if ('useFactory' in token) {
-        return Id.for(token.useFactory as Fn);
-      }
-    }
-
-    return Id.for(token);
-  }
-
   private verifyController(controllerRef: ControllerRef): void {
-    if (!getDecoratorMetadata<true>(controllerRef, DECORATOR_METADATA_KEYS.controller)) {
+    if (!getDecoratorMetadata<true>(controllerRef, DECORATOR_METADATA_KEYS.CONTROLLER)) {
       throw new ContainerCompilerException(
         str`Missing controller metadata for ${controllerRef}`,
         {
@@ -253,7 +239,7 @@ export class ContainerCompiler {
     if (isClass(providerLike)) {
       const metadata = getDecoratorMetadata<ClassProviderMetadata>(
         providerLike,
-        DECORATOR_METADATA_KEYS.provider,
+        DECORATOR_METADATA_KEYS.PROVIDER,
       );
 
       if (!metadata) {
@@ -280,7 +266,7 @@ export class ContainerCompiler {
     if ('useClass' in options) {
       return {
         kind: 'class',
-        scope: options.scope ?? DEFAULT_SCOPES.provider,
+        scope: options.scope ?? DEFAULT_SCOPES.PROVIDER,
         useClass: options.useClass,
         injects: this.compileInjections(options.injects),
         lifecycle: this.resolveLifecycleProps(options.useClass),
@@ -290,7 +276,7 @@ export class ContainerCompiler {
     if ('useFactory' in options) {
       return {
         kind: 'factory',
-        scope: options.scope ?? DEFAULT_SCOPES.provider,
+        scope: options.scope ?? DEFAULT_SCOPES.PROVIDER,
         useFactory: options.useFactory,
         injects: this.compileInjections(options.injects),
       };
@@ -304,7 +290,7 @@ export class ContainerCompiler {
 
   private compileInjections(
     injections: Array<InjectionLike | null> | undefined,
-  ): Array<CompiledInjection> {
+  ): CompiledInjection[] {
     return (
       injections?.filter(notEmpty).map((injectionLike): CompiledInjection => {
         if (
@@ -321,7 +307,7 @@ export class ContainerCompiler {
         }
 
         return {
-          providerId: this.resolveProviderId(injectionLike),
+          providerId: resolveProviderId(injectionLike),
           optional: false,
         };
       }) ?? []
@@ -330,7 +316,7 @@ export class ContainerCompiler {
 
   private resolveLifecycleProps(target: Class): LifecycleProps {
     return new Map(
-      getDecoratorMetadata<LifecycleProps>(target, DECORATOR_METADATA_KEYS.lifecycle),
+      getDecoratorMetadata<LifecycleProps>(target, DECORATOR_METADATA_KEYS.ON_LIFECYCLE),
     );
   }
 }

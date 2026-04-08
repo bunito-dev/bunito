@@ -3,13 +3,13 @@ import type { FactoryProviderOptions } from '../../container';
 import { ConfigService } from '../config-service';
 
 export function defineConfig<TConfig>(
-  name: string,
+  name: `${string}Config`,
   factory: (configService: ConfigService) => Promise<TConfig> | TConfig,
 ): Mandatory<FactoryProviderOptions<Promise<TConfig> | TConfig>, 'token'> {
   return {
-    token: Symbol(`config(${name})`),
+    token: Symbol(name),
     useFactory: factory,
-    scope: 'module',
+    scope: 'singleton',
     injects: [ConfigService],
   };
 }

@@ -1,4 +1,8 @@
-import type { HTTP_ERROR_STATUS_CODES, HTTP_SUCCESS_STATUS_CODES } from './constants';
+import type {
+  HTTP_CONTENT_TYPES,
+  HTTP_ERROR_STATUS_CODES,
+  HTTP_SUCCESS_STATUS_CODES,
+} from './constants';
 
 export type HttpMethod =
   | 'GET'
@@ -16,10 +20,4 @@ export type HttpSuccessStatus = keyof typeof HTTP_SUCCESS_STATUS_CODES;
 
 export type HttpStatus = HttpErrorStatus | HttpSuccessStatus;
 
-export type HttpContext = {
-  request: Request;
-  params: Record<string, string>;
-  query: Record<string, string | string[]>;
-  body: unknown;
-  data: Record<string, unknown>;
-};
+export type HttpContentType = (typeof HTTP_CONTENT_TYPES)[number] | (string & {});

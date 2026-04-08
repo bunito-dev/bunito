@@ -1,10 +1,11 @@
 import { ConfigModule } from '../config';
-import type { ModuleOptions } from '../container';
+import { defineModule } from '../container';
 import { Logger } from './logger';
 import { LoggerConfig } from './logger.config';
+import { LoggerService } from './logger.service';
 
-export const LoggerModule: ModuleOptions = {
+export const LoggerModule = defineModule('LoggerModule', {
   imports: [ConfigModule],
-  providers: [LoggerConfig, Logger],
+  providers: [LoggerConfig, Logger, LoggerService],
   exports: [Logger],
-};
+});

@@ -2,8 +2,8 @@ import { defineConfig } from '@bunito/core';
 
 export const HttpConfig = defineConfig<{
   port: number | string;
-}>('http', ({ getEnv }) => {
+}>('HttpConfig', ({ getEnvAs }) => {
   return {
-    port: getEnv('HTTP_PORT') ?? getEnv('PORT') ?? 3000,
+    port: getEnvAs(['HTTP_PORT', 'PORT'], 'port') ?? 3000,
   };
 });

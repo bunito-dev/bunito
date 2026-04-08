@@ -65,8 +65,8 @@ describe('ContainerRuntime', () => {
       ],
     });
     const runtime = new ContainerRuntime(compiler);
-    const firstRequestId = Id.unique('request');
-    const secondRequestId = Id.unique('request');
+    const firstRequestId = Id.create('request');
+    const secondRequestId = Id.create('request');
 
     const first = await runtime.resolveProvider<{
       dependency: string;
@@ -135,7 +135,9 @@ describe('ContainerRuntime', () => {
     const moduleId = compiler.compileModule({});
     const runtime = new ContainerRuntime(compiler);
 
-    expect(await runtime.resolveProvider(Id.for('missing'), { moduleId })).toBeUndefined();
+    expect(
+      await runtime.resolveProvider(Id.for('missing'), { moduleId }),
+    ).toBeUndefined();
   });
 
   it('should throw when a required injection cannot be resolved', async () => {
@@ -203,8 +205,8 @@ describe('ContainerRuntime', () => {
       providers: [RequestService],
     });
     const runtime = new ContainerRuntime(compiler);
-    const requestIdA = Id.unique('request');
-    const requestIdB = Id.unique('request');
+    const requestIdA = Id.create('request');
+    const requestIdB = Id.create('request');
 
     await runtime.resolveProvider(Id.for(RequestService), {
       moduleId,
@@ -232,7 +234,7 @@ describe('ContainerRuntime', () => {
       providers: [RequestService],
     });
     const runtime = new ContainerRuntime(compiler);
-    const requestId = Id.unique('request');
+    const requestId = Id.create('request');
 
     const firstInstance = await runtime.resolveProvider(Id.for(RequestService), {
       moduleId,
@@ -250,9 +252,7 @@ describe('ContainerRuntime', () => {
   });
 
   it('should return no lifecycle handlers for non-objects or missing props', () => {
-    const runtime = new ContainerRuntime(
-      new ContainerCompiler(),
-    ) as unknown as {
+    const runtime = new ContainerRuntime(new ContainerCompiler()) as unknown as {
       processLifecycleHandlers: (
         instance: unknown,
         props?: Map<string, PropertyKey>,

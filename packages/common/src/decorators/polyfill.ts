@@ -1,6 +1,4 @@
-import { isUndefined } from '../helpers';
-
-if (isUndefined(Symbol.metadata)) {
+if (!Symbol.metadata) {
   Object.defineProperty(Symbol, 'metadata', {
     value: Symbol('metadata'),
     enumerable: true,

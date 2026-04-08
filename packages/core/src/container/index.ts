@@ -7,4 +7,5 @@ export * from './container-runtime.exception';
 export * from './decorators';
 export * from './helpers';
 export * from './id';
+export * from './predefined';
 export * from './types';

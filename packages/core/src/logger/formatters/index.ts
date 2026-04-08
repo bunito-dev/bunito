@@ -1,2 +1,2 @@
-export * from './json.formater';
-export * from './prettify.formater';
+import './json.formatter';
+import './prettify.formater';

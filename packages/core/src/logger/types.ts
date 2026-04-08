@@ -1,13 +1,30 @@
-import type { BUILD_IN_LOG_FORMATTERS, LOG_LEVELS } from './constants';
+import type { LOG_LEVELS } from './constants';
 
-export type LogLevel = keyof typeof LOG_LEVELS;
+export type LogLevelKind = keyof typeof LOG_LEVELS;
 
-export type LogFormat = keyof typeof BUILD_IN_LOG_FORMATTERS | (string & {});
+export type LogLevel = {
+  kind: LogLevelKind;
+  value: number;
+};
 
-export type LogFormatter = (
-  stdout: NodeJS.WriteStream,
-  context: string | undefined,
-  level: LogLevel,
-  message: unknown,
-  args: unknown[],
-) => void;
+export type LogFormat = 'json' | 'prettify' | (string & {});
+
+export type LogArgs<TArg0 = unknown> = [TArg0, ...unknown[]];
+
+export type LogOptions<TLevel> = {
+  context?: string;
+  traceId?: number;
+  level: TLevel;
+  duration?: number;
+};
+
+export type WriteLogOptions = LogOptions<LogLevelKind> & {
+  args: LogArgs;
+};
+
+export type FormatLogOptions = LogOptions<LogLevel> & {
+  error?: Error;
+  message?: string;
+  data?: unknown[];
+  timestamp: string;
+};

@@ -2,24 +2,36 @@ import { resolveObjectName, resolveSymbolKey } from '@bunito/common';
 import type { Token } from './types';
 
 export class Id {
-  private static indexCounter = 0;
+  private static nameIndexes = new Map<string, number>();
 
   private static objectIds = new WeakMap<object, Id>();
 
   private static symbolIds = new Map<symbol, Id>();
 
+  static isInstance(id: unknown): id is Id {
+    return id instanceof Id;
+  }
+
   static unique(name: string): Id {
-    return new Id(name);
+    const index = (Id.nameIndexes.get(name) ?? 0) + 1;
+
+    Id.nameIndexes.set(name, index);
+
+    return new Id(name, index);
   }
 
   static for(token: Token): Id {
+    if (Id.isInstance(token)) {
+      return token;
+    }
+
     switch (typeof token) {
       case 'function':
       case 'object': {
         let id = Id.objectIds.get(token);
 
         if (!id) {
-          id = new Id(resolveObjectName(token) ?? 'anonymous');
+          id = Id.unique(resolveObjectName(token) ?? 'anonymous');
           Id.objectIds.set(token, id);
         }
 
@@ -32,7 +44,7 @@ export class Id {
         let id = Id.symbolIds.get(sym);
 
         if (!id) {
-          id = new Id(resolveSymbolKey(sym) ?? 'unknown');
+          id = Id.unique(resolveSymbolKey(sym) ?? 'unknown');
           Id.symbolIds.set(sym, id);
         }
 
@@ -41,14 +53,14 @@ export class Id {
     }
   }
 
-  private constructor(
+  constructor(
     readonly name: string,
-    readonly index = ++Id.indexCounter,
+    readonly index = 0,
   ) {
     //
   }
 
   toString(): string {
-    return `${this.name}@${this.index}`;
+    return this.index ? `${this.name}#${this.index}` : this.name;
   }
 }
