@@ -79,13 +79,15 @@ export class Logger {
     });
   }
 
-  track(): (...args: LogArgs) => void {
+  track(...args: LogArgs): (...postArgs: unknown[]) => void;
+  track(...args: unknown[]): (...postArgs: LogArgs) => void;
+  track(...args: unknown[]): (...postArgs: unknown[]) => void {
     const now = Date.now();
 
-    return (...args: LogArgs) => {
+    return (...postArgs) => {
       this.writeLog({
         level: 'TRACK',
-        args,
+        args: [...args, ...postArgs] as LogArgs,
         duration: Date.now() - now,
       });
     };

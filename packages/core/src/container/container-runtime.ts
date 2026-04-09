@@ -1,6 +1,6 @@
 import { isObject, NestedMap, str } from '@bunito/common';
+import { RuntimeException } from '../exceptions';
 import type { ContainerCompiler } from './container-compiler';
-import { ContainerRuntimeException } from './container-runtime.exception';
 import { Id } from './id';
 import { MODULE_ID, REQUEST_ID } from './predefined';
 import type {
@@ -181,7 +181,7 @@ export class ContainerRuntime {
 
       if (param === undefined) {
         if (!optional) {
-          throw new ContainerRuntimeException(
+          throw new RuntimeException(
             str`Injection ${injectionId} for ${providerId} provider not found at #${index} in ${moduleId}`,
             {
               injectionId,
@@ -219,8 +219,8 @@ export class ContainerRuntime {
         }
 
         if (event !== 'onResolve') {
-          callable[propKey] = () => {
-            throw new ContainerRuntimeException(
+          callable[propKey] = () =>
+            RuntimeException.reject(
               str`Provider ${instance} lifecycle event ${event} cannot be called twice`,
               {
                 instance,
@@ -228,7 +228,6 @@ export class ContainerRuntime {
                 propKey,
               },
             );
-          };
         }
       };
 

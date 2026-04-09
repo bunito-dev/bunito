@@ -38,19 +38,18 @@ export class PrettifyFormater implements LogFormatter {
     write(' ');
     write(`${level.kind}`.padStart(7), levelTheme.colorPrimary);
 
-    if (context) {
+    if (context || traceId) {
       write(' ');
-      write(`[${context}]`, levelTheme.colorSecondary, 'bold');
+      write(
+        `[${context ?? 'Unknown'}${traceId ? `#${traceId}` : ''}]`,
+        levelTheme.colorSecondary,
+        'bold',
+      );
     }
 
     if (message) {
       write(' ');
       write(message, levelTheme.colorMessage);
-    }
-
-    if (traceId) {
-      write(' ');
-      write(`#${traceId}`, 'gray', 'bold');
     }
 
     if (duration) {

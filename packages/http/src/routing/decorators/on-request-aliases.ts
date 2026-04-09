@@ -1,14 +1,14 @@
-import type { RouteRequestOptionsLike } from '../types';
+import type { OnRequestOptionsLike, RoutePath } from '../types';
 import { OnRequest } from './on-request';
 
-export const Get = (optionsLike?: RouteRequestOptionsLike<'method'>) =>
-  OnRequest(optionsLike, 'GET');
+export const OnGet = (path?: RoutePath, options?: OnRequestOptionsLike<'method'>) =>
+  OnRequest(path, options, 'GET');
 
-export const Post = (optionsLike?: RouteRequestOptionsLike<'method'>) =>
-  OnRequest(optionsLike, 'POST');
+export const OnPost = (path?: RoutePath, options?: OnRequestOptionsLike<'method'>) =>
+  OnRequest(path, options, 'POST');
 
-export const Put = (optionsLike?: RouteRequestOptionsLike<'method'>) =>
-  OnRequest(optionsLike, 'PUT');
+export const OnPut = (path?: RoutePath, options?: OnRequestOptionsLike<'method'>) =>
+  OnRequest(path, options, 'PUT');
 
-export const Delete = (optionsLike?: RouteRequestOptionsLike<'method'>) =>
-  OnRequest(optionsLike, 'DELETE');
+export const OnDelete = (path?: RoutePath, options?: OnRequestOptionsLike<'method'>) =>
+  OnRequest(path, options, 'DELETE');

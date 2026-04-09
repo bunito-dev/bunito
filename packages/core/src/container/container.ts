@@ -1,6 +1,6 @@
 import type { Class } from '@bunito/common';
 import { str } from '@bunito/common';
-import { ContainerException } from './container.exception';
+import { RuntimeException } from '../exceptions';
 import { ContainerCompiler } from './container-compiler';
 import { ContainerRuntime } from './container-runtime';
 import { Id } from './id';
@@ -35,22 +35,20 @@ export class Container {
       });
     }
 
-    this.setup = () =>
-      Promise.reject(new ContainerException('Container setup cannot be called twice'));
+    this.setup = () => RuntimeException.reject('Container setup cannot be called twice');
   }
 
   async boot(): Promise<void> {
     await this.runtime.triggerBootstrap();
 
-    this.boot = () =>
-      Promise.reject(new ContainerException('Container boot cannot be called twice'));
+    this.boot = () => RuntimeException.reject('Container boot cannot be called twice');
   }
 
   async destroy(): Promise<void> {
     await this.runtime.destroyScope();
 
     this.destroy = () =>
-      Promise.reject(new ContainerException('Container destroy cannot be called twice'));
+      RuntimeException.reject('Container destroy cannot be called twice');
   }
 
   setInstance(token: Token, instance: unknown): void {
@@ -76,7 +74,7 @@ export class Container {
     const instance = await this.tryResolveProvider(token as Token, options);
 
     if (!instance) {
-      throw new ContainerException(
+      throw new RuntimeException(
         str`Could not resolve ${token} in ${options.moduleId} module`,
         {
           token,

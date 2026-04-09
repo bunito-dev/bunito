@@ -1,39 +1,34 @@
 import type { ClassMethodDecorator } from '@bunito/common';
-import { createImmutableDecorator, isString } from '@bunito/common';
-import type { HttpMethod } from '../../types';
+import { createImmutableDecorator } from '@bunito/common';
 import { DECORATOR_METADATA_KEYS } from '../constants';
 import type {
-  RouteRequestDefinition,
-  RouteRequestOptions,
-  RouteRequestOptionsLike,
+  OnRequestDefinition,
+  OnRequestOptions,
+  OnRequestOptionsLike,
+  RouteMethod,
+  RoutePath,
 } from '../types';
 
-export function OnRequest<TOmit extends keyof RouteRequestOptions = never>(
-  optionLike?: RouteRequestOptionsLike<TOmit>,
-  defaultMethod: HttpMethod = 'ALL',
+export function OnRequest<TOmit extends keyof OnRequestOptions = never>(
+  path: RoutePath = '/',
+  options: Partial<OnRequestOptionsLike<TOmit>> = {},
+  defaultMethod: RouteMethod = 'ALL',
 ): ClassMethodDecorator {
-  let options: RouteRequestOptions;
-
-  if (isString(optionLike)) {
-    options = {
-      path: optionLike,
-    };
-  } else if (optionLike) {
-    options = optionLike;
-  }
-
   return createImmutableDecorator(({ metadata, name }) => {
-    const definition: RouteRequestDefinition = {
+    const definition: OnRequestDefinition = {
       propKey: name,
       options: {
-        path: '/',
+        path,
         method: defaultMethod,
+        params: null,
+        query: null,
+        body: null,
         ...options,
       },
     };
 
     metadata[DECORATOR_METADATA_KEYS.ON_REQUEST] ??= [];
-    (metadata[DECORATOR_METADATA_KEYS.ON_REQUEST] as RouteRequestDefinition[]).push(
+    (metadata[DECORATOR_METADATA_KEYS.ON_REQUEST] as OnRequestDefinition[]).push(
       definition,
     );
   });

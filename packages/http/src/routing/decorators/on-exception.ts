@@ -1,11 +1,11 @@
 import type { ClassMethodDecorator } from '@bunito/common';
 import { createImmutableDecorator } from '@bunito/common';
 import { DECORATOR_METADATA_KEYS } from '../constants';
-import type { RouteErrorDefinition, RouteErrorOptions } from '../types';
+import type { OnExceptionDefinition, OnExceptionOptions } from '../types';
 
-export function OnError(options: RouteErrorOptions = {}): ClassMethodDecorator {
+export function OnException(options: OnExceptionOptions = {}): ClassMethodDecorator {
   return createImmutableDecorator(({ metadata, name }) => {
-    const definition: RouteErrorDefinition = {
+    const definition: OnExceptionDefinition = {
       propKey: name,
       options: {
         method: 'ALL',
@@ -13,8 +13,8 @@ export function OnError(options: RouteErrorOptions = {}): ClassMethodDecorator {
       },
     };
 
-    metadata[DECORATOR_METADATA_KEYS.ON_ERROR] ??= [];
-    (metadata[DECORATOR_METADATA_KEYS.ON_ERROR] as RouteErrorDefinition[]).push(
+    metadata[DECORATOR_METADATA_KEYS.ON_EXCEPTION] ??= [];
+    (metadata[DECORATOR_METADATA_KEYS.ON_EXCEPTION] as OnExceptionDefinition[]).push(
       definition,
     );
   });

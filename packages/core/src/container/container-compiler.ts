@@ -7,8 +7,8 @@ import {
   notEmpty,
   str,
 } from '@bunito/common';
+import { ConfigurationException, RuntimeException } from '../exceptions';
 import { DECORATOR_METADATA_KEYS, DEFAULT_SCOPES } from './constants';
-import { ContainerCompilerException } from './container-compiler.exception';
 import { Id } from './id';
 import type {
   ClassProviderMetadata,
@@ -36,7 +36,7 @@ export class ContainerCompiler {
     const module = this.modules.get(moduleId);
 
     if (!module) {
-      throw new ContainerCompilerException(str`Module ${moduleId} not found`, {
+      throw new RuntimeException(str`Module ${moduleId} not found`, {
         moduleId,
       });
     }
@@ -89,8 +89,12 @@ export class ContainerCompiler {
     const moduleId = resolveModuleId(moduleLike);
 
     if (parentModuleIds.has(moduleId)) {
-      throw new ContainerCompilerException(
-        str`Circular dependency detected between ${[...parentModuleIds].map((parentModuleId) => str`${parentModuleId}`).join(' → ')} in ${moduleId} module`,
+      const parentPath = [...parentModuleIds]
+        .map((parentModuleId) => str`${parentModuleId}`)
+        .join(' → ');
+
+      throw new ConfigurationException(
+        str`Circular dependency detected between ${parentPath} in ${moduleId} module`,
         {
           moduleId,
           parentModuleIds,
@@ -160,7 +164,7 @@ export class ContainerCompiler {
 
         if (providerModuleId) {
           if (exportModuleId) {
-            throw new ContainerCompilerException(
+            throw new ConfigurationException(
               str`Provider ${providerId} is exported by multiple modules`,
               {
                 moduleId,
@@ -174,7 +178,7 @@ export class ContainerCompiler {
       }
 
       if (!exportModuleId) {
-        throw new ContainerCompilerException(
+        throw new ConfigurationException(
           str`Provider ${providerId} not found in ${moduleId} module`,
           {
             moduleId,
@@ -200,7 +204,7 @@ export class ContainerCompiler {
       );
 
       if (!options) {
-        throw new ContainerCompilerException(
+        throw new ConfigurationException(
           str`Missing module metadata for ${moduleLike} `,
           {
             moduleLike,
@@ -224,7 +228,7 @@ export class ContainerCompiler {
 
   private verifyController(controllerRef: ControllerRef): void {
     if (!getDecoratorMetadata<true>(controllerRef, DECORATOR_METADATA_KEYS.CONTROLLER)) {
-      throw new ContainerCompilerException(
+      throw new ConfigurationException(
         str`Missing controller metadata for ${controllerRef}`,
         {
           controllerRef,
@@ -243,7 +247,7 @@ export class ContainerCompiler {
       );
 
       if (!metadata) {
-        throw new ContainerCompilerException(
+        throw new ConfigurationException(
           str`Missing provider metadata for ${providerLike} `,
           {
             providerLike,

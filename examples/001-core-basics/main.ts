@@ -3,7 +3,7 @@ import { App, LoggerModule, Provider } from '@bunito/core';
 
 @Provider()
 class BarService {
-  bar(): Array<string> {
+  bar(): string[] {
     return ['bar'];
   }
 }
@@ -16,11 +16,11 @@ class FooService {
     //
   }
 
-  foo(): Array<string> {
+  foo(): string[] {
     return ['foo'];
   }
 
-  bar(): Array<string> {
+  bar(): string[] {
     return this.foo().concat(this.barService.bar());
   }
 }

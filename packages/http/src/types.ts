@@ -4,15 +4,7 @@ import type {
   HTTP_SUCCESS_STATUS_CODES,
 } from './constants';
 
-export type HttpMethod =
-  | 'GET'
-  | 'POST'
-  | 'PUT'
-  | 'DELETE'
-  | 'PATCH'
-  | 'HEAD'
-  | 'OPTIONS'
-  | 'ALL';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
 
 export type HttpErrorStatus = keyof typeof HTTP_ERROR_STATUS_CODES;
 

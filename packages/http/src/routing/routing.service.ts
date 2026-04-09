@@ -1,8 +1,8 @@
 import type { Class } from '@bunito/common';
-import { getDecoratorMetadata, isString, str } from '@bunito/common';
+import { getDecoratorMetadata, isObject, isString, str } from '@bunito/common';
 import type { CallableInstance, ModuleId, RequestId, ResolveConfig } from '@bunito/core';
 import { Container, Id, Logger, MODULE_ID, OnInit, Provider } from '@bunito/core';
-import { HTTP_SUCCESS_STATUS_CODES } from '../constants';
+import type { ZodObject, ZodType } from 'zod';
 import { HttpException } from '../http.exception';
 import type { HttpMethod } from '../types';
 import {
@@ -13,15 +13,21 @@ import {
 import { RoutingConfig } from './routing.config';
 import type {
   InspectedRoute,
+  OnExceptionDefinition,
+  OnExceptionMatch,
+  OnRequestDefinition,
+  OnRequestMatch,
+  OnResponseDefinition,
+  OnResponseMatch,
   RouteContext,
-  RouteErrorDefinition,
   RouteHandler,
   RouteMatches,
+  RouteMethod,
   RouteNode,
   RoutePath,
-  RouteRequestDefinition,
-  RouteResponseDefinition,
+  RouteQuery,
   RouteSegment,
+  RouteState,
 } from './types';
 import { processTokenizedPath, tokenizePath } from './utils';
 
@@ -75,9 +81,9 @@ export class RoutingService {
         ),
       );
 
-      this.detectRequestEntities(parentNode, useClass, moduleId);
-      this.detectResponseEntities(parentNode, useClass, moduleId);
-      this.detectErrorEntities(parentNode, useClass, moduleId);
+      this.detectOnRequestEntities(parentNode, useClass, moduleId);
+      this.detectOnResponseEntities(parentNode, useClass, moduleId);
+      this.detectOnExceptionEntities(parentNode, useClass, moduleId);
     }
 
     this.inspectRoutes();
@@ -91,7 +97,7 @@ export class RoutingService {
     return inspectedRoute;
   }
 
-  async handleRequest(request: Request): Promise<Response> {
+  async processRequest(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname as RoutePath;
     const method = request.method as HttpMethod;
@@ -103,159 +109,270 @@ export class RoutingService {
       moduleId: this.moduleId,
     });
 
-    logger.setContext(RoutingService);
+    logger.setContext('HttpRequest');
 
     const track = logger.track();
 
+    const matches: RouteMatches = {
+      onRequest: [],
+      onResponse: [],
+      onException: [],
+    };
+
+    this.matchRoute(tokenizePath(path), method, matches);
+
     const context: RouteContext = {
       request,
+      logger,
+      url,
       path,
       method,
-      params: {},
-      query: {},
-      body: null,
       data: {},
     };
 
+    const state: RouteState = {};
+
     let response: Response;
-    let exception: HttpException | undefined;
 
     try {
-      response = await this.processRequest(requestId, context);
-    } catch (err) {
-      exception = HttpException.capture(err);
+      const maybeResponse = await this.handleRequest(
+        requestId,
+        context,
+        state,
+        matches.onRequest,
+      );
 
-      response = exception.toResponse(this.config.defaultContentType);
+      if (maybeResponse instanceof Response) {
+        response = maybeResponse;
+      } else {
+        response = await this.handleResponse(
+          requestId,
+          maybeResponse,
+          context,
+          state,
+          matches.onResponse,
+        );
+      }
+    } catch (err) {
+      response = await this.handleException(
+        requestId,
+        HttpException.capture(err),
+        context,
+        matches.onException,
+      );
     }
 
     track(`${response.status} ${method} ${path}`);
 
-    if (exception?.cause) {
-      if (isString(exception.cause)) {
-        logger.warn(exception.cause);
-      } else {
-        logger.fatal('Unhandled exception', exception.cause);
-      }
-    }
-
     return response;
   }
 
-  async processRequest(requestId: RequestId, context: RouteContext): Promise<Response> {
-    const matches: RouteMatches = {
-      requests: [],
-      responses: [],
-      errors: [],
-    };
+  private async validateRequestParams(
+    params: unknown,
+    paramsSchema: ZodObject | null,
+  ): Promise<unknown> {
+    if (!paramsSchema) {
+      return params;
+    }
 
-    this.matchRoute(tokenizePath(context.path), context.method, matches);
+    const parsed = await paramsSchema.safeParseAsync(params);
 
-    const { requests, responses, errors } = matches;
+    if (parsed.success) {
+      return parsed.data;
+    }
 
-    let exception: HttpException | undefined;
+    // TODO: Add exception
+  }
 
-    const { defaultContentType } = this.config;
+  private async validateRequestQuery(
+    { url }: RouteContext,
+    routeState: RouteState,
+    querySchema: ZodObject | null,
+  ): Promise<unknown> {
+    if (!routeState.query) {
+      const query: RouteQuery = {};
 
-    if (!requests.length) {
-      exception = new HttpException('NOT_FOUND');
-    } else {
-      let responseData: unknown;
-
-      try {
-        for (const { params, handler } of requests) {
-          const response = await handler(requestId, {
-            ...context,
-            params,
-          });
-
-          if (response === undefined) {
-            continue;
-          }
-
-          if (response instanceof Response) {
-            return response;
-          }
-
-          responseData = response;
-          break;
+      for (const [key, value] of url.searchParams.entries()) {
+        if (query[key] === undefined) {
+          query[key] = value;
+        } else if (isString(query[key])) {
+          query[key] = [query[key], value];
+        } else if (Array.isArray(query[key])) {
+          query[key].push(value);
         }
-
-        for (const { params, handler } of responses) {
-          const response = await handler(requestId, responseData, {
-            ...context,
-            params,
-          });
-
-          if (response === undefined) {
-            continue;
-          }
-
-          if (response instanceof Response) {
-            return response;
-          }
-
-          responseData = response;
-          break;
-        }
-      } catch (err) {
-        exception = HttpException.capture(err);
       }
 
-      if (!exception) {
-        if (responseData === undefined) {
-          exception ??= new HttpException('NOT_FOUND');
-        } else {
-          switch (defaultContentType) {
-            case 'text/plain':
-              if (isString(responseData, false)) {
-                return new Response(responseData, {
-                  status: HTTP_SUCCESS_STATUS_CODES.OK,
-                  headers: {
-                    'Content-Type': 'text/plain',
-                  },
-                });
-              }
+      routeState.query = query;
+    }
 
-              exception = new HttpException(
-                'NOT_IMPLEMENTED',
-                undefined,
-                'Trying to return non-string value as text/plain response',
-              );
-              break;
+    if (!querySchema) {
+      return routeState.query;
+    }
 
-            case 'application/json':
-              return Response.json(responseData);
+    const parsed = await querySchema.safeParseAsync(routeState.query);
 
-            default:
-              exception = new HttpException(
-                'NOT_IMPLEMENTED',
-                undefined,
-                'Cannot return response data as default content type',
-              );
-          }
+    if (parsed.success) {
+      return parsed.data;
+    }
+
+    // TODO: Add exception
+  }
+
+  private async validateRequestBody(
+    { request }: RouteContext,
+    routeState: RouteState,
+    bodySchema: ZodType | null,
+  ): Promise<unknown> {
+    if (routeState.body === undefined) {
+      if (request.body) {
+        switch (request.headers.get('Content-Type') ?? this.config.defaultContentType) {
+          case 'application/json':
+            routeState.body = await request.json();
+            break;
+
+          case 'text/plain':
+            routeState.body = await request.text();
+            break;
         }
+      }
+
+      routeState.body ??= request.body;
+    }
+
+    if (!bodySchema) {
+      return routeState.body;
+    }
+
+    const parsed = await bodySchema.safeParseAsync(routeState.body);
+
+    if (parsed.success) {
+      return parsed.data;
+    }
+
+    // TODO: Add exception
+  }
+
+  private async handleRequest(
+    requestId: RequestId,
+    routeContext: RouteContext,
+    routeState: RouteState,
+    routeMatches: OnRequestMatch[],
+  ): Promise<unknown> {
+    for (const { handler, params, options } of routeMatches) {
+      const context = {
+        ...routeContext,
+        params: await this.validateRequestParams(params, options.params),
+        query: await this.validateRequestQuery(routeContext, routeState, options.query),
+        body: await this.validateRequestBody(routeContext, routeState, options.body),
+      };
+
+      const result = await handler(requestId, context);
+
+      if (result === undefined) {
+        continue;
+      }
+
+      return result;
+    }
+
+    throw new HttpException('NOT_FOUND');
+  }
+
+  private async handleResponse(
+    requestId: RequestId,
+    responseData: unknown,
+    routeContext: RouteContext,
+    routeState: RouteState,
+    routeMatches: OnResponseMatch[],
+  ): Promise<Response> {
+    for (const { handler, params, options } of routeMatches) {
+      const context = {
+        ...routeContext,
+        params: await this.validateRequestParams(params, options.params),
+        query: await this.validateRequestQuery(routeContext, routeState, options.query),
+      };
+      const result = await handler(requestId, responseData, context);
+
+      if (result === undefined) {
+        continue;
+      }
+
+      if (result instanceof Response) {
+        return result;
       }
     }
 
-    if (exception) {
-      try {
-        for (const { handler } of errors) {
-          const response = await handler(requestId, exception, context);
+    switch (this.config.defaultContentType) {
+      case 'application/json':
+        return Response.json(responseData);
 
-          if (response instanceof Response) {
-            return response;
-          }
+      case 'text/plain':
+        if (!isString(responseData, false)) {
+          throw new HttpException(
+            'NOT_IMPLEMENTED',
+            undefined,
+            'Trying to return non-string value as text/plain response',
+          );
         }
-      } catch (err) {
-        exception = HttpException.capture(err);
-      }
+        return new Response(responseData);
 
-      throw exception;
+      default:
+        throw new HttpException(
+          'NOT_IMPLEMENTED',
+          undefined,
+          'Cannot return response data as default content type',
+        );
+    }
+  }
+
+  private async handleException(
+    requestId: RequestId,
+    exception: HttpException,
+    routeContext: RouteContext,
+    routeMatches: OnExceptionMatch[],
+  ): Promise<Response> {
+    let unhandledException = exception;
+
+    try {
+      for (const { handler } of routeMatches) {
+        const response = await handler(requestId, exception, routeContext);
+
+        if (response instanceof Response) {
+          return response;
+        }
+      }
+    } catch (err) {
+      unhandledException = HttpException.capture(err);
     }
 
-    return new Response(null, {
-      status: HTTP_SUCCESS_STATUS_CODES.NO_CONTENT,
-    });
+    const { logger } = routeContext;
+    const { message, data, statusCode, cause } = unhandledException;
+
+    if (isString(cause)) {
+      logger.warn(cause);
+    } else if (cause) {
+      logger.fatal('Unhandled exception', cause);
+    }
+
+    switch (this.config.defaultContentType) {
+      case 'application/json':
+        return Response.json(
+          isObject(data)
+            ? data
+            : {
+                error: message,
+                data,
+              },
+          {
+            status: statusCode,
+          },
+        );
+
+      default:
+        return new Response(message, {
+          status: statusCode,
+        });
+    }
   }
 
   private inspectRoute(
@@ -263,7 +380,7 @@ export class RoutingService {
     parentPaths: RoutePath[] = [],
     node: RouteNode = this.rootNode,
   ): void {
-    const { segment, children, entities } = node;
+    const { segment, children, handlers } = node;
 
     switch (segment?.kind) {
       case 'static':
@@ -285,12 +402,12 @@ export class RoutingService {
 
     const path = parentPaths.length ? (parentPaths.join('') as RoutePath) : '/';
 
-    const routeMethods: Partial<Record<HttpMethod, InspectedRoute>> = {};
+    const routeMethods: Partial<Record<RouteMethod, InspectedRoute>> = {};
 
     for (const {
       name,
       options: { method },
-    } of entities?.requests ?? []) {
+    } of handlers?.onRequest ?? []) {
       routeMethods[method] ??= { path, method };
 
       if (!routeMethods[method]?.onRequest?.push(name)) {
@@ -301,7 +418,7 @@ export class RoutingService {
     for (const {
       name,
       options: { method },
-    } of entities?.responses ?? []) {
+    } of handlers?.onResponse ?? []) {
       routeMethods[method] ??= { path, method };
 
       if (!routeMethods[method]?.onResponse?.push(name)) {
@@ -312,7 +429,7 @@ export class RoutingService {
     for (const {
       name,
       options: { method },
-    } of entities?.errors ?? []) {
+    } of handlers?.onException ?? []) {
       routeMethods[method] ??= { path, method };
 
       if (!routeMethods[method]?.onError?.push(name)) {
@@ -329,38 +446,38 @@ export class RoutingService {
 
   private matchRoute(
     pathTokens: string[],
-    method: HttpMethod,
+    method: RouteMethod,
     matches: RouteMatches,
     depth: number = 0,
     node: RouteNode = this.rootNode,
     params: Record<string, string> = {},
   ): void {
-    const { entities } = node;
+    const { handlers } = node;
 
-    for (const entity of entities?.requests ?? []) {
+    for (const entity of handlers?.onRequest ?? []) {
       if (
         (!node.exact || pathTokens.length === depth) &&
         (entity.options.method === 'ALL' || entity.options.method === method)
       ) {
-        matches.requests.push({
+        matches.onRequest.push({
           params: { ...params },
           ...entity,
         });
       }
     }
 
-    for (const entity of entities?.responses ?? []) {
+    for (const entity of handlers?.onResponse ?? []) {
       if (entity.options.method === 'ALL' || entity.options.method === method) {
-        matches.responses.push({
+        matches.onResponse.push({
           params: { ...params },
           ...entity,
         });
       }
     }
 
-    for (const entity of entities?.errors ?? []) {
+    for (const entity of handlers?.onException ?? []) {
       if (entity.options.method === 'ALL' || entity.options.method === method) {
-        matches.errors.push(entity);
+        matches.onException.push(entity);
       }
     }
 
@@ -411,12 +528,12 @@ export class RoutingService {
     };
   }
 
-  private detectRequestEntities(
+  private detectOnRequestEntities(
     parentNode: RouteNode,
     controllerClass: Class,
     moduleId: ModuleId,
   ): void {
-    const definitions = getDecoratorMetadata<RouteRequestDefinition[]>(
+    const definitions = getDecoratorMetadata<OnRequestDefinition[]>(
       controllerClass,
       DECORATOR_METADATA_KEYS.ON_REQUEST,
     );
@@ -433,9 +550,9 @@ export class RoutingService {
 
       const node = this.touchNode(segments, parentNode);
 
-      node.entities ??= {};
-      node.entities.requests ??= [];
-      node.entities.requests.push({
+      node.handlers ??= {};
+      node.handlers.onRequest ??= [];
+      node.handlers.onRequest.push({
         options,
         name: str`${controllerClass}#${propKey}`,
         handler: this.createRouteHandler(controllerClass, moduleId, propKey),
@@ -443,12 +560,12 @@ export class RoutingService {
     }
   }
 
-  private detectResponseEntities(
+  private detectOnResponseEntities(
     parentNode: RouteNode,
     controllerClass: Class,
     moduleId: ModuleId,
   ): void {
-    const definitions = getDecoratorMetadata<RouteResponseDefinition[]>(
+    const definitions = getDecoratorMetadata<OnResponseDefinition[]>(
       controllerClass,
       DECORATOR_METADATA_KEYS.ON_RESPONSE,
     );
@@ -457,13 +574,13 @@ export class RoutingService {
       return;
     }
 
-    parentNode.entities ??= {};
-    parentNode.entities.responses ??= [];
+    parentNode.handlers ??= {};
+    parentNode.handlers.onResponse ??= [];
 
     for (const definition of definitions) {
       const { propKey, options } = definition;
 
-      parentNode.entities.responses.push({
+      parentNode.handlers.onResponse.push({
         options,
         name: str`${controllerClass}#${propKey}`,
         handler: this.createRouteHandler(controllerClass, moduleId, propKey),
@@ -471,27 +588,27 @@ export class RoutingService {
     }
   }
 
-  private detectErrorEntities(
+  private detectOnExceptionEntities(
     parentNode: RouteNode,
     controllerClass: Class,
     moduleId: ModuleId,
   ): void {
-    const definitions = getDecoratorMetadata<RouteErrorDefinition[]>(
+    const definitions = getDecoratorMetadata<OnExceptionDefinition[]>(
       controllerClass,
-      DECORATOR_METADATA_KEYS.ON_ERROR,
+      DECORATOR_METADATA_KEYS.ON_EXCEPTION,
     );
 
     if (!definitions) {
       return;
     }
 
-    parentNode.entities ??= {};
-    parentNode.entities.errors ??= [];
+    parentNode.handlers ??= {};
+    parentNode.handlers.onException ??= [];
 
     for (const definition of definitions) {
       const { propKey, options } = definition;
 
-      parentNode.entities.errors.push({
+      parentNode.handlers.onException.push({
         options,
         name: str`${controllerClass}#${propKey}`,
         handler: this.createRouteHandler(controllerClass, moduleId, propKey),

@@ -1,9 +1,14 @@
+import type { OnLifecycleHandler } from './on-lifecycle';
 import { OnLifecycle } from './on-lifecycle';
 
-export const OnResolve = () => OnLifecycle('onResolve');
+export const OnResolve = <THandler extends OnLifecycleHandler>() =>
+  OnLifecycle<THandler>('onResolve');
 
-export const OnInit = () => OnLifecycle('onInit');
+export const OnInit = <THandler extends OnLifecycleHandler>() =>
+  OnLifecycle<THandler>('onInit');
 
-export const OnBoot = () => OnLifecycle('onBoot');
+export const OnBoot = <THandler extends OnLifecycleHandler>() =>
+  OnLifecycle<THandler>('onBoot');
 
-export const OnDestroy = () => OnLifecycle('onDestroy');
+export const OnDestroy = <THandler extends OnLifecycleHandler>() =>
+  OnLifecycle<THandler>('onDestroy');

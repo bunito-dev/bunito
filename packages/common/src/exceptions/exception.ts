@@ -10,6 +10,16 @@ export class Exception extends Error {
     return error instanceof this;
   }
 
+  static reject<TSelf extends Class<Exception>>(
+    this: TSelf,
+    message?: string | undefined,
+    data?: Record<string, unknown>,
+    cause?: unknown,
+  ): Promise<never> {
+    // biome-ignore lint/complexity/noThisInStatic: Need to use `this`
+    return Promise.reject(new this(message, data, cause));
+  }
+
   override message = 'Unknown Exception';
 
   override name = 'UnknownException';

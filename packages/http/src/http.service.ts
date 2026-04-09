@@ -28,7 +28,7 @@ export class HttpService {
 
     this.server = Bun.serve({
       port,
-      fetch: async (request) => this.router.handleRequest(request),
+      fetch: async (request) => this.router.processRequest(request),
     });
 
     this.logger.ok(`Server started at ${this.server.url}`);

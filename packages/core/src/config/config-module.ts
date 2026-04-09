@@ -1,7 +1,10 @@
-import { defineModule } from '../container';
+import { Module } from '../container';
 import { ConfigService } from './config-service';
 
-export const ConfigModule = defineModule('ConfigModule', {
+@Module({
   providers: [ConfigService],
   exports: [ConfigService],
-});
+})
+export class ConfigModule {
+  //
+}
