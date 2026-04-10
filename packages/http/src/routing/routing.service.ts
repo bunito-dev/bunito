@@ -6,9 +6,9 @@ import { ZodError } from 'zod';
 import { HttpException, ValidationException } from '../exceptions';
 import type { HttpMethod } from '../types';
 import {
-  DECORATOR_METADATA_KEYS,
   ROUTE_DYNAMIC_SEGMENT_ALIASES,
   ROUTE_DYNAMIC_SEGMENT_KEYS,
+  ROUTING_METADATA_KEYS,
 } from './constants';
 import { RoutingConfig } from './routing.config';
 import type {
@@ -59,10 +59,7 @@ export class RoutingService {
       if (!pathTokens) {
         pathTokens = tokenizePath(
           ...parentClasses.map((parentClass) =>
-            getDecoratorMetadata<RoutePath>(
-              parentClass,
-              DECORATOR_METADATA_KEYS.USES_PATH,
-            ),
+            getDecoratorMetadata<RoutePath>(parentClass, ROUTING_METADATA_KEYS.USES_PATH),
           ),
         );
 
@@ -75,7 +72,7 @@ export class RoutingService {
         processTokenizedPath(
           ...pathTokens,
           ...tokenizePath(
-            getDecoratorMetadata<RoutePath>(useClass, DECORATOR_METADATA_KEYS.USES_PATH),
+            getDecoratorMetadata<RoutePath>(useClass, ROUTING_METADATA_KEYS.USES_PATH),
           ),
         ),
       );
@@ -314,7 +311,7 @@ export class RoutingService {
 
     switch (this.config.defaultContentType) {
       case 'application/json':
-        return Response.json(exception.toJSON(), {
+        return Response.json(unhandledException.toJSON(), {
           status: statusCode,
         });
 
@@ -503,7 +500,7 @@ export class RoutingService {
   ): void {
     const definitions = getDecoratorMetadata<OnRequestDefinition[]>(
       controllerClass,
-      DECORATOR_METADATA_KEYS.ON_REQUEST,
+      ROUTING_METADATA_KEYS.ON_REQUEST,
     );
 
     if (!definitions) {
@@ -536,7 +533,7 @@ export class RoutingService {
   ): void {
     const definitions = getDecoratorMetadata<OnResponseDefinition[]>(
       controllerClass,
-      DECORATOR_METADATA_KEYS.ON_RESPONSE,
+      ROUTING_METADATA_KEYS.ON_RESPONSE,
     );
 
     if (!definitions) {
@@ -565,7 +562,7 @@ export class RoutingService {
   ): void {
     const definitions = getDecoratorMetadata<OnExceptionDefinition[]>(
       controllerClass,
-      DECORATOR_METADATA_KEYS.ON_EXCEPTION,
+      ROUTING_METADATA_KEYS.ON_EXCEPTION,
     );
 
     if (!definitions) {

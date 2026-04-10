@@ -1,6 +1,6 @@
 import type { ClassMethodDecorator } from '@bunito/common';
 import { createImmutableDecorator } from '@bunito/common';
-import { DECORATOR_METADATA_KEYS } from '../constants';
+import { ROUTING_METADATA_KEYS } from '../constants';
 import type {
   OnResponseDefinition,
   OnResponseHandler,
@@ -19,8 +19,8 @@ export function OnResponse<THandler extends OnResponseHandler>(
       },
     };
 
-    metadata[DECORATOR_METADATA_KEYS.ON_RESPONSE] ??= [];
-    (metadata[DECORATOR_METADATA_KEYS.ON_RESPONSE] as OnResponseDefinition[]).push(
+    metadata[ROUTING_METADATA_KEYS.ON_RESPONSE] ??= [];
+    (metadata[ROUTING_METADATA_KEYS.ON_RESPONSE] as OnResponseDefinition[]).push(
       definition,
     );
   });

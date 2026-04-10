@@ -46,4 +46,8 @@ describe('str', () => {
       }} ${undefined}`,
     ).toBe('items [symbol] [class] [fn] [object] ');
   });
+
+  it('should stringify arrays using the dedicated fallback label', () => {
+    expect(str`items ${[1, 2, 3]}`).toBe('items [array]');
+  });
 });

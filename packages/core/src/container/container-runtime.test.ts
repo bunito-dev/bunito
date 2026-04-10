@@ -41,9 +41,14 @@ describe('ContainerRuntime', () => {
 
     expect(instance).toBeDefined();
     expect(sameInstance).toBeDefined();
-    expect(instance!.dependency).toBe('injected');
-    expect(instance!.initRuns).toBe(1);
-    expect(instance!.resolveRuns).toBe(1);
+
+    if (!instance || !sameInstance) {
+      throw new Error('Expected resolved service instances');
+    }
+
+    expect(instance.dependency).toBe('injected');
+    expect(instance.initRuns).toBe(1);
+    expect(instance.resolveRuns).toBe(1);
     expect(sameInstance).toBe(instance);
   });
 
@@ -65,8 +70,8 @@ describe('ContainerRuntime', () => {
       ],
     });
     const runtime = new ContainerRuntime(compiler);
-    const firstRequestId = Id.create('request');
-    const secondRequestId = Id.create('request');
+    const firstRequestId = Id.unique('request');
+    const secondRequestId = Id.unique('request');
 
     const first = await runtime.resolveProvider<{
       dependency: string;
@@ -93,10 +98,15 @@ describe('ContainerRuntime', () => {
     expect(first).toBeDefined();
     expect(second).toBeDefined();
     expect(third).toBeDefined();
+
+    if (!first || !second || !third) {
+      throw new Error('Expected resolved request-scoped instances');
+    }
+
     expect(first).toBe(second);
     expect(third).not.toBe(first);
-    expect(first!.optionalValue).toBeNull();
-    expect(first!.dependency).toBe('injected');
+    expect(first.optionalValue).toBeNull();
+    expect(first.dependency).toBe('injected');
   });
 
   it('should resolve global instances set manually and value providers', async () => {
@@ -182,9 +192,14 @@ describe('ContainerRuntime', () => {
     });
 
     expect(instance).toBeDefined();
+
+    if (!instance) {
+      throw new Error('Expected resolved bootable service');
+    }
+
     await runtime.triggerBootstrap();
-    expect(instance!.bootRuns).toBe(1);
-    expect(runtime.triggerBootstrap()).rejects.toThrow('cannot be called twice');
+    expect(instance.bootRuns).toBe(1);
+    await expect(runtime.triggerBootstrap()).rejects.toThrow('cannot be called twice');
   });
 
   it('should trigger destroy hooks for a concrete scope and when destroying all scopes', async () => {
@@ -205,8 +220,8 @@ describe('ContainerRuntime', () => {
       providers: [RequestService],
     });
     const runtime = new ContainerRuntime(compiler);
-    const requestIdA = Id.create('request');
-    const requestIdB = Id.create('request');
+    const requestIdA = Id.unique('request');
+    const requestIdB = Id.unique('request');
 
     await runtime.resolveProvider(Id.for(RequestService), {
       moduleId,
@@ -234,7 +249,7 @@ describe('ContainerRuntime', () => {
       providers: [RequestService],
     });
     const runtime = new ContainerRuntime(compiler);
-    const requestId = Id.create('request');
+    const requestId = Id.unique('request');
 
     const firstInstance = await runtime.resolveProvider(Id.for(RequestService), {
       moduleId,

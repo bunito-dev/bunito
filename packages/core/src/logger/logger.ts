@@ -43,14 +43,14 @@ export class Logger {
 
   fatal(...args: LogArgs): void {
     this.writeLog({
-      level: 'ERROR',
+      level: 'FATAL',
       args,
     });
   }
 
   error(...args: LogArgs): void {
     this.writeLog({
-      level: 'FATAL',
+      level: 'ERROR',
       args,
     });
   }

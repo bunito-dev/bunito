@@ -1,145 +1,273 @@
-import { afterEach, describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'bun:test';
 import { getDecoratorMetadata } from '@bunito/common';
-import { DECORATOR_METADATA_KEYS } from '../container/constants';
-import { LOG_FORMATTERS } from './constants';
+import type { ClassProviderMetadata } from '../container';
+import { CONTAINER_METADATA_KEYS, Id, REQUEST_ID } from '../container';
 import { Logger } from './logger';
-import { LoggerConfig } from './logger.config';
-
-type FakeStdout = {
-  output: string;
-  write: (chunk: string) => boolean;
-};
-
-function createStdout(): FakeStdout {
-  return {
-    output: '',
-    write(chunk: string) {
-      this.output += chunk;
-      return true;
-    },
-  };
-}
-
-const originalJsonFormatter = LOG_FORMATTERS.json;
-const originalPrettifyFormatter = LOG_FORMATTERS.prettify;
-const originalNoneFormatter = LOG_FORMATTERS.none;
-
-afterEach(() => {
-  LOG_FORMATTERS.json = originalJsonFormatter;
-  LOG_FORMATTERS.prettify = originalPrettifyFormatter;
-  LOG_FORMATTERS.none = originalNoneFormatter;
-});
+import { LoggerService } from './logger.service';
+import type { WriteLogOptions } from './types';
 
 describe('Logger', () => {
-  it('should be registered as a transient provider injecting LoggerConfig', () => {
+  it('should be registered as a request-scoped provider', () => {
     expect(
-      getDecoratorMetadata<{
-        scope: string;
-        injects: Array<typeof LoggerConfig>;
-      }>(Logger, DECORATOR_METADATA_KEYS.provider),
+      getDecoratorMetadata<ClassProviderMetadata>(
+        Logger,
+        CONTAINER_METADATA_KEYS.PROVIDER,
+      ),
     ).toEqual({
-      scope: 'transient',
-      injects: [LoggerConfig],
+      scope: 'request',
+      injects: [
+        LoggerService,
+        {
+          optional: true,
+          token: REQUEST_ID,
+        },
+      ],
     });
   });
 
-  it('should set context from strings and classes', () => {
-    const logger = new Logger({
-      level: 'verbose',
-      format: 'none',
-    });
-
-    logger.setContext('App');
-    expect((logger as unknown as { context?: string }).context).toBe('App');
+  it('should set context from strings and callables', () => {
+    const calls: unknown[] = [];
+    const logger = new Logger(
+      {
+        writeLog(options: WriteLogOptions) {
+          calls.push(options);
+        },
+      } as unknown as LoggerService,
+      new Id('request', 7),
+    );
 
     class AppService {}
 
-    logger.setContext(AppService);
-    expect((logger as unknown as { context?: string }).context).toBe('AppService');
-  });
-
-  it('should skip messages below the configured log level', () => {
-    const calls: Array<unknown> = [];
-
-    LOG_FORMATTERS.json = (...args) => {
-      calls.push(args);
-    };
-
-    const logger = new Logger({
-      level: 'warn',
-      format: 'json',
-    });
-
-    logger.info('ignored');
-    logger.error('logged');
-
-    expect(calls).toHaveLength(1);
-    expect(calls[0]).toEqual([process.stdout, undefined, 'error', 'logged', []]);
-  });
-
-  it('should skip logging when the configured formatter is missing', () => {
-    const logger = new Logger({
-      level: 'verbose',
-      format: 'none',
-    });
-    const stdout = createStdout();
-
-    (logger as unknown as { stdout: NodeJS.WriteStream }).stdout =
-      stdout as unknown as NodeJS.WriteStream;
-
-    logger.info('hello');
-
-    expect(stdout.output).toBe('');
-  });
-
-  it('should pass context, message and args to the configured formatter', () => {
-    const calls: Array<unknown> = [];
-
-    LOG_FORMATTERS.prettify = (...args) => {
-      calls.push(args);
-    };
-
-    const logger = new Logger({
-      level: 'verbose',
-      format: 'prettify',
-    });
-
     logger.setContext('App');
-    expect(logger.warn('hello', 123)).toBe('hello');
-    expect(logger.info('info-message')).toBe('info-message');
-    expect(logger.ok('ok-message')).toBe('ok-message');
-    expect(logger.trace('trace-message')).toBe('trace-message');
-    expect(logger.debug({ foo: 'bar' }, 'extra')).toEqual({ foo: 'bar' });
-    expect(logger.verbose('verbose-message', 3)).toBe('verbose-message');
+    logger.info('plain');
+    logger.setContext(AppService, 'HTTP');
+    logger.ok('scoped');
+    logger.setContext('');
+    logger.verbose('ignored-context');
 
     expect(calls).toEqual([
-      [process.stdout, 'App', 'warn', 'hello', [123]],
-      [process.stdout, 'App', 'info', 'info-message', []],
-      [process.stdout, 'App', 'ok', 'ok-message', []],
-      [process.stdout, 'App', 'trace', 'trace-message', []],
-      [process.stdout, 'App', 'debug', { foo: 'bar' }, ['extra']],
-      [process.stdout, 'App', 'verbose', 'verbose-message', [3]],
+      {
+        context: 'App',
+        traceId: 7,
+        level: 'INFO',
+        args: ['plain'],
+      },
+      {
+        context: 'AppService(HTTP)',
+        traceId: 7,
+        level: 'OK',
+        args: ['scoped'],
+      },
+      {
+        context: 'AppService(HTTP)',
+        traceId: 7,
+        level: 'VERBOSE',
+        args: ['ignored-context'],
+      },
     ]);
   });
 
-  it('should route fatal and error messages through the logger pipeline', () => {
-    const calls: Array<unknown> = [];
-
-    LOG_FORMATTERS.json = (...args) => {
-      calls.push(args);
-    };
-
+  it('should route log methods through LoggerService and return the first debug argument', () => {
+    const calls: unknown[] = [];
     const logger = new Logger({
-      level: 'verbose',
-      format: 'json',
-    });
+      writeLog(options: WriteLogOptions) {
+        calls.push(options);
+      },
+    } as unknown as LoggerService);
 
-    logger.fatal('fatal-message', 1);
-    logger.error('error-message', 2);
+    expect(logger.debug({ foo: 'bar' }, 'extra')).toEqual({ foo: 'bar' });
+    logger.warn('warn');
+    logger.info('info');
+    logger.ok('ok');
+    logger.verbose('verbose');
+    logger.fatal('fatal');
+    logger.error('error');
 
     expect(calls).toEqual([
-      [process.stdout, undefined, 'fatal', 'fatal-message', [1]],
-      [process.stdout, undefined, 'error', 'error-message', [2]],
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'DEBUG',
+        args: [{ foo: 'bar' }, 'extra'],
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'WARN',
+        args: ['warn'],
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'INFO',
+        args: ['info'],
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'OK',
+        args: ['ok'],
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'VERBOSE',
+        args: ['verbose'],
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'FATAL',
+        args: ['fatal'],
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'ERROR',
+        args: ['error'],
+      },
+    ]);
+  });
+
+  it('should include duration in traced child loggers', () => {
+    const calls: unknown[] = [];
+    const logger = new Logger({
+      writeLog(options: WriteLogOptions) {
+        calls.push(options);
+      },
+    } as unknown as LoggerService);
+    const originalNow = Date.now;
+
+    let now = 100;
+    Date.now = () => now;
+
+    try {
+      const trace = logger.trace();
+
+      now = 125;
+      trace.fatal('fatal');
+      now = 150;
+      trace.error('error');
+      now = 175;
+      trace.warn('warn');
+      now = 250;
+      trace.info('info');
+      now = 300;
+      trace.ok('ok');
+      now = 350;
+      trace.verbose('verbose');
+      now = 450;
+      expect(trace.debug('debug-value')).toBe('debug-value');
+    } finally {
+      Date.now = originalNow;
+    }
+
+    expect(calls).toEqual([
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'FATAL',
+        args: ['fatal'],
+        duration: 25,
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'ERROR',
+        args: ['error'],
+        duration: 50,
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'WARN',
+        args: ['warn'],
+        duration: 75,
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'INFO',
+        args: ['info'],
+        duration: 150,
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'OK',
+        args: ['ok'],
+        duration: 200,
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'VERBOSE',
+        args: ['verbose'],
+        duration: 250,
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'DEBUG',
+        args: ['debug-value'],
+        duration: 350,
+      },
+    ]);
+  });
+
+  it('should map fatal and error to the matching log levels', () => {
+    const calls: unknown[] = [];
+    const logger = new Logger({
+      writeLog(options: WriteLogOptions) {
+        calls.push(options);
+      },
+    } as unknown as LoggerService);
+    const originalNow = Date.now;
+
+    let now = 10;
+    Date.now = () => now;
+
+    try {
+      logger.fatal('fatal');
+      logger.error('error');
+
+      const trace = logger.trace();
+
+      now = 20;
+      trace.fatal('trace-fatal');
+      now = 30;
+      trace.error('trace-error');
+    } finally {
+      Date.now = originalNow;
+    }
+
+    expect(calls).toEqual([
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'FATAL',
+        args: ['fatal'],
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'ERROR',
+        args: ['error'],
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'FATAL',
+        args: ['trace-fatal'],
+        duration: 10,
+      },
+      {
+        context: undefined,
+        traceId: undefined,
+        level: 'ERROR',
+        args: ['trace-error'],
+        duration: 20,
+      },
     ]);
   });
 });

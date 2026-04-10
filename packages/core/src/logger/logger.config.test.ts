@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'bun:test';
+import { ConfigService } from '../config';
 import { LoggerConfig } from './logger.config';
 
 describe('LoggerConfig', () => {
-  it('should register a module-scoped config provider', async () => {
+  it('should create a singleton config provider for logger settings', async () => {
     const service = {
-      whenCI: <TValue>(_ciValue: TValue, nonCiValue: TValue): TValue => nonCiValue,
-      getEnv: () => undefined,
-    };
+      isCI: false,
+      getEnvAs: () => undefined,
+    } as unknown as ConfigService;
 
     expect(typeof LoggerConfig.token).toBe('symbol');
-    expect(String(LoggerConfig.token)).toBe('Symbol(config(logger))');
-    expect(LoggerConfig.scope).toBe('module');
-    expect(LoggerConfig.injects).toEqual([expect.any(Function)]);
+    expect(String(LoggerConfig.token)).toBe('Symbol(LoggerConfig)');
+    expect(LoggerConfig.scope).toBe('singleton');
+    expect(LoggerConfig.injects).toEqual([ConfigService]);
     expect(await LoggerConfig.useFactory(service)).toEqual({
       level: 'DEBUG',
       format: 'prettify',
@@ -20,17 +21,19 @@ describe('LoggerConfig', () => {
 
   it('should prefer env-derived values over CI defaults', async () => {
     const service = {
-      whenCI: <TValue>(ciValue: TValue, _nonCiValue: TValue): TValue => ciValue,
-      getEnv: (key: string, parser?: (value: string) => unknown) => {
-        const values: Record<string, string> = {
-          LOG_LEVEL: 'ERROR',
-          LOG_FORMAT: 'JSON',
-        };
-        const value = values[key];
+      isCI: true,
+      getEnvAs(key: string, format: string) {
+        if (key === 'LOG_LEVEL' && format === 'toUpperCase') {
+          return 'ERROR';
+        }
 
-        return value && parser ? parser(value) : value;
+        if (key === 'LOG_FORMAT' && format === 'toLowerCase') {
+          return 'json';
+        }
+
+        return undefined;
       },
-    };
+    } as unknown as ConfigService;
 
     expect(await LoggerConfig.useFactory(service)).toEqual({
       level: 'ERROR',

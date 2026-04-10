@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { LoggerModule } from '../logger';
+import { Logger, LoggerModule } from '../logger';
 import { App } from './app';
 
 const originalLogLevel = process.env.LOG_LEVEL;
@@ -19,173 +19,158 @@ afterEach(() => {
   }
 });
 
+type TraceLogger = {
+  fatalCalls: unknown[][];
+  okCalls: unknown[][];
+  fatal: (...args: unknown[]) => void;
+  ok: (...args: unknown[]) => void;
+};
+
 type FakeLogger = {
-  traceCalls: Array<unknown>;
-  okCalls: Array<unknown>;
-  infoCalls: Array<unknown>;
-  errorCalls: Array<unknown>;
-  contexts: Array<string>;
-  trace: (...args: Array<unknown>) => void;
-  ok: (...args: Array<unknown>) => void;
-  info: (...args: Array<unknown>) => void;
-  error: (...args: Array<unknown>) => void;
-  setContext: (context: string) => void;
+  contexts: [unknown, string | undefined][];
+  traces: TraceLogger[];
+  setContext: (context: unknown, description?: string) => void;
+  trace: () => TraceLogger;
+};
+
+type FakeContainer = {
+  setInstances: [unknown, unknown][];
+  resolved: unknown[];
+  tried: unknown[];
+  setInstance: (token: unknown, instance: unknown) => void;
+  resolveProvider: (token: unknown) => Promise<unknown>;
+  tryResolveProvider: (token: unknown) => Promise<unknown>;
+  setup: () => Promise<void>;
+  boot: () => Promise<void>;
+  destroy: () => Promise<void>;
 };
 
 function createLogger(): FakeLogger {
   return {
-    traceCalls: [],
-    okCalls: [],
-    infoCalls: [],
-    errorCalls: [],
     contexts: [],
-    trace(...args) {
-      this.traceCalls.push(args);
+    traces: [],
+    setContext(context, description) {
+      this.contexts.push([context, description]);
     },
-    ok(...args) {
-      this.okCalls.push(args);
-    },
-    info(...args) {
-      this.infoCalls.push(args);
-    },
-    error(...args) {
-      this.errorCalls.push(args);
-    },
-    setContext(context) {
-      this.contexts.push(context);
+    trace() {
+      const trace: TraceLogger = {
+        fatalCalls: [],
+        okCalls: [],
+        fatal(...args) {
+          this.fatalCalls.push(args);
+        },
+        ok(...args) {
+          this.okCalls.push(args);
+        },
+      };
+
+      this.traces.push(trace);
+
+      return trace;
     },
   };
 }
 
-class TestApp extends App {
-  constructor(
-    logger: FakeLogger | undefined,
-    container: {
-      setInstance: (token: unknown, instance: unknown) => void;
-      resolve: (token: unknown) => Promise<unknown>;
-      tryResolve: (token: unknown) => Promise<unknown>;
-      boot: () => Promise<void>;
-      destroy: () => Promise<void>;
+function createContainer(): FakeContainer {
+  return {
+    setInstances: [],
+    resolved: [],
+    tried: [],
+    setInstance(token, instance) {
+      this.setInstances.push([token, instance]);
     },
-  ) {
-    super('Test', logger as never, container as never);
-  }
-
-  runWrapPromise(
-    promiseFn: () => Promise<void>,
-    traceMessage: string,
-    successMessage: string,
-  ): Promise<boolean> {
-    return this.wrapPromise(promiseFn, traceMessage, successMessage);
-  }
+    async resolveProvider(token) {
+      this.resolved.push(token);
+      return `resolve:${String(token)}`;
+    },
+    async tryResolveProvider(token) {
+      this.tried.push(token);
+      return `try:${String(token)}`;
+    },
+    async setup() {},
+    async boot() {},
+    async destroy() {},
+  };
 }
 
 describe('App', () => {
-  it('should create an app without logger support when Logger is not available', async () => {
-    const app = await App.create('Plain', {});
+  it('should register itself in the container and set logger context in the constructor', () => {
+    const logger = createLogger();
+    const container = createContainer();
+    const app = new App('Unit', logger as never, container as never);
+
+    expect(container.setInstances).toEqual([[App, app]]);
+    expect(logger.contexts).toEqual([[App, 'Unit']]);
+  });
+
+  it('should delegate resolve methods to the container', async () => {
+    const app = new App(undefined, undefined, createContainer() as never);
+
+    expect(await app.resolve<string>('token')).toBe('resolve:token');
+    expect(await app.tryResolve<string>('token')).toBe('try:token');
+  });
+
+  it('should return true and log success when boot and destroy complete', async () => {
+    const logger = createLogger();
+    const container = createContainer();
+    const app = new App('Unit', logger as never, container as never);
+
+    expect(await app.boot()).toBeTrue();
+    expect(await app.destroy()).toBeTrue();
+    expect(logger.traces).toHaveLength(2);
+    expect(logger.traces[0]?.okCalls).toEqual([['Started']]);
+    expect(logger.traces[1]?.okCalls).toEqual([['Destroyed']]);
+  });
+
+  it('should return false and log fatal errors when actions fail and tracing is available', async () => {
+    const logger = createLogger();
+    const container = createContainer();
+    const error = new Error('boom');
+
+    container.boot = async () => {
+      throw error;
+    };
+
+    const app = new App('Unit', logger as never, container as never);
+
+    expect(await app.boot()).toBeFalse();
+    expect(logger.traces).toHaveLength(1);
+    expect(logger.traces[0]?.fatalCalls).toEqual([[error]]);
+  });
+
+  it('should rethrow action errors when no logger is available', async () => {
+    const container = createContainer();
+
+    container.boot = async () => {
+      throw new Error('boom');
+    };
+
+    const app = new App(undefined, undefined, container as never);
+
+    await expect(app.boot()).rejects.toThrow('boom');
+  });
+
+  it('should create an app without logger support when Logger is unavailable', async () => {
+    const app = await App.create({});
 
     expect(app.logger).toBeUndefined();
     expect(await app.resolve(App)).toBe(app);
     expect(await app.tryResolve('missing')).toBeUndefined();
   });
 
-  it('should create an app with a logger when LoggerModule is imported', async () => {
-    process.env.LOG_LEVEL = 'trace';
-    process.env.LOG_FORMAT = 'none';
+  it('should create an app with logger support when LoggerModule is imported', async () => {
+    process.env.LOG_LEVEL = 'VERBOSE';
+    process.env.LOG_FORMAT = 'prettify';
 
-    const app = await App.create('Logged', {
-      imports: [LoggerModule],
-    });
+    const app = await App.create(
+      {
+        imports: [LoggerModule],
+      },
+      'Logged',
+    );
 
-    expect(app.logger).toBeDefined();
+    expect(app.logger).toBeInstanceOf(Logger);
     expect(await app.resolve(App)).toBe(app);
-    expect(app.resolve('missing')).rejects.toThrow('Could not resolve');
-  });
-
-  it('should wrap successful operations with trace and success logs', async () => {
-    const logger = createLogger();
-    const instances = new Map<unknown, unknown>();
-    const app = new TestApp(logger, {
-      setInstance(token, instance) {
-        instances.set(token, instance);
-      },
-      resolve: async () => 'resolved',
-      tryResolve: async () => undefined,
-      boot: async () => undefined,
-      destroy: async () => undefined,
-    });
-
-    expect(instances.get(App)).toBe(app);
-    expect(await app.boot()).toBeTrue();
-    expect(await app.destroy()).toBeTrue();
-    expect(logger.contexts).toEqual(['App(Test)']);
-    expect(logger.traceCalls).toEqual([['Booting...'], ['Destroying...']]);
-    expect(logger.okCalls).toEqual([['Ready!'], ['Destroyed!']]);
-    expect(logger.infoCalls).toEqual([]);
-    expect(logger.errorCalls).toEqual([]);
-  });
-
-  it('should return false and log the error when an operation fails with logger enabled', async () => {
-    const logger = createLogger();
-    const error = new Error('boom');
-    const app = new TestApp(logger, {
-      setInstance: () => undefined,
-      resolve: async () => undefined,
-      tryResolve: async () => undefined,
-      boot: async () => {
-        throw error;
-      },
-      destroy: async () => undefined,
-    });
-
-    expect(await app.boot()).toBeFalse();
-    expect(logger.traceCalls).toEqual([['Booting...']]);
-    expect(logger.okCalls).toEqual([]);
-    expect(logger.errorCalls).toEqual([[error]]);
-  });
-
-  it('should delegate resolve methods to the container', async () => {
-    const logger = createLogger();
-    const app = new TestApp(logger, {
-      setInstance: () => undefined,
-      resolve: async (token) => `resolve:${String(token)}`,
-      tryResolve: async (token) => `try:${String(token)}`,
-      boot: async () => undefined,
-      destroy: async () => undefined,
-    });
-
-    expect(await app.resolve<string>('token')).toBe('resolve:token');
-    expect(await app.tryResolve<string>('token')).toBe('try:token');
-  });
-
-  it('should return false instead of rejecting when logger is unavailable and an operation fails', async () => {
-    const app = new TestApp(undefined, {
-      setInstance: () => undefined,
-      resolve: async () => undefined,
-      tryResolve: async () => undefined,
-      boot: async () => {
-        throw new Error('boom');
-      },
-      destroy: async () => undefined,
-    });
-
-    expect(await app.boot()).toBeFalse();
-  });
-
-  it('should expose wrapPromise to subclasses', async () => {
-    const logger = createLogger();
-    const app = new TestApp(logger, {
-      setInstance: () => undefined,
-      resolve: async () => undefined,
-      tryResolve: async () => undefined,
-      boot: async () => undefined,
-      destroy: async () => undefined,
-    });
-
-    expect(
-      await app.runWrapPromise(() => Promise.resolve(), 'Tracing...', 'Done!'),
-    ).toBeTrue();
-    expect(logger.traceCalls.at(-1)).toEqual(['Tracing...']);
-    expect(logger.okCalls.at(-1)).toEqual(['Done!']);
+    await expect(app.resolve('missing')).rejects.toThrow('Could not resolve');
   });
 });

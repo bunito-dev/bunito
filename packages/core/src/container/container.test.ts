@@ -84,19 +84,19 @@ describe('Container', () => {
     }
 
     const container = new Container(AppModule);
-    const requestId = Id.create('request');
+    const requestId = Id.unique('request');
 
     await container.setup();
     await container.resolveProvider(RequestScopedService, { requestId });
     await container.boot();
     expect((await container.resolveProvider(AppModule)).bootRuns).toBe(1);
 
-    expect(container.setup()).rejects.toThrow('cannot be called twice');
-    expect(container.boot()).rejects.toThrow('cannot be called twice');
+    await expect(container.setup()).rejects.toThrow('cannot be called twice');
+    await expect(container.boot()).rejects.toThrow('cannot be called twice');
 
     await container.destroy();
     expect(destroyRuns).toBe(1);
-    expect(container.destroy()).rejects.toThrow('cannot be called twice');
+    await expect(container.destroy()).rejects.toThrow('cannot be called twice');
   });
 
   it('should return undefined from tryResolveProvider when the provider does not exist', async () => {
@@ -106,7 +106,7 @@ describe('Container', () => {
   });
 
   it('should tolerate missing or non-class controller matches while traversing modules', async () => {
-    const moduleId = Id.create('module');
+    const moduleId = Id.unique('module');
     const compiler = {
       compileModule: () => moduleId,
       getModule: () => ({

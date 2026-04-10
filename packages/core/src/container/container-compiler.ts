@@ -8,7 +8,7 @@ import {
   str,
 } from '@bunito/common';
 import { ConfigurationException, RuntimeException } from '../exceptions';
-import { DECORATOR_METADATA_KEYS, DEFAULT_SCOPES } from './constants';
+import { CONTAINER_METADATA_KEYS, DEFAULT_SCOPES } from './constants';
 import { Id } from './id';
 import type {
   ClassProviderMetadata,
@@ -31,6 +31,9 @@ import { resolveModuleId, resolveProviderId } from './utils';
 
 export class ContainerCompiler {
   private readonly modules = new Map<ModuleId, CompiledModule>();
+
+  // biome-ignore lint/complexity/noUselessConstructor: Coverage
+  constructor() {}
 
   getModule(moduleId: ModuleId): CompiledModule {
     const module = this.modules.get(moduleId);
@@ -89,9 +92,13 @@ export class ContainerCompiler {
     const moduleId = resolveModuleId(moduleLike);
 
     if (parentModuleIds.has(moduleId)) {
-      const parentPath = [...parentModuleIds]
-        .map((parentModuleId) => str`${parentModuleId}`)
-        .join(' → ');
+      const parentPathParts: string[] = [];
+
+      for (const parentModuleId of parentModuleIds) {
+        parentPathParts.push(str`${parentModuleId}`);
+      }
+
+      const parentPath = parentPathParts.join(' → ');
 
       throw new ConfigurationException(
         str`Circular dependency detected between ${parentPath} in ${moduleId} module`,
@@ -200,7 +207,7 @@ export class ContainerCompiler {
     if (isClass(moduleLike)) {
       options = getDecoratorMetadata<ModuleOptions>(
         moduleLike,
-        DECORATOR_METADATA_KEYS.MODULE,
+        CONTAINER_METADATA_KEYS.MODULE,
       );
 
       if (!options) {
@@ -227,7 +234,7 @@ export class ContainerCompiler {
   }
 
   private verifyController(controllerRef: ControllerRef): void {
-    if (!getDecoratorMetadata<true>(controllerRef, DECORATOR_METADATA_KEYS.CONTROLLER)) {
+    if (!getDecoratorMetadata<true>(controllerRef, CONTAINER_METADATA_KEYS.CONTROLLER)) {
       throw new ConfigurationException(
         str`Missing controller metadata for ${controllerRef}`,
         {
@@ -243,7 +250,7 @@ export class ContainerCompiler {
     if (isClass(providerLike)) {
       const metadata = getDecoratorMetadata<ClassProviderMetadata>(
         providerLike,
-        DECORATOR_METADATA_KEYS.PROVIDER,
+        CONTAINER_METADATA_KEYS.PROVIDER,
       );
 
       if (!metadata) {
@@ -295,32 +302,44 @@ export class ContainerCompiler {
   private compileInjections(
     injections: Array<InjectionLike | null> | undefined,
   ): CompiledInjection[] {
-    return (
-      injections?.filter(notEmpty).map((injectionLike): CompiledInjection => {
-        if (
-          isObject(injectionLike) &&
-          'token' in injectionLike &&
-          !('useClass' in injectionLike) &&
-          !('useFactory' in injectionLike) &&
-          !('useValue' in injectionLike)
-        ) {
-          return {
-            providerId: Id.for(injectionLike.token),
-            optional: injectionLike.optional ?? false,
-          };
-        }
+    if (!injections) {
+      return [];
+    }
 
-        return {
-          providerId: resolveProviderId(injectionLike),
-          optional: false,
-        };
-      }) ?? []
-    );
+    const compiledInjections: CompiledInjection[] = [];
+
+    for (const injectionLike of injections) {
+      if (!notEmpty(injectionLike)) {
+        continue;
+      }
+
+      if (
+        isObject(injectionLike) &&
+        'token' in injectionLike &&
+        !('useClass' in injectionLike) &&
+        !('useFactory' in injectionLike) &&
+        !('useValue' in injectionLike)
+      ) {
+        compiledInjections.push({
+          providerId: Id.for(injectionLike.token),
+          optional: injectionLike.optional ?? false,
+        });
+
+        continue;
+      }
+
+      compiledInjections.push({
+        providerId: resolveProviderId(injectionLike),
+        optional: false,
+      });
+    }
+
+    return compiledInjections;
   }
 
   private resolveLifecycleProps(target: Class): LifecycleProps {
     return new Map(
-      getDecoratorMetadata<LifecycleProps>(target, DECORATOR_METADATA_KEYS.ON_LIFECYCLE),
+      getDecoratorMetadata<LifecycleProps>(target, CONTAINER_METADATA_KEYS.ON_LIFECYCLE),
     );
   }
 }

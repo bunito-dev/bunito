@@ -1,6 +1,6 @@
 import type { Class, ClassDecorator } from '@bunito/common';
 import { createImmutableDecorator } from '@bunito/common';
-import { DECORATOR_METADATA_KEYS, DEFAULT_SCOPES } from '../constants';
+import { CONTAINER_METADATA_KEYS, DEFAULT_SCOPES } from '../constants';
 import type { ClassModuleOptions, ClassProviderMetadata, ModuleOptions } from '../types';
 
 export function Module<TModule extends Class>(
@@ -14,11 +14,11 @@ export function Module<TModule extends Class>(
   } = options;
 
   return createImmutableDecorator(({ metadata }, target) => {
-    metadata[DECORATOR_METADATA_KEYS.MODULE] = {
+    metadata[CONTAINER_METADATA_KEYS.MODULE] = {
       ...moduleOptions,
       providers: [...providers, target],
     } satisfies ModuleOptions;
-    metadata[DECORATOR_METADATA_KEYS.PROVIDER] = {
+    metadata[CONTAINER_METADATA_KEYS.PROVIDER] = {
       scope,
       injects,
     } satisfies ClassProviderMetadata;

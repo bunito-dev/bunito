@@ -63,16 +63,16 @@ class BrokenModule {
 
 describe('App integration', () => {
   it('should create, resolve and run lifecycle with logger module imported', async () => {
-    process.env.LOG_LEVEL = 'trace';
-    process.env.LOG_FORMAT = 'none';
+    process.env.LOG_LEVEL = 'VERBOSE';
+    process.env.LOG_FORMAT = 'prettify';
 
-    const app = await App.create('Integration', AppModule);
+    const app = await App.create(AppModule, 'Integration');
 
     const moduleInstance = await app.resolve(AppModule);
     const greetingService = await app.resolve(GreetingService);
     const logger = await app.resolve(Logger);
 
-    expect(app.logger).toBeDefined();
+    expect(app.logger).toBeInstanceOf(Logger);
     expect(moduleInstance.initRuns).toBe(1);
     expect(moduleInstance.bootRuns).toBe(0);
     expect(moduleInstance.destroyRuns).toBe(0);
@@ -86,7 +86,7 @@ describe('App integration', () => {
     expect(moduleInstance.destroyRuns).toBe(1);
   });
 
-  it('should reject app creation when setup fails during eager provider resolution', async () => {
-    expect(App.create('Broken', BrokenModule)).rejects.toThrow('setup failed');
+  it('should reject app creation when setup fails while resolving a bootable provider', async () => {
+    await expect(App.create(BrokenModule, 'Broken')).rejects.toThrow('setup failed');
   });
 });

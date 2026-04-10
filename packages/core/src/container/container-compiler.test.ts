@@ -81,7 +81,49 @@ describe('ContainerCompiler', () => {
     expect(compiled.exports.get(Id.for('value-token'))).toBe(moduleId);
   });
 
+  it('should compile module-class providers with custom scope and factory provider options', () => {
+    const factoryProvider = {
+      token: 'factory-token',
+      scope: 'request' as const,
+      injects: ['dep', { token: 'optional-dep', optional: true }, null],
+      useFactory: () => 'factory-value',
+    };
+
+    @Module({
+      scope: 'module',
+      injects: ['module-dep', null],
+      providers: [factoryProvider],
+      exports: ['factory-token'],
+    })
+    class FeatureModule {}
+
+    const compiler = new ContainerCompiler();
+    const moduleId = compiler.compileModule(FeatureModule);
+    const compiled = compiler.getModule(moduleId);
+
+    expect(compiled.providers.get(Id.for(FeatureModule))).toEqual({
+      kind: 'class',
+      scope: 'module',
+      useClass: FeatureModule,
+      injects: [{ providerId: Id.for('module-dep'), optional: false }],
+      lifecycle: new Map(),
+    });
+    expect(compiled.providers.get(Id.for('factory-token'))).toEqual({
+      kind: 'factory',
+      scope: 'request',
+      useFactory: factoryProvider.useFactory,
+      injects: [
+        { providerId: Id.for('dep'), optional: false },
+        { providerId: Id.for('optional-dep'), optional: true },
+      ],
+    });
+    expect(compiled.exports.get(Id.for('factory-token'))).toBe(moduleId);
+  });
+
   it('should locate providers from the current module and imported exports', () => {
+    @Provider()
+    class LocalProvider {}
+
     @Provider()
     class ExportedProvider {}
 
@@ -90,15 +132,26 @@ describe('ContainerCompiler', () => {
       exports: [ExportedProvider],
     };
     const rootModule = {
+      providers: [LocalProvider],
       imports: [importedModule],
     };
 
     const compiler = new ContainerCompiler();
     const rootModuleId = compiler.compileModule(rootModule);
 
+    expect(compiler.locateProvider(Id.for(LocalProvider), rootModuleId)).toEqual({
+      moduleId: rootModuleId,
+      provider: {
+        kind: 'class',
+        scope: 'singleton',
+        useClass: LocalProvider,
+        injects: [],
+        lifecycle: new Map(),
+      },
+    });
     expect(compiler.locateProvider(Id.for(ExportedProvider), rootModuleId)).toEqual({
       moduleId: Id.for(importedModule),
-      PROVIDER: {
+      provider: {
         kind: 'class',
         scope: 'singleton',
         useClass: ExportedProvider,
@@ -107,12 +160,37 @@ describe('ContainerCompiler', () => {
       },
     });
     expect(compiler.locateProvider(Id.for('missing'), rootModuleId)).toBeUndefined();
+    expect(
+      compiler.locateProvider(Id.for('missing'), new Id('unknown-module')),
+    ).toBeUndefined();
+  });
+
+  it('should throw when exporting a provider that is missing from the module graph', () => {
+    const compiler = new ContainerCompiler();
+
+    expect(() =>
+      compiler.compileModule({
+        exports: ['missing-token'],
+      }),
+    ).toThrow('not found');
+  });
+
+  it('should reuse an already compiled module id when compiling the same module twice', () => {
+    const module = {
+      providers: [{ token: 'value-token', useValue: 123 }],
+    };
+    const compiler = new ContainerCompiler();
+
+    const first = compiler.compileModule(module);
+    const second = compiler.compileModule(module);
+
+    expect(second).toBe(first);
   });
 
   it('should throw when reading a missing compiled module', () => {
     const compiler = new ContainerCompiler();
 
-    expect(() => compiler.getModule(Id.create('missing'))).toThrow('not found');
+    expect(() => compiler.getModule(new Id('missing'))).toThrow('not found');
   });
 
   it('should throw when a class module is missing metadata', () => {

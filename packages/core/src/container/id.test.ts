@@ -3,11 +3,14 @@ import { Id } from './id';
 
 describe('Id', () => {
   it('should create unique ids with an incrementing suffix', () => {
-    const first = Id.create('token');
-    const second = Id.create('token');
+    const first = Id.unique('token');
+    const second = Id.unique('token');
 
     expect(first.name).toBe('token');
-    expect(first.toString()).not.toBe(second.toString());
+    expect(first.index).toBe(1);
+    expect(second.index).toBe(2);
+    expect(first.toString()).toBe('token#1');
+    expect(second.toString()).toBe('token#2');
   });
 
   it('should reuse ids for the same object token', () => {
@@ -24,5 +27,13 @@ describe('Id', () => {
   it('should create different ids for different tokens', () => {
     expect(Id.for({})).not.toBe(Id.for({}));
     expect(Id.for('first')).not.toBe(Id.for('second'));
+  });
+
+  it('should recognize id instances and preserve them', () => {
+    const id = new Id('existing');
+
+    expect(Id.isInstance(id)).toBeTrue();
+    expect(Id.for(id)).toBe(id);
+    expect(id.toString()).toBe('existing');
   });
 });

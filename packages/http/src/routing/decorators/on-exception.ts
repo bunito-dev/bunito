@@ -1,6 +1,6 @@
 import type { ClassMethodDecorator } from '@bunito/common';
 import { createImmutableDecorator } from '@bunito/common';
-import { DECORATOR_METADATA_KEYS } from '../constants';
+import { ROUTING_METADATA_KEYS } from '../constants';
 import type {
   OnExceptionDefinition,
   OnExceptionHandler,
@@ -19,8 +19,8 @@ export function OnException<THandler extends OnExceptionHandler>(
       },
     };
 
-    metadata[DECORATOR_METADATA_KEYS.ON_EXCEPTION] ??= [];
-    (metadata[DECORATOR_METADATA_KEYS.ON_EXCEPTION] as OnExceptionDefinition[]).push(
+    metadata[ROUTING_METADATA_KEYS.ON_EXCEPTION] ??= [];
+    (metadata[ROUTING_METADATA_KEYS.ON_EXCEPTION] as OnExceptionDefinition[]).push(
       definition,
     );
   });

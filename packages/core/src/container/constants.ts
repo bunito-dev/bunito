@@ -6,7 +6,7 @@ export const DEFAULT_SCOPES = {
   CONTROLLER: 'request',
 } as const satisfies Record<string, ScopeKind>;
 
-export const DECORATOR_METADATA_KEYS = {
+export const CONTAINER_METADATA_KEYS = {
   MODULE: Symbol('MODULE'),
   CONTROLLER: Symbol('CONTROLLER'),
   PROVIDER: Symbol('PROVIDER'),
