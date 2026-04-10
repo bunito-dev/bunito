@@ -65,7 +65,6 @@ When relevant, update:
 
 - [`README.md`](./README.md)
 - [`AGENTS.md`](./AGENTS.md)
-- [`TODO.md`](./TODO.md)
 - package README files in `packages/*`
 - architecture or decision docs in `docs/`
 
@@ -74,7 +73,7 @@ Good rule of thumb:
 - if behavior changes, update tests
 - if public usage changes, update README
 - if project conventions change, update `AGENTS.md`
-- if product scope changes, update `TODO.md` or `docs/roadmap.md`
+- if product scope changes, update `docs/roadmap.md`
 
 ## Working In Sensitive Areas
 

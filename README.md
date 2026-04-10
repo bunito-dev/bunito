@@ -112,7 +112,6 @@ Additional project documentation lives in:
 
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 - [`AGENTS.md`](./AGENTS.md)
-- [`TODO.md`](./TODO.md)
 - [`docs/README.md`](./docs/README.md)
 - [`docs/getting-started.md`](./docs/getting-started.md)
 - [`docs/architecture.md`](./docs/architecture.md)
@@ -127,7 +126,6 @@ Suggested reading order for new contributors:
 3. [`docs/architecture.md`](./docs/architecture.md)
 4. [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 5. [`docs/testing.md`](./docs/testing.md)
-6. [`TODO.md`](./TODO.md)
 
 ## Repository Structure
 
