@@ -1,35 +1,17 @@
 # Docs
 
-This directory contains project-level documentation for bunito.
+This directory contains short project-level notes for bunito.
 
-## Contents
+## Files
 
-- [`architecture.md`](./architecture.md)
-  - current runtime model of the framework
-  - package responsibilities
-  - application lifecycle
-  - DI, module, config, logger, and HTTP architecture
+- [`getting-started.md`](./getting-started.md): first steps with the current examples
+- [`architecture.md`](./architecture.md): short package and runtime overview
+- [`testing.md`](./testing.md): testing expectations and repository validation
+- [`roadmap.md`](./roadmap.md): current direction and rough priorities
 
-- [`testing.md`](./testing.md)
-  - testing philosophy
-  - file placement
-  - validation workflow
-  - coverage expectations
-
-- [`getting-started.md`](./getting-started.md)
-  - minimal app walkthrough
-  - first controller, module, provider, and bootstrap flow
-
-- [`roadmap.md`](./roadmap.md)
-  - current likely direction of the project
-  - near-term and mid-term priorities
-
-
-## Suggested Reading Order
+## Suggested Order
 
 1. [`README.md`](../README.md)
-2. [`docs/getting-started.md`](./getting-started.md)
-3. [`docs/architecture.md`](./architecture.md)
-4. [`CONTRIBUTING.md`](../CONTRIBUTING.md)
-5. [`docs/testing.md`](./testing.md)
-6. [`docs/roadmap.md`](./roadmap.md)
+2. [`getting-started.md`](./getting-started.md)
+3. [`architecture.md`](./architecture.md)
+4. [`testing.md`](./testing.md)

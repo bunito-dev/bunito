@@ -1,154 +1,67 @@
 # Getting Started
 
-This guide walks through a minimal bunito application using `@bunito/core` and
-`@bunito/http`.
+The fastest way to get oriented is to run the examples that already live in this repository.
 
-## Prerequisites
-
-- [Bun](https://bun.sh) installed
-- a TypeScript project using ESM
-
-## Install Packages
+## 1. Install Dependencies
 
 ```bash
-bun add @bunito/core @bunito/http zod
+bun install
 ```
 
-## Create A Controller
+## 2. Run The Core Example
 
-```ts
-import { Controller } from '@bunito/core';
-import { Get, Route } from '@bunito/http';
-
-@Route('/hello')
-@Controller()
-export class HelloController {
-  @Get('/')
-  hello() {
-    return {
-      message: 'Hello from bunito',
-    };
-  }
-}
+```bash
+cd examples
+bun run core:001-basics
 ```
 
-## Create A Module
+Source:
 
-You can define modules either as plain `ModuleOptions` objects or as decorated
-classes. A decorated module class is usually the most ergonomic starting point.
+- [`examples/core/001-basics/main.ts`](../examples/core/001-basics/main.ts)
 
-```ts
-import { Module } from '@bunito/core';
-import { HttpModule } from '@bunito/http';
-import { HelloController } from './hello.controller';
+This example shows:
 
-@Module({
-  imports: [HttpModule],
-  controllers: [HelloController],
-})
-export class AppModule {}
+- creating an app with `App.create()`
+- registering providers
+- resolving providers from the container
+- using `LoggerModule`
+
+## 3. Run The HTTP Example
+
+```bash
+cd examples
+bun run http:001-basics
 ```
 
-## Bootstrap The Application
+Main files:
 
-```ts
-import { App } from '@bunito/core';
-import { AppModule } from './app.module';
+- [`examples/http/001-basics/main.ts`](../examples/http/001-basics/main.ts)
+- [`examples/http/001-basics/app.module.ts`](../examples/http/001-basics/app.module.ts)
+- [`examples/http/001-basics/foo/foo.module.ts`](../examples/http/001-basics/foo/foo.module.ts)
+- [`examples/http/001-basics/foo/bar/bar.controller.ts`](../examples/http/001-basics/foo/bar/bar.controller.ts)
 
-const app = await App.create('my-app', AppModule);
+This example shows:
 
-await app.bootstrap();
+- composing modules with `@Module()`
+- using `HttpModule` and `RoutingModule`
+- defining controllers and handlers with HTTP decorators
+- request-scoped providers
+- `zod`-based request validation
+
+## 4. Validate The Repository
+
+From the repository root:
+
+```bash
+bun run typecheck
+bun run lint
+bun run test
+bun run coverage
 ```
 
-At this point, bunito will:
+## Next Reading
 
-1. compile the module graph
-2. construct the container
-3. run setup hooks
-4. discover HTTP routes
-5. start the HTTP server during bootstrap
-
-## Add Validation
-
-You can attach `zod` schemas to route handlers and get typed request context.
-
-```ts
-import { Controller } from '@bunito/core';
-import type { HttpContext } from '@bunito/http';
-import { Get } from '@bunito/http';
-import { z } from 'zod';
-
-const querySchema = {
-  query: z.object({
-    name: z.string(),
-  }),
-};
-
-@Controller()
-export class HelloController {
-  @Get({
-    path: '/',
-    schema: querySchema,
-  })
-  hello(context: HttpContext<typeof querySchema>) {
-    return {
-      message: `Hello ${context.query.name}`,
-    };
-  }
-}
-```
-
-## Add A Provider
-
-Providers can be classes, factories, or values.
-
-```ts
-import { Controller, Module, Provider } from '@bunito/core';
-import { Get } from '@bunito/http';
-
-@Provider()
-class HelloService {
-  message() {
-    return 'Hello from a provider';
-  }
-}
-
-@Controller({
-  injects: [HelloService],
-})
-class HelloController {
-  constructor(private readonly helloService: HelloService) {}
-
-  @Get('/')
-  hello() {
-    return {
-      message: this.helloService.message(),
-    };
-  }
-}
-
-@Module({
-  imports: [HttpModule],
-  providers: [HelloService],
-  controllers: [HelloController],
-})
-export class AppModule {}
-```
-
-## Next Steps
-
-After the minimal app is working, the best next references are:
-
-- [`docs/architecture.md`](./architecture.md)
-- [`docs/testing.md`](./testing.md)
+- [`README.md`](../README.md)
+- [`architecture.md`](./architecture.md)
 - [`packages/core/README.md`](../packages/core/README.md)
 - [`packages/http/README.md`](../packages/http/README.md)
-- [`example/src/main.ts`](../example/src/main.ts)
-
-## Current Limits
-
-The framework is already usable, but some HTTP features are still planned:
-
-- middleware
-- multipart/form-data support
-- richer custom HTTP error responses

@@ -1,19 +1,19 @@
 {
   "name": "@bunito/common",
-  "version": "0.0.2",
-  "description": "Dependency-free shared decorator helpers, exceptions, literals, types, and utilities for bunito.",
+  "version": "0.0.4",
+  "description": "Shared metadata helpers, exceptions, and utility primitives for bunito packages.",
   "keywords": [
     "bunito",
     "bun",
     "typescript",
-    "framework",
+    "runtime",
     "decorators",
     "metadata",
     "exceptions",
     "utilities",
     "helpers",
-    "types",
-    "literals"
+    "primitives",
+    "types"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",

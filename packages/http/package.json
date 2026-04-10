@@ -1,7 +1,7 @@
 {
   "name": "@bunito/http",
-  "version": "0.0.2",
-  "description": "HTTP module for bunito with route decorators, controller discovery, request validation, and Bun server integration.",
+  "version": "0.0.4",
+  "description": "HTTP integration for bunito with routing decorators, controller discovery, validation, and Bun server lifecycle.",
   "keywords": [
     "bunito",
     "bun",
@@ -12,7 +12,9 @@
     "routing",
     "controllers",
     "decorators",
-    "zod"
+    "validation",
+    "zod",
+    "api"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",
@@ -39,8 +41,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:*",
-    "@bunito/core": "workspace:*",
+    "@bunito/common": "workspace:0.0.4",
+    "@bunito/core": "workspace:0.0.4",
     "zod": "catalog:"
   },
   "devDependencies": {

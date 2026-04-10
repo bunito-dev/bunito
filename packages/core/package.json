@@ -1,19 +1,22 @@
 {
   "name": "@bunito/core",
-  "version": "0.0.2",
-  "description": "Core bunito runtime with app lifecycle, dependency injection, modules, config, and logger support.",
+  "version": "0.0.4",
+  "description": "Core bunito runtime with app lifecycle, dependency injection, modules, config, and logging.",
   "keywords": [
     "bunito",
     "bun",
     "typescript",
     "framework",
+    "runtime",
+    "application",
     "dependency-injection",
     "di",
     "modules",
     "config",
     "logger",
     "container",
-    "lifecycle"
+    "lifecycle",
+    "ioc"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",
@@ -41,7 +44,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:*"
+    "@bunito/common": "workspace:0.0.4"
   },
   "devDependencies": {
     "@types/bun": "catalog:"

@@ -5,15 +5,14 @@
 `bunito` is a Bun-based TypeScript monorepo for a small framework split into focused
 workspace packages:
 
-- `packages/common`: shared helpers, predicates, decorators, and exception types.
-- `packages/core`: application bootstrap, dependency injection container, module
-  compilation/runtime, and logger integration.
-- `packages/http`: HTTP integration built on top of `@bunito/core`.
-- `example`: runnable example app showing modules, providers, controllers, setup
-  hooks, and HTTP routes.
+- `packages/common`: shared helpers, predicates, metadata utilities, and base exceptions
+- `packages/core`: application bootstrap, dependency injection container, modules,
+  config, and logger integration
+- `packages/http`: HTTP integration built on top of `@bunito/core`
+- `examples`: runnable examples showing the current API in small, focused setups
 
-The repo currently uses Bun workspaces, Bun's built-in test runner for automated
-tests, TypeScript in strict mode, and Biome for linting/formatting.
+The repository uses Bun workspaces, Bun's built-in test runner, strict TypeScript,
+and Biome for linting and formatting.
 
 ## Workspace Layout
 
@@ -23,182 +22,121 @@ tests, TypeScript in strict mode, and Biome for linting/formatting.
   - `bunfig.toml`
   - `tsconfig.json`
 - Framework packages live in `packages/*`.
-- The runnable integration example lives in `example/`.
-- `bin/main.ts` exists, but the practical usage example today is `example/src/main.ts`.
-- There is currently no `packages/cli` package in the repository.
+- Runnable examples live in `examples/`.
+- Long-lived technical notes live in `specs/`.
+
+Current examples:
+
+- `examples/core/001-basics`
+- `examples/http/001-basics`
 
 ## Current Package Inventory
 
 - `@bunito/common`
   - Exports only from `src/index.ts`
-  - No runtime dependencies
-  - Holds metadata helpers, generic exception base class, and small predicates/utils
+  - Holds metadata helpers, exceptions, and small utilities
 - `@bunito/core`
   - Depends on `@bunito/common`
-  - Exports `app`, `config`, `container`, and `logger`
-  - Owns DI, module compilation/runtime, application bootstrap, and logging
+  - Owns `App`, DI container, modules, config, and logger
 - `@bunito/http`
   - Depends on `@bunito/common`, `@bunito/core`, and `zod`
-  - Exports decorators, `HttpModule`, `HttpService`, config, exceptions, and HTTP types
-- `@bunito/example`
-  - Private workspace app used as the main integration/demo target
+  - Owns HTTP module/service, routing decorators, exceptions, and HTTP types
+- `@bunito/examples`
+  - Private workspace used for runnable examples
 
 ## Tooling And Commands
 
-Use Bun for package management and script execution.
+Use Bun for package management and scripts.
 
 - Install dependencies: `bun install`
 - Typecheck the repo: `bun run typecheck`
-- Run the full test suite: `bun run test`
 - Lint the repo: `bun run lint`
 - Format the repo: `bun run format`
+- Run the full test suite: `bun run test`
 - Run full coverage: `bun run coverage`
 - Sync package versions with the root manifest: `./scripts/sync-versions.sh`
-- Run the example app:
-  - from repo root: `cd example && bun run start`
-- Run tests for a specific package:
-  - `bun test packages/common/src`
-  - `bun test packages/core/src`
-  - `bun test packages/http/src`
-- Run full coverage:
-  - `bun run coverage`
 
-When making code changes, validate with at least typechecking and linting and,
-when relevant, by running tests and the example app.
+Run examples:
+
+- `cd examples && bun run core:001-basics`
+- `cd examples && bun run http:001-basics`
+
+Run tests for a specific package:
+
+- `bun test packages/common/src`
+- `bun test packages/core/src`
+- `bun test packages/http/src`
 
 ## Coding Conventions
 
-- Language: TypeScript with ESM.
-- Formatting/linting: Biome (`biome.json`).
-- Indentation: 2 spaces.
-- Quotes: single quotes.
-- Semicolons: required.
-- Prefer separate `import type` statements when importing types.
-- Prefer `node:` import protocol for Node built-ins.
-- Avoid parameter reassignment.
-- Remove unused imports and locals.
+- Language: TypeScript with ESM
+- Formatting/linting: Biome
+- Indentation: 2 spaces
+- Quotes: single quotes
+- Semicolons: required
+- Prefer separate `import type` statements when importing types
+- Prefer `node:` import protocol for Node built-ins
+- Remove unused imports and locals
+
+### Import Paths
+
+Use this convention consistently:
+
+- inside the same package: prefer relative imports
+- across packages: use package names such as `@bunito/common`, `@bunito/core`, `@bunito/http`
+
+For tests in this repo, the same rule applies:
+
+- test files inside `packages/core` should use relative imports for `core` internals
+- test files inside `packages/http` should use relative imports for `http` internals
+- imports that cross package boundaries should go through the package name
 
 The root `tsconfig.json` enables strict mode and modern decorator support via
 `ESNext.Decorators`, includes Bun globals via `"types": ["bun"]`, and includes
-`DOM` libs for Bun HTTP types like `Request` and `Response`. Preserve that
-direction when editing decorator-driven code.
+`DOM` libs for Bun HTTP types like `Request` and `Response`.
 
 ## Architecture Notes
 
 ### `@bunito/common`
 
-Important files:
+Important areas:
 
-- `packages/common/src/decorators/metadata/*`: low-level metadata read/write helpers
-- `packages/common/src/exceptions/exception.ts`: framework base exception
-- `packages/common/src/utils/*`: shared predicates and name helpers
+- `packages/common/src/decorators/*`
+- `packages/common/src/exceptions/*`
+- `packages/common/src/helpers/*`
 
 Notes:
 
-- This package is intentionally lightweight.
-- Avoid coupling `common` back to `core` or `http`.
-- Metadata helpers are used by both container decorators and HTTP decorators, so
-  changes here ripple across the whole framework.
+- keep this package lightweight
+- avoid coupling `common` back to `core` or `http`
 
 ### `@bunito/core`
 
-Important files:
+Important areas:
 
-- `packages/core/src/app/app.ts`: creates `App`, compiles the root module, wires in
-  `LoggerModule`, and drives setup/bootstrap.
-- `packages/core/src/container/*`: the DI container, token/id handling, compiler,
-  runtime, decorators, and related types.
-- `packages/core/src/logger/*`: logger abstractions and logger module.
-- `packages/core/src/config/*`: environment/config registration and config service.
+- `packages/core/src/app/*`
+- `packages/core/src/container/*`
+- `packages/core/src/config/*`
+- `packages/core/src/logger/*`
 
-Be careful when changing container behavior. A small change in metadata, token
-resolution, or module compilation can affect all packages.
+Notes:
 
-Container/runtime behavior worth knowing:
-
-- `App.create(name, moduleRef)` creates a `Container`, optionally resolves `Logger`,
-  runs `setupEntrypoints()`, then returns an `App`.
-- `App` registers itself into the container with `container.setInstance(App, this)`.
-- `bootstrap()` delegates to container bootstrap hooks and returns `Promise<boolean>`.
-- `teardown()` destroys scopes and also returns `Promise<boolean>`.
-- Module classes decorated with `@Module()` are also module-scoped providers.
-- `entrypoint` currently means a provider coming from the module class itself.
-- `module.extends` is intentionally still in flux and should not be covered by tests.
-- Module-scoped providers are cached per consumer module context, which intentionally
-  distinguishes them from true singletons.
-
-Config/logger behavior worth knowing:
-
-- `configModule` registers `ConfigService`.
-- `registerConfig(name, factory)` creates a module-scoped config provider.
-- `LoggerModule` provides `Logger` plus `LoggerConfig`.
-- `Logger` is transient and depends on `LoggerConfig`.
-- Built-in formatters are `prettify` and `json`.
+- small changes in container behavior can affect every package
+- module/provider metadata and scope handling are especially sensitive
 
 ### `@bunito/http`
 
-Important files:
+Important areas:
 
-- `packages/http/src/http.module.ts`: integrates the HTTP layer into the module
-  system and starts serving during bootstrap.
-- `packages/http/src/http.service.ts`: runtime HTTP behavior.
-- `packages/http/src/decorators/*`: route decorators such as `@Get()` and `@Post()`.
-- `packages/http/src/types.ts`: HTTP context typing.
+- `packages/http/src/http.module.ts`
+- `packages/http/src/http.service.ts`
+- `packages/http/src/routing/*`
+- `packages/http/src/exceptions/*`
 
-Validate decorator and route metadata changes against the example app, especially
-parameter parsing and controller registration.
+Notes:
 
-HTTP behavior worth knowing:
-
-- `HttpModule` imports `LoggerModule` and `configModule`, provides `HttpService`,
-  and starts/stops the Bun server via `@Bootstrap()` / `@Destroy()`.
-- `HttpService` discovers controllers from `container.controllers` during `@Setup()`.
-- Class-level `@Route()` metadata accumulates through the controller/module stack.
-- Method decorators (`@Get`, `@Post`, etc.) store handler metadata consumed by
-  `HttpService.resolveHandlers()`.
-- Route handlers are resolved through the container with a generated request id.
-- Request `query`, `params`, and `body` can be validated with `zod` schemas.
-- Current implementation intentionally does not yet handle middleware,
-  multipart/form-data, or custom HTTP error formatting.
-- `HttpService.resolveHandlers()` should not mutate decorator metadata; treat route
-  metadata as immutable input.
-
-### `example`
-
-Important files:
-
-- `example/src/main.ts`: root composition and bootstrap
-- `example/src/foo/*`: module-class usage, module lifecycle hooks, nested route prefix
-- `example/src/bar/*`: config registration plus provider/controller injection
-
-What the example currently demonstrates:
-
-- Root app composition through plain `ModuleOptions`
-- Importing `HttpModule` and `LoggerModule`
-- Module classes decorated with `@Module()` and `@Route()`
-- `@Setup()`, `@Bootstrap()`, and `@Destroy()` hooks
-- Controllers returning plain objects that are serialized to JSON responses
-- Multiple handlers on the same path/method
-- Zod-powered query validation in HTTP handlers
-- Config registration via `registerConfig()`
-
-## Change Guidelines For Agents
-
-- Start by understanding which package owns the behavior you need to change.
-- Prefer small, local changes over cross-package refactors unless the problem truly
-  spans package boundaries.
-- If you touch decorators or metadata utilities, inspect both the declaration side
-  and the runtime consumption side before editing.
-- If you change DI/module behavior in `core`, review how `example/src/main.ts`
-  exercises providers, modules, controller injection, and `@Setup()`.
-- If you change HTTP behavior, check route decorators, HTTP service code, and the
-  example controller paths together.
-- If you touch request/response handling in `http`, also inspect `HttpException`
-  and schema parsing branches in `HttpService.processRequest()`.
-- If you touch logger serialization, verify both `prettify` and `json` formatters.
-- If you add public runtime API, export it from the package `src/index.ts` and add
-  or update an index export test.
-- Keep public exports in each package `src/index.ts` in sync with any new public API.
+- if you change routing behavior, inspect both decorator declaration and runtime consumption
+- validate routing-related changes against the HTTP example
 
 ## Validation Expectations
 
@@ -209,47 +147,39 @@ Before finishing work, run whichever checks fit the change:
 - For tested/runtime changes: `bun run test`
 - For coverage-sensitive work: `bun run coverage`
 - If formatting is needed: `bun run format`
-- For framework/runtime changes: run `cd example && bun run start` and verify the
-  app still boots
-
-Because runtime integration still matters, manual verification of the example app
-is still valuable even with automated tests in place.
+- For runtime-flow changes, run a relevant example from `examples/`
 
 Current baseline:
 
-- The repository has automated tests across `common`, `core`, and `http`.
-- Full repo `bun test --coverage` is expected to stay at `100%` functions and lines.
-- `bun run typecheck` should be treated as required, not optional. It catches issues
-  that Bun tests can miss, especially generic/inheritance mismatches and test typing.
+- `bun run typecheck` should pass
+- `bun run lint` should pass
+- `bun run test` should pass
+- `bun run coverage` should pass
+- Coverage is expected to stay at `100%` functions and lines
+
+## Documentation Notes
+
+The project documentation is intentionally lightweight right now.
+
+- Root and package README files should give quick orientation, not full documentation
+- `docs/getting-started.md` should reflect the current examples in `examples/`
+- `specs/` is currently mostly empty except for ADR scaffolding and template files
+- there is no `TODO.md` in the repository; do not point docs there
+
+If commands, examples, paths, or conventions change, update this file together
+with the relevant README/docs.
 
 ## Practical Notes
 
 - The git worktree may already contain user changes. Do not revert unrelated edits.
-- `package.json` uses Bun workspaces and a workspace catalog for shared dependency
-  versions.
-- `@types/bun` is sourced from `latest`, so type behavior may shift over time.
-- GitHub Actions CI lives in `.github/workflows/ci.yml` and currently runs
-  typecheck, lint, tests, and an explicit 100% coverage gate.
-- The coverage gate is implemented natively through `bunfig.toml` using
-  `test.coverageThreshold`, so `bun run coverage` is sufficient both locally and
-  in CI.
-- `bunfig.toml` also enables `lcov` coverage output and JUnit XML test reporting
-  for CI artifacts.
+- `package.json` uses Bun workspaces and a workspace catalog for shared dependency versions.
+- GitHub Actions CI lives in `.github/workflows/ci.yml` and runs typecheck, lint,
+  tests, and coverage.
+- Coverage is enforced natively through `bunfig.toml`.
 - Tests are written with `bun:test` only.
-- For this repo, new tests should generally be added as separate `*.test.ts` files
-  next to the source under test, without modifying existing source/test files unless
-  the user explicitly asks for a fix.
-- Some runtime behaviors are intentionally early-stage in `http`; if something looks
-  unfinished, prefer reporting the gap unless the user asked for implementation.
-
-## When Adding New Documentation
-
-If you introduce new commands, packages, or runtime flows, update this file so the
-next agent can quickly orient itself without re-discovering the project structure.
 
 ## Specifications And ADRs
 
-- Long-lived technical specs and ADRs live in `specs/`.
-- Architecture Decision Records should go under `specs/adr/`.
-- Use `specs/adr/template.md` as the starting point for new ADRs.
-- Existing accepted decisions live under `specs/adr/accepted/`.
+- Long-lived technical specs and ADRs live in `specs/`
+- Use `specs/adr/template.md` as the starting point for new ADRs
+- Today, `specs/` is mostly scaffolding; do not assume existing specs beyond the template

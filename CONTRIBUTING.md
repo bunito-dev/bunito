@@ -1,123 +1,65 @@
 # Contributing
 
-Thank you for contributing to bunito.
+Thanks for contributing to bunito.
 
-This repository is intentionally small and modular. The main goal when making
-changes is to preserve that quality: simple runtime behavior, a compact public
-API, and strong confidence through typechecking and tests.
+The project is intentionally small and modular. Prefer changes that keep the
+runtime easy to follow and the public API compact.
 
-## Development Setup
-
-Install dependencies:
+## Setup
 
 ```bash
 bun install
 ```
 
-Common commands:
+Useful commands:
 
 ```bash
 bun run typecheck
 bun run lint
+bun run format
 bun run test
 bun run coverage
 ```
 
-Run the example app:
+Run the examples:
 
 ```bash
-cd example
-bun run start
+cd examples
+bun run core:001-basics
+bun run http:001-basics
 ```
 
-## Contribution Principles
+## General Expectations
 
 - Prefer small, local changes over broad refactors.
-- Keep `@bunito/common` lightweight and framework-agnostic.
-- Treat `@bunito/core` container and module behavior as sensitive.
-- Treat `@bunito/http` as early-stage but intentional: avoid growing the API
-  randomly before key design choices are settled.
-- If a public API changes, update exports, tests, and documentation together.
+- Update tests together with behavior changes.
+- Update docs when public usage or project conventions change.
+- Keep exports in package `src/index.ts` files in sync with public API.
 
-## Testing Expectations
+## Validation
 
-Tests use `bun:test` only.
+Before finishing a change, the expected baseline is:
 
-General expectations:
+- `bun run typecheck`
+- `bun run lint`
+- `bun run test`
+- `bun run coverage`
 
-- add focused `*.test.ts` files next to the code under test
-- prefer one test file per source file or behavior area
-- cover both expected behavior and important edge cases
-- do not weaken coverage to land a change
+Coverage is enforced at `100%`.
 
-Current baseline:
+## Documentation
 
-- `bun run typecheck` must pass
-- `bun run lint` must pass
-- `bun run test` must pass
-- `bun run coverage` must pass
-
-Coverage is intentionally enforced at `100%` for functions and lines.
-
-## Documentation Expectations
+Keep documentation lightweight and current.
 
 When relevant, update:
 
 - [`README.md`](./README.md)
-- [`AGENTS.md`](./AGENTS.md)
 - package README files in `packages/*`
-- architecture or decision docs in `docs/`
+- [`docs/`](./docs)
+- [`AGENTS.md`](./AGENTS.md)
 
-Good rule of thumb:
+## Sensitive Areas
 
-- if behavior changes, update tests
-- if public usage changes, update README
-- if project conventions change, update `AGENTS.md`
-- if product scope changes, update `docs/roadmap.md`
-
-## Working In Sensitive Areas
-
-### `@bunito/common`
-
-Keep the package dependency-free and reusable. Do not move framework-specific
-runtime logic here.
-
-### `@bunito/core`
-
-Be especially careful in:
-
-- container compilation
-- provider resolution
-- scopes and lifecycle hooks
-- module import/export behavior
-- application bootstrap flow
-
-Small changes in these areas can affect the entire repository.
-
-### `@bunito/http`
-
-Before changing HTTP behavior, inspect both:
-
-- the decorator/metadata declaration side
-- the `HttpService` runtime consumption side
-
-Also validate changes against the example app.
-
-## Pull Request Checklist
-
-Before opening a PR, make sure:
-
-- the change is scoped and explained clearly
-- validation commands pass locally
-- docs are updated if the behavior or API changed
-- public exports remain in sync
-- tests still describe the intended behavior, not just the implementation detail
-
-## Breaking Changes
-
-If a change alters public behavior or intended semantics:
-
-- call it out explicitly in the PR description
-- update README and relevant package docs
-- update or add a decision record in `specs/adr/` if the change affects
-  architecture or framework philosophy
+- `@bunito/common`: keep it lightweight and framework-agnostic
+- `@bunito/core`: be careful around container, scopes, lifecycle, and module behavior
+- `@bunito/http`: check both decorator declaration and runtime consumption when changing routing behavior

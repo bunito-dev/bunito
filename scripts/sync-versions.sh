@@ -17,7 +17,7 @@ print_info "Main package version: ${main_pkg_version}"
 for pkg_dir in "$ROOT_DIR"/packages/*; do
   pkg_json="$(read_pkg_json "$pkg_dir")"
   pkg_private=$(jq ".private // false" <<< "$pkg_json")
-  pkg_name=$(jq -e ".name" <<< "$pkg_json")
+  pkg_name=$(jq -r -e ".name" <<< "$pkg_json")
   pkg_version=$(jq -r -e ".version" <<< "$pkg_json")
 
   if [ "$pkg_private" != "false" ]; then
@@ -25,14 +25,44 @@ for pkg_dir in "$ROOT_DIR"/packages/*; do
     continue
   fi
 
-  if [ "$pkg_version" == "$main_pkg_version" ]; then
-    print_info "Package ${pkg_name} already has the correct version: skipping"
+  updated_pkg_json="$(jq \
+    --arg v "$main_pkg_version" \
+    '
+      .version = $v
+      | .dependencies |= (
+          (. // {})
+          | with_entries(
+              if (.value | type) == "string" and (.value | startswith("workspace:")) then
+                .value = "workspace:\($v)"
+              else
+                .
+              end
+            )
+        )
+      | .devDependencies |= (
+          (. // {})
+          | with_entries(
+              if (.value | type) == "string" and (.value | startswith("workspace:")) then
+                .value = "workspace:\($v)"
+              else
+                .
+              end
+            )
+        )
+    ' <<< "$pkg_json")"
+
+  if [ "$updated_pkg_json" == "$pkg_json" ]; then
+    print_info "Package ${pkg_name} already has the correct version and workspace dependencies: skipping"
     continue
   fi
 
-  write_pkg_json "$pkg_dir" "$(jq --arg v "$main_pkg_version" '.version = $v' <<< "$pkg_json")"
+  write_pkg_json "$pkg_dir" "$updated_pkg_json"
 
-  print_ok "Updated version for package: ${pkg_name}"
+  if [ "$pkg_version" != "$main_pkg_version" ]; then
+    print_ok "Updated version and workspace dependencies for package: ${pkg_name}"
+  else
+    print_ok "Updated workspace dependencies for package: ${pkg_name}"
+  fi
   updated_pkg_names+=("$pkg_name")
 done
 
