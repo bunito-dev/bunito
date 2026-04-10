@@ -1,9 +1,15 @@
 import type { ClassMethodDecorator } from '@bunito/common';
 import { createImmutableDecorator } from '@bunito/common';
 import { DECORATOR_METADATA_KEYS } from '../constants';
-import type { OnExceptionDefinition, OnExceptionOptions } from '../types';
+import type {
+  OnExceptionDefinition,
+  OnExceptionHandler,
+  OnExceptionOptions,
+} from '../types';
 
-export function OnException(options: OnExceptionOptions = {}): ClassMethodDecorator {
+export function OnException<THandler extends OnExceptionHandler>(
+  options: OnExceptionOptions = {},
+): ClassMethodDecorator<THandler> {
   return createImmutableDecorator(({ metadata, name }) => {
     const definition: OnExceptionDefinition = {
       propKey: name,

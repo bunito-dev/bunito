@@ -40,7 +40,9 @@
     "README.md",
     "LICENSE"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "zod": "catalog:"
+  },
   "devDependencies": {
     "@types/bun": "catalog:"
   },

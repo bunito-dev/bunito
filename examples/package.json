@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start:001-core-basics": "bun ./001-core-basics/main.ts",
-    "start:002-http-basics": "bun --watch ./002-http-basics/main.ts"
+    "core:001-basics": "bun ./core/001-basics/main.ts",
+    "http:001-basics": "bun --watch ./http/001-basics/main.ts"
   },
   "dependencies": {
     "@bunito/core": "workspace:*",

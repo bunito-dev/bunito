@@ -1,20 +1,17 @@
+import type {
+  Any,
+  EmptyFallback,
+  Fn,
+  ResolveField,
+  StripUndefined,
+  UnwrapZodType,
+} from '@bunito/common';
 import type { Logger, RequestId } from '@bunito/core';
-import type { ZodObject, ZodType, z } from 'zod';
+import type { ZodObject, ZodType } from 'zod';
+import type { HttpException } from '../exceptions';
 import type { HttpMethod } from '../types';
 
-type ResolveZodLike<TValue, TZod, TDefault = unknown> = TValue extends TZod
-  ? z.infer<TValue>
-  : TValue extends TDefault
-    ? TValue
-    : TDefault;
-
-export type RoutePath = `/${string}`;
-
-export type RouteParams = Record<string, string>;
-
-export type RouteQuery = Record<string, string | string[]>;
-
-export type RouteData = Record<string, unknown>;
+export type RoutePath = '/' | '/*' | '/**' | `/${string}`;
 
 export type RouteMethod = HttpMethod | 'ALL';
 
@@ -56,22 +53,8 @@ export type RouteHandlerEntity<TOptions> = {
 };
 
 export type RouteHandlerMatch<TEntity> = {
-  params: RouteParams;
+  params: Record<string, string>;
 } & TEntity;
-
-export type RouteContext<TData extends RouteData = RouteData> = {
-  request: Request;
-  logger: Logger;
-  url: URL;
-  path: RoutePath;
-  method: HttpMethod;
-  data: Partial<TData>;
-};
-
-export type RouteState = {
-  query?: RouteQuery;
-  body?: unknown;
-};
 
 export type InspectedRoute = {
   path: RoutePath;
@@ -81,37 +64,68 @@ export type InspectedRoute = {
   onError?: string[];
 };
 
+export type RouteContext<
+  TData = never,
+  TQuery = never,
+  TParams = never,
+  TBody = never,
+> = {
+  request: Request;
+  logger: Logger;
+  url: URL;
+  path: RoutePath;
+  method: HttpMethod;
+  data: Partial<EmptyFallback<TData, Record<string, unknown>>>;
+  query: EmptyFallback<TQuery, Record<string, string | string[]>>;
+  params: EmptyFallback<TParams, Record<string, string>>;
+  body: EmptyFallback<TBody, unknown>;
+};
+
 // on request
 
-export type OnRequestSchema<
-  TZodObject extends ZodObject = ZodObject,
-  TZodType extends ZodType = ZodType,
-> = {
-  params?: TZodObject | RouteParams;
-  query?: TZodObject | RouteQuery;
-  body?: TZodType | unknown;
+export type OnRequestSchemaShape = {
+  params?: ZodObject;
+  query?: ZodObject;
+  body?: ZodType;
 };
 
-export type OnRequestContext<
-  TSchema extends OnRequestSchema = OnRequestSchema<never, never>,
-  TData extends RouteData = RouteData,
-> = RouteContext<TData> & {
-  params: ResolveZodLike<TSchema['params'], ZodObject, RouteParams>;
-  query: ResolveZodLike<TSchema['query'], ZodObject, RouteQuery>;
-  body: ResolveZodLike<TSchema['body'], ZodType>;
+export type OnRequestSchema = ZodObject<OnRequestSchemaShape>;
+
+export type OnRequestStatic = {
+  params?: Record<string, string>;
+  query?: Record<string, string | string[]>;
+  body?: unknown;
+  data?: Record<string, unknown>;
 };
+
+type ResolveOnRequestContextField<
+  TArg0,
+  TArg1,
+  TKey extends keyof OnRequestSchemaShape,
+> = EmptyFallback<
+  StripUndefined<ResolveField<UnwrapZodType<TArg0>, TKey>>,
+  StripUndefined<ResolveField<TArg1, TKey>>
+>;
+
+export type OnRequestContext<
+  TArg0 extends OnRequestStatic | OnRequestSchema = OnRequestStatic,
+  TArg1 extends OnRequestStatic = OnRequestStatic,
+> = RouteContext<
+  EmptyFallback<
+    StripUndefined<ResolveField<TArg0, 'data'>>,
+    StripUndefined<ResolveField<TArg1, 'data'>>
+  >,
+  ResolveOnRequestContextField<TArg0, TArg1, 'query'>,
+  ResolveOnRequestContextField<TArg0, TArg1, 'params'>,
+  ResolveOnRequestContextField<TArg0, TArg1, 'body'>
+>;
+
+export type OnRequestHandler = Fn<unknown, [context: OnRequestContext<Any, Any>]>;
 
 export type OnRequestOptions = RouteHandlerOptions & {
   path?: RoutePath;
-  params?: ZodObject | null;
-  query?: ZodObject | null;
-  body?: ZodType | null;
+  schema?: OnRequestSchema | null;
 };
-
-export type OnRequestOptionsLike<TOmit extends keyof OnRequestOptions = never> = Omit<
-  OnRequestOptions,
-  TOmit
->;
 
 export type OnRequestDefinition = {
   propKey: PropertyKey;
@@ -123,23 +137,7 @@ export type OnRequestMatch = RouteHandlerMatch<OnRequestEntity>;
 
 // on response
 
-export type OnResponseSchema<TZodObject extends ZodObject = ZodObject> = {
-  params?: TZodObject | RouteParams;
-  query?: TZodObject | RouteQuery;
-};
-
-export type OnResponseContext<
-  TSchema extends OnResponseSchema = OnResponseSchema<never>,
-  TData extends RouteData = RouteData,
-> = RouteContext<TData> & {
-  params: ResolveZodLike<TSchema['params'], ZodObject, RouteParams>;
-  query: ResolveZodLike<TSchema['query'], ZodObject, RouteQuery>;
-};
-
-export type OnResponseOptions = RouteHandlerOptions & {
-  params?: ZodObject | null;
-  query?: ZodObject | null;
-};
+export type OnResponseOptions = RouteHandlerOptions;
 
 export type OnResponseDefinition = {
   propKey: PropertyKey;
@@ -150,9 +148,25 @@ export type OnResponseEntity = RouteHandlerEntity<OnResponseOptions>;
 
 export type OnResponseMatch = RouteHandlerMatch<OnResponseEntity>;
 
-// on error
+export type OnResponseContextStatic = Pick<OnRequestStatic, 'data' | 'query' | 'params'>;
 
-export type OnExceptionContext<TData extends RouteData = RouteData> = RouteContext<TData>;
+export type OnResponseContext<
+  TArg0 extends OnResponseContextStatic = OnResponseContextStatic,
+> = Omit<
+  RouteContext<
+    StripUndefined<ResolveField<TArg0, 'data'>>,
+    StripUndefined<ResolveField<TArg0, 'query'>>,
+    StripUndefined<ResolveField<TArg0, 'params'>>
+  >,
+  'body'
+>;
+
+export type OnResponseHandler = Fn<
+  Response | Promise<Response>,
+  [data: Any, context: OnResponseContext<Any>]
+>;
+
+// on error
 
 export type OnExceptionOptions = RouteHandlerOptions;
 
@@ -164,3 +178,21 @@ export type OnExceptionDefinition = {
 export type OnExceptionEntity = RouteHandlerEntity<OnExceptionOptions>;
 
 export type OnExceptionMatch = OnExceptionEntity;
+
+export type OnExceptionContextStatic = Pick<OnRequestStatic, 'data' | 'query'>;
+
+export type OnExceptionContext<
+  TArg0 extends OnExceptionContextStatic = OnExceptionContextStatic,
+> = Omit<
+  RouteContext<
+    StripUndefined<ResolveField<TArg0, 'data'>>,
+    StripUndefined<ResolveField<TArg0, 'query'>>,
+    StripUndefined<ResolveField<TArg0, 'params'>>
+  >,
+  'body' | 'params'
+>;
+
+export type OnExceptionHandler = Fn<
+  Response | Promise<Response>,
+  [exception: HttpException, context: OnResponseContext<Any>]
+>;

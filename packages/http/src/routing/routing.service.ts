@@ -2,8 +2,8 @@ import type { Class } from '@bunito/common';
 import { getDecoratorMetadata, isObject, isString, str } from '@bunito/common';
 import type { CallableInstance, ModuleId, RequestId, ResolveConfig } from '@bunito/core';
 import { Container, Id, Logger, MODULE_ID, OnInit, Provider } from '@bunito/core';
-import type { ZodObject, ZodType } from 'zod';
-import { HttpException } from '../http.exception';
+import { ZodError } from 'zod';
+import { HttpException, ValidationException } from '../exceptions';
 import type { HttpMethod } from '../types';
 import {
   DECORATOR_METADATA_KEYS,
@@ -17,6 +17,7 @@ import type {
   OnExceptionMatch,
   OnRequestDefinition,
   OnRequestMatch,
+  OnRequestSchema,
   OnResponseDefinition,
   OnResponseMatch,
   RouteContext,
@@ -25,11 +26,9 @@ import type {
   RouteMethod,
   RouteNode,
   RoutePath,
-  RouteQuery,
   RouteSegment,
-  RouteState,
 } from './types';
-import { processTokenizedPath, tokenizePath } from './utils';
+import { normalizeSearchParams, processTokenizedPath, tokenizePath } from './utils';
 
 @Provider({
   injects: [RoutingConfig, Container, MODULE_ID],
@@ -128,9 +127,10 @@ export class RoutingService {
       path,
       method,
       data: {},
+      query: normalizeSearchParams(url.searchParams),
+      params: {},
+      body: await this.readRequestBody(request),
     };
-
-    const state: RouteState = {};
 
     let response: Response;
 
@@ -138,7 +138,6 @@ export class RoutingService {
       const maybeResponse = await this.handleRequest(
         requestId,
         context,
-        state,
         matches.onRequest,
       );
 
@@ -149,14 +148,23 @@ export class RoutingService {
           requestId,
           maybeResponse,
           context,
-          state,
           matches.onResponse,
         );
       }
     } catch (err) {
+      let exception: HttpException | undefined;
+
+      if (err instanceof ZodError) {
+        exception = ValidationException.fromZodError(err);
+      }
+
+      if (!exception) {
+        exception = HttpException.capture(err);
+      }
+
       response = await this.handleException(
         requestId,
-        HttpException.capture(err),
+        exception,
         context,
         matches.onException,
       );
@@ -167,106 +175,57 @@ export class RoutingService {
     return response;
   }
 
-  private async validateRequestParams(
-    params: unknown,
-    paramsSchema: ZodObject | null,
-  ): Promise<unknown> {
-    if (!paramsSchema) {
-      return params;
+  private async readRequestBody(request: Request): Promise<unknown> {
+    if (request.body) {
+      const contentType =
+        request.headers.get('Content-Type') ?? this.config.defaultContentType;
+
+      switch (contentType) {
+        case 'application/json':
+          return await request.json();
+
+        case 'text/plain':
+          return await request.text();
+
+        default:
+          return request.body;
+      }
     }
 
-    const parsed = await paramsSchema.safeParseAsync(params);
-
-    if (parsed.success) {
-      return parsed.data;
-    }
-
-    // TODO: Add exception
+    return null;
   }
 
-  private async validateRequestQuery(
-    { url }: RouteContext,
-    routeState: RouteState,
-    querySchema: ZodObject | null,
-  ): Promise<unknown> {
-    if (!routeState.query) {
-      const query: RouteQuery = {};
+  private async prepareRequestContext(
+    params: Record<string, string>,
+    context: RouteContext,
+    schema: OnRequestSchema | null,
+  ): Promise<RouteContext> {
+    const result: RouteContext = {
+      ...context,
+      params,
+    };
 
-      for (const [key, value] of url.searchParams.entries()) {
-        if (query[key] === undefined) {
-          query[key] = value;
-        } else if (isString(query[key])) {
-          query[key] = [query[key], value];
-        } else if (Array.isArray(query[key])) {
-          query[key].push(value);
-        }
-      }
-
-      routeState.query = query;
+    if (!schema) {
+      return result;
     }
 
-    if (!querySchema) {
-      return routeState.query;
-    }
+    const parsed = await schema.parseAsync(result);
 
-    const parsed = await querySchema.safeParseAsync(routeState.query);
+    Object.assign(result, parsed);
 
-    if (parsed.success) {
-      return parsed.data;
-    }
-
-    // TODO: Add exception
-  }
-
-  private async validateRequestBody(
-    { request }: RouteContext,
-    routeState: RouteState,
-    bodySchema: ZodType | null,
-  ): Promise<unknown> {
-    if (routeState.body === undefined) {
-      if (request.body) {
-        switch (request.headers.get('Content-Type') ?? this.config.defaultContentType) {
-          case 'application/json':
-            routeState.body = await request.json();
-            break;
-
-          case 'text/plain':
-            routeState.body = await request.text();
-            break;
-        }
-      }
-
-      routeState.body ??= request.body;
-    }
-
-    if (!bodySchema) {
-      return routeState.body;
-    }
-
-    const parsed = await bodySchema.safeParseAsync(routeState.body);
-
-    if (parsed.success) {
-      return parsed.data;
-    }
-
-    // TODO: Add exception
+    return result;
   }
 
   private async handleRequest(
     requestId: RequestId,
     routeContext: RouteContext,
-    routeState: RouteState,
     routeMatches: OnRequestMatch[],
   ): Promise<unknown> {
     for (const { handler, params, options } of routeMatches) {
-      const context = {
-        ...routeContext,
-        params: await this.validateRequestParams(params, options.params),
-        query: await this.validateRequestQuery(routeContext, routeState, options.query),
-        body: await this.validateRequestBody(routeContext, routeState, options.body),
-      };
-
-      const result = await handler(requestId, context);
+      const result = await handler(
+        requestId,
+        await this.prepareRequestContext(params, routeContext, options.schema),
+      );
 
       if (result === undefined) {
         continue;
@@ -274,24 +233,19 @@ export class RoutingService {
 
       return result;
     }
-
-    throw new HttpException('NOT_FOUND');
   }
 
   private async handleResponse(
     requestId: RequestId,
     responseData: unknown,
     routeContext: RouteContext,
-    routeState: RouteState,
     routeMatches: OnResponseMatch[],
   ): Promise<Response> {
-    for (const { handler, params, options } of routeMatches) {
-      const context = {
+    for (const { handler, params } of routeMatches) {
+      const result = await handler(requestId, responseData, {
         ...routeContext,
-        params: await this.validateRequestParams(params, options.params),
-        query: await this.validateRequestQuery(routeContext, routeState, options.query),
-      };
-      const result = await handler(requestId, responseData, context);
+        params,
+      });
 
       if (result === undefined) {
         continue;

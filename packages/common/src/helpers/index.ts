@@ -5,4 +5,5 @@ export * from './is-string';
 export * from './not-empty';
 export * from './resolve-object-name';
 export * from './resolve-symbol-key';
+export * from './str';
 export * from './types';

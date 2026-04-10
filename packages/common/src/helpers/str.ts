@@ -1,4 +1,6 @@
-import { isClass, resolveObjectName, resolveSymbolKey } from '../helpers';
+import { isClass } from './is-class';
+import { resolveObjectName } from './resolve-object-name';
+import { resolveSymbolKey } from './resolve-symbol-key';
 
 export function str(strings: TemplateStringsArray, ...args: unknown[]): string {
   return strings.raw

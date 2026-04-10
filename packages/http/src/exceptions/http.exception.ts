@@ -1,6 +1,6 @@
 import { Exception, isString } from '@bunito/common';
-import { HTTP_ERROR_STATUS_CODES, HTTP_STATUS_MESSAGES } from './constants';
-import type { HttpErrorStatus } from './types';
+import { HTTP_ERROR_STATUS_CODES, HTTP_STATUS_MESSAGES } from '../constants';
+import type { HttpErrorStatus } from '../types';
 
 export class HttpException<
   TData extends Record<string, unknown> = Record<string, unknown>,

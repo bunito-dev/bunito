@@ -16,3 +16,15 @@ export type Mandatory<TObject, TKey extends keyof TObject> = Required<
   Pick<TObject, TKey>
 > &
   Omit<TObject, TKey>;
+
+export type StripUndefined<TValue> = Exclude<TValue, undefined>;
+
+export type EmptyFallback<TValue, TFallback> = [TValue] extends [never]
+  ? TFallback
+  : TValue;
+
+export type ResolveField<TValue, TKey extends PropertyKey> = TValue extends object
+  ? TKey extends keyof TValue
+    ? TValue[TKey]
+    : undefined
+  : undefined;

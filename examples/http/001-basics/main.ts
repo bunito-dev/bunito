@@ -1,5 +1,5 @@
 import { App, Controller, Logger, LoggerModule, Module, Provider } from '@bunito/core';
-import type { OnRequestContext, OnRequestSchema } from '@bunito/http';
+import type { OnRequestContext, OnRequestSchema, OnResponseContext } from '@bunito/http';
 import {
   HttpModule,
   OnGet,
@@ -33,28 +33,33 @@ class BarController {
   }
 }
 
-type OnResponseArgs = [request: Request];
-
-const FooBar2Schema = {
-  query: z.object({ a: z.number() }),
+const FooBar2Schema = z.object({
+  query: z.object({ a: z.string() }),
   params: z.object({
     a: z.string(),
     b: z.string(),
   }),
-} satisfies OnRequestSchema;
+}) satisfies OnRequestSchema;
 
 @Controller()
 class FooController {
   @OnRequest() onRequest() {
-    return {
+    return Response.json({
       version: '1.0.0',
-    };
+    });
   }
 
   @OnResponse()
-  onResponse(...[request]: OnResponseArgs): Response {
+  async onResponse(res: unknown, context: OnResponseContext): Promise<Response> {
+    const { method, path, params, query, data } = context;
+
     return Response.json({
-      request,
+      method,
+      path,
+      params,
+      query,
+      data,
+      res,
     });
   }
 
@@ -71,13 +76,16 @@ class FooController {
   }
 
   @OnGet('/bar/:a/:b', FooBar2Schema)
-  bar2(context: OnRequestContext<typeof FooBar2Schema, { a: number }>): string {
-    console.log(context.params);
-    console.log(context.data);
-    console.log(context.query);
-    console.log(context.body);
+  bar2(context: OnRequestContext<typeof FooBar2Schema, { data: { a: number } }>) {
+    const { method, path, params, query, data } = context;
 
-    return 'bar2';
+    return {
+      method,
+      path,
+      params,
+      query,
+      data,
+    };
   }
 }
 

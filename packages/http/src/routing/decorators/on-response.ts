@@ -1,18 +1,20 @@
 import type { ClassMethodDecorator } from '@bunito/common';
 import { createImmutableDecorator } from '@bunito/common';
 import { DECORATOR_METADATA_KEYS } from '../constants';
-import type { OnResponseDefinition, OnResponseOptions } from '../types';
+import type {
+  OnResponseDefinition,
+  OnResponseHandler,
+  OnResponseOptions,
+} from '../types';
 
-export function OnResponse(
+export function OnResponse<THandler extends OnResponseHandler>(
   options: OnResponseOptions = {},
-): ClassMethodDecorator<(request: Request) => Response> {
+): ClassMethodDecorator<THandler> {
   return createImmutableDecorator(({ metadata, name }) => {
     const definition: OnResponseDefinition = {
       propKey: name,
       options: {
         method: 'ALL',
-        params: null,
-        query: null,
         ...options,
       },
     };

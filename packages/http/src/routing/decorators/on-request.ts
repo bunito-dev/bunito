@@ -1,28 +1,18 @@
 import type { ClassMethodDecorator } from '@bunito/common';
 import { createImmutableDecorator } from '@bunito/common';
 import { DECORATOR_METADATA_KEYS } from '../constants';
-import type {
-  OnRequestDefinition,
-  OnRequestOptions,
-  OnRequestOptionsLike,
-  RouteMethod,
-  RoutePath,
-} from '../types';
+import type { OnRequestDefinition, OnRequestHandler, OnRequestOptions } from '../types';
 
-export function OnRequest<TOmit extends keyof OnRequestOptions = never>(
-  path: RoutePath = '/',
-  options: Partial<OnRequestOptionsLike<TOmit>> = {},
-  defaultMethod: RouteMethod = 'ALL',
-): ClassMethodDecorator {
+export function OnRequest<THandler extends OnRequestHandler>(
+  options: OnRequestOptions = {},
+): ClassMethodDecorator<THandler> {
   return createImmutableDecorator(({ metadata, name }) => {
     const definition: OnRequestDefinition = {
       propKey: name,
       options: {
-        path,
-        method: defaultMethod,
-        params: null,
-        query: null,
-        body: null,
+        path: '/',
+        method: 'ALL',
+        schema: null,
         ...options,
       },
     };
