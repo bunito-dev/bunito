@@ -1,5 +1,5 @@
 import type { Class } from '@bunito/common';
-import { getDecoratorMetadata, isObject, isString, str } from '@bunito/common';
+import { getDecoratorMetadata, isString } from '@bunito/common';
 import type { CallableInstance, ModuleId, RequestId, ResolveConfig } from '@bunito/core';
 import { Container, Id, Logger, MODULE_ID, OnInit, Provider } from '@bunito/core';
 import { ZodError } from 'zod';
@@ -110,7 +110,7 @@ export class RoutingService {
 
     logger.setContext('HttpRequest');
 
-    const track = logger.track();
+    const trace = logger.trace();
 
     const matches: RouteMatches = {
       onRequest: [],
@@ -170,7 +170,7 @@ export class RoutingService {
       );
     }
 
-    track(`${response.status} ${method} ${path}`);
+    trace.debug(`${response.status} ${method} ${path}`);
 
     return response;
   }
@@ -256,6 +256,10 @@ export class RoutingService {
       }
     }
 
+    if (responseData === undefined) {
+      throw new HttpException('NOT_FOUND');
+    }
+
     switch (this.config.defaultContentType) {
       case 'application/json':
         return Response.json(responseData);
@@ -300,7 +304,7 @@ export class RoutingService {
     }
 
     const { logger } = routeContext;
-    const { message, data, statusCode, cause } = unhandledException;
+    const { message, statusCode, cause } = unhandledException;
 
     if (isString(cause)) {
       logger.warn(cause);
@@ -310,17 +314,9 @@ export class RoutingService {
 
     switch (this.config.defaultContentType) {
       case 'application/json':
-        return Response.json(
-          isObject(data)
-            ? data
-            : {
-                error: message,
-                data,
-              },
-          {
-            status: statusCode,
-          },
-        );
+        return Response.json(exception.toJSON(), {
+          status: statusCode,
+        });
 
       default:
         return new Response(message, {
@@ -359,35 +355,53 @@ export class RoutingService {
     const routeMethods: Partial<Record<RouteMethod, InspectedRoute>> = {};
 
     for (const {
-      name,
+      propKey,
+      controllerName,
       options: { method },
     } of handlers?.onRequest ?? []) {
       routeMethods[method] ??= { path, method };
 
-      if (!routeMethods[method]?.onRequest?.push(name)) {
-        routeMethods[method].onRequest = [name];
+      const inspect = {
+        propKey,
+        controllerName,
+      };
+
+      if (!routeMethods[method]?.onRequest?.push(inspect)) {
+        routeMethods[method].onRequest = [inspect];
       }
     }
 
     for (const {
-      name,
+      propKey,
+      controllerName,
       options: { method },
     } of handlers?.onResponse ?? []) {
       routeMethods[method] ??= { path, method };
 
-      if (!routeMethods[method]?.onResponse?.push(name)) {
-        routeMethods[method].onResponse = [name];
+      const inspect = {
+        propKey,
+        controllerName,
+      };
+
+      if (!routeMethods[method]?.onResponse?.push(inspect)) {
+        routeMethods[method].onResponse = [inspect];
       }
     }
 
     for (const {
-      name,
+      propKey,
+      controllerName,
       options: { method },
     } of handlers?.onException ?? []) {
       routeMethods[method] ??= { path, method };
 
-      if (!routeMethods[method]?.onError?.push(name)) {
-        routeMethods[method].onError = [name];
+      const inspect = {
+        propKey,
+        controllerName,
+      };
+
+      if (!routeMethods[method]?.onError?.push(inspect)) {
+        routeMethods[method].onError = [inspect];
       }
     }
 
@@ -508,7 +522,8 @@ export class RoutingService {
       node.handlers.onRequest ??= [];
       node.handlers.onRequest.push({
         options,
-        name: str`${controllerClass}#${propKey}`,
+        controllerName: controllerClass.name,
+        propKey,
         handler: this.createRouteHandler(controllerClass, moduleId, propKey),
       });
     }
@@ -536,7 +551,8 @@ export class RoutingService {
 
       parentNode.handlers.onResponse.push({
         options,
-        name: str`${controllerClass}#${propKey}`,
+        controllerName: controllerClass.name,
+        propKey,
         handler: this.createRouteHandler(controllerClass, moduleId, propKey),
       });
     }
@@ -564,7 +580,8 @@ export class RoutingService {
 
       parentNode.handlers.onException.push({
         options,
-        name: str`${controllerClass}#${propKey}`,
+        controllerName: controllerClass.name,
+        propKey,
         handler: this.createRouteHandler(controllerClass, moduleId, propKey),
       });
     }

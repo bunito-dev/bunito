@@ -4,24 +4,23 @@ import { Container } from '../container';
 import { Logger } from '../logger';
 
 export class App {
-  static async create(name: string, moduleLike: ModuleLike): Promise<App> {
+  static async create(moduleLike: ModuleLike, name?: string): Promise<App> {
     const container = new Container(moduleLike);
     const logger = await container.tryResolveProvider(Logger);
+
     const app = new App(name, logger, container);
 
-    logger?.trace('Stetting up...');
-    await container.setup();
-    logger?.info('Ready!');
+    await app.runAction('setup', 'Initialized');
 
     return app;
   }
 
   constructor(
-    name: string,
+    name: string | undefined,
     readonly logger: Logger | undefined,
     private readonly container: Container,
   ) {
-    logger?.setContext(`App(${name})`);
+    logger?.setContext(App, name);
     container.setInstance(App, this);
   }
 
@@ -40,32 +39,31 @@ export class App {
   }
 
   async boot(): Promise<boolean> {
-    return this.wrapPromise(() => this.container.boot(), 'Booting...', 'Ready!');
+    return this.runAction('boot', 'Started');
   }
 
   async destroy(): Promise<boolean> {
-    return this.wrapPromise(
-      () => this.container.destroy(),
-      'Destroying...',
-      'Destroyed!',
-    );
+    return this.runAction('destroy', 'Destroyed');
   }
 
-  protected async wrapPromise(
-    promiseFn: () => Promise<void>,
-    traceMessage: string,
-    successMessage: string,
+  protected async runAction(
+    action: 'setup' | 'boot' | 'destroy',
+    message: string,
   ): Promise<boolean> {
-    this.logger?.trace(traceMessage);
+    const trace = this.logger?.trace();
 
     try {
-      await promiseFn();
+      await this.container[action]();
     } catch (error) {
-      this.logger?.error(error);
+      if (!trace) {
+        throw error;
+      }
+
+      trace?.fatal(error);
       return false;
     }
 
-    this.logger?.ok(successMessage);
+    trace?.ok(message);
 
     return true;
   }

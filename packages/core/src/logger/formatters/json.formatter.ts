@@ -38,6 +38,6 @@ export class JSONFormatter implements LogFormatter {
       duration,
     };
 
-    return `${JSON.stringify(record)}\n`;
+    return JSON.stringify(record);
   }
 }

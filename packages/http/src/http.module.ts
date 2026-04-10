@@ -8,6 +8,4 @@ import { RoutingModule } from './routing';
   providers: [HttpConfig, HttpService],
   exports: [HttpService],
 })
-export class HttpModule {
-  //
-}
+export class HttpModule {}

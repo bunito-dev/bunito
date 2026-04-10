@@ -46,8 +46,7 @@ export type RouteHandlerOptions = {
   method?: RouteMethod;
 };
 
-export type RouteHandlerEntity<TOptions> = {
-  name: string;
+export type RouteHandlerEntity<TOptions> = InspectedRouteHandler & {
   options: Required<TOptions>;
   handler: RouteHandler;
 };
@@ -59,9 +58,14 @@ export type RouteHandlerMatch<TEntity> = {
 export type InspectedRoute = {
   path: RoutePath;
   method: RouteMethod;
-  onRequest?: string[];
-  onResponse?: string[];
-  onError?: string[];
+  onRequest?: InspectedRouteHandler[];
+  onResponse?: InspectedRouteHandler[];
+  onError?: InspectedRouteHandler[];
+};
+
+export type InspectedRouteHandler = {
+  controllerName: string;
+  propKey: PropertyKey;
 };
 
 export type RouteContext<

@@ -7,6 +7,4 @@ import { RoutingService } from './routing.service';
   providers: [RoutingConfig, RoutingService],
   exports: [RoutingService],
 })
-export class RoutingModule {
-  //
-}
+export class RoutingModule {}

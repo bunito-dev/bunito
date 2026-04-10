@@ -5,63 +5,51 @@ export const PRETTIFY_LEVEL_THEMES: Record<
   LogLevelKind,
   {
     icon: string;
-    colorPrimary: InspectColor;
-    colorSecondary: InspectColor;
-    colorMessage: InspectColor;
+    primary: InspectColor;
+    secondary: InspectColor;
+    text: InspectColor;
   }
 > = {
   FATAL: {
     icon: '☠',
-    colorPrimary: 'redBright',
-    colorSecondary: 'redBright',
-    colorMessage: 'redBright',
+    primary: 'redBright',
+    secondary: 'redBright',
+    text: 'redBright',
   },
   ERROR: {
     icon: '✘',
-    colorPrimary: 'red',
-    colorSecondary: 'red',
-    colorMessage: 'red',
+    primary: 'red',
+    secondary: 'red',
+    text: 'red',
   },
   WARN: {
     icon: '➥',
-    colorPrimary: 'yellow',
-    colorSecondary: 'yellowBright',
-    colorMessage: 'yellowBright',
+    primary: 'yellow',
+    secondary: 'yellowBright',
+    text: 'yellowBright',
   },
   INFO: {
     icon: '➥',
-    colorPrimary: 'blue',
-    colorSecondary: 'blueBright',
-    colorMessage: 'blueBright',
+    primary: 'blue',
+    secondary: 'blueBright',
+    text: 'blueBright',
   },
   OK: {
     icon: '✔',
-    colorPrimary: 'green',
-    colorSecondary: 'greenBright',
-    colorMessage: 'greenBright',
-  },
-  TRACE: {
-    icon: '➥',
-    colorPrimary: 'magentaBright',
-    colorSecondary: 'magentaBright',
-    colorMessage: 'white',
-  },
-  TRACK: {
-    icon: '➥',
-    colorPrimary: 'magenta',
-    colorSecondary: 'magenta',
-    colorMessage: 'white',
+    primary: 'green',
+    secondary: 'greenBright',
+    text: 'greenBright',
   },
   DEBUG: {
     icon: '➥',
-    colorPrimary: 'cyan',
-    colorSecondary: 'cyanBright',
-    colorMessage: 'cyanBright',
+    primary: 'cyan',
+    secondary: 'cyanBright',
+    text: 'cyanBright',
   },
   VERBOSE: {
     icon: '➥',
-    colorPrimary: 'gray',
-    colorSecondary: 'gray',
-    colorMessage: 'gray',
+    primary: 'gray',
+    secondary: 'gray',
+    text: 'gray',
   },
 };

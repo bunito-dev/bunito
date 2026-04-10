@@ -1,4 +1,4 @@
-import { Exception, isString } from '@bunito/common';
+import { Exception, isObject, isString } from '@bunito/common';
 import { HTTP_ERROR_STATUS_CODES, HTTP_STATUS_MESSAGES } from '../constants';
 import type { HttpErrorStatus } from '../types';
 
@@ -38,5 +38,14 @@ export class HttpException<
 
   get statusCode(): number {
     return HTTP_ERROR_STATUS_CODES[this.status];
+  }
+
+  toJSON() {
+    return isObject(this.data)
+      ? this.data
+      : {
+          error: this.message,
+          data: this.data,
+        };
   }
 }

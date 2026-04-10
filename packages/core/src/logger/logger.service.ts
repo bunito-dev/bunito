@@ -87,6 +87,6 @@ export class LoggerService {
       return;
     }
 
-    this.stdout.write(buffer);
+    this.stdout.write(`${buffer}\n`);
   }
 }

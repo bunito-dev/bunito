@@ -17,6 +17,7 @@ import type { LogArgs, WriteLogOptions } from './types';
 })
 export class Logger {
   private context: string | undefined;
+
   private readonly traceId: number | undefined;
 
   constructor(
@@ -26,14 +27,17 @@ export class Logger {
     this.traceId = requestId?.index;
   }
 
-  setContext(contextLike: string | Class | Fn): void {
+  setContext(contextLike: string | Class | Fn, description?: string): void {
+    let context: string | undefined;
+
     if (isFn(contextLike)) {
-      this.context = resolveObjectName(contextLike);
-      return;
+      context = resolveObjectName(contextLike);
+    } else if (isString(contextLike, true)) {
+      context = contextLike;
     }
 
-    if (isString(contextLike, true)) {
-      this.context = contextLike;
+    if (context) {
+      this.context = description ? `${context}(${description})` : context;
     }
   }
 
@@ -72,25 +76,11 @@ export class Logger {
     });
   }
 
-  trace(...args: LogArgs): void {
+  verbose(...args: LogArgs): void {
     this.writeLog({
-      level: 'TRACE',
+      level: 'VERBOSE',
       args,
     });
-  }
-
-  track(...args: LogArgs): (...postArgs: unknown[]) => void;
-  track(...args: unknown[]): (...postArgs: LogArgs) => void;
-  track(...args: unknown[]): (...postArgs: unknown[]) => void {
-    const now = Date.now();
-
-    return (...postArgs) => {
-      this.writeLog({
-        level: 'TRACK',
-        args: [...args, ...postArgs] as LogArgs,
-        duration: Date.now() - now,
-      });
-    };
   }
 
   debug<TArg0>(...args: LogArgs<TArg0>): TArg0 {
@@ -102,11 +92,28 @@ export class Logger {
     return args[0];
   }
 
-  verbose(...args: [unknown, ...unknown[]]): void {
-    this.writeLog({
-      level: 'VERBOSE',
-      args,
-    });
+  trace(): Omit<Logger, 'trace' | 'setContext'> {
+    const now = Date.now();
+
+    const writeLog = (options: WriteLogOptions) => {
+      this.writeLog({
+        duration: Date.now() - now,
+        ...options,
+      });
+    };
+
+    return {
+      fatal: (...args) => writeLog({ level: 'FATAL', args }),
+      error: (...args) => writeLog({ level: 'ERROR', args }),
+      warn: (...args) => writeLog({ level: 'WARN', args }),
+      info: (...args) => writeLog({ level: 'INFO', args }),
+      ok: (...args) => writeLog({ level: 'OK', args }),
+      verbose: (...args) => writeLog({ level: 'VERBOSE', args }),
+      debug: (...args) => {
+        writeLog({ level: 'DEBUG', args });
+        return args[0];
+      },
+    };
   }
 
   protected writeLog(options: WriteLogOptions): void {

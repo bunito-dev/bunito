@@ -58,9 +58,7 @@ class BrokenModule {
   }
 
   @OnBoot()
-  onBoot(): void {
-    //
-  }
+  onBoot(): void {}
 }
 
 describe('App integration', () => {

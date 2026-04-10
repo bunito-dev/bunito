@@ -56,9 +56,7 @@ export class Id {
   constructor(
     readonly name: string,
     readonly index = 0,
-  ) {
-    //
-  }
+  ) {}
 
   toString(): string {
     return this.index ? `${this.name}#${this.index}` : this.name;

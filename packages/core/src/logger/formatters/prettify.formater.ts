@@ -30,38 +30,45 @@ export class PrettifyFormater implements LogFormatter {
 
     const levelTheme = PRETTIFY_LEVEL_THEMES[level.kind];
 
-    write(levelTheme.icon, levelTheme.colorSecondary);
+    write(levelTheme.icon, levelTheme.primary);
 
     write(' ');
     write(timestamp, 'gray');
 
     write(' ');
-    write(`${level.kind}`.padStart(7), levelTheme.colorPrimary);
+    write(`${level.kind}`.padStart(7), levelTheme.primary);
 
     if (context || traceId) {
       write(' ');
       write(
         `[${context ?? 'Unknown'}${traceId ? `#${traceId}` : ''}]`,
-        levelTheme.colorSecondary,
+        levelTheme.secondary,
         'bold',
       );
     }
 
     if (message) {
       write(' ');
-      write(message, levelTheme.colorMessage);
+      write(message, levelTheme.text);
     }
 
-    if (duration) {
+    if (duration !== undefined) {
+      let text: string;
+      if (duration === 0) {
+        text = '~1ms';
+      } else if (duration < 1000) {
+        text = `+${duration}ms`;
+      } else {
+        text = `+${(duration / 1000).toFixed(3)}s`;
+      }
+
       write(' ');
-      write(`+${duration}ms`, 'gray', 'bold');
+      write(text, 'gray', 'bold');
     }
-
-    write('\n');
 
     if (error) {
-      write(inspect(error, false, this.options.inspectDepth, this.options.useColors));
       write('\n');
+      write(inspect(error, false, this.options.inspectDepth, this.options.useColors));
     }
 
     if (data?.length) {
@@ -77,10 +84,10 @@ export class PrettifyFormater implements LogFormatter {
         }
 
         for (const line of lines) {
-          write(`∙`, levelTheme.colorSecondary);
+          write('\n');
+          write(`∙`, levelTheme.secondary);
           write(' ');
           write(line);
-          write('\n');
         }
       }
     }

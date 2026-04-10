@@ -4,8 +4,6 @@ export const LOG_LEVELS = {
   WARN: 40,
   INFO: 30,
   OK: 30,
-  TRACE: 20,
-  TRACK: 20,
-  DEBUG: 10,
+  DEBUG: 20,
   VERBOSE: 0,
 } as const;

@@ -26,12 +26,14 @@ export class HttpService {
 
     const { port } = this.config;
 
+    const trace = this.logger.trace();
+
     this.server = Bun.serve({
       port,
       fetch: async (request) => this.router.processRequest(request),
     });
 
-    this.logger.ok(`Server started at ${this.server.url}`);
+    trace.info(`Server started at ${this.server.url}`);
   }
 
   @OnDestroy()
@@ -41,9 +43,11 @@ export class HttpService {
       return;
     }
 
-    this.logger.trace('Stopping server...');
+    const trace = this.logger.trace();
+
     await this.server.stop(true);
-    this.logger.ok('Server stopped');
+
+    trace.info('Server stopped');
 
     this.server = undefined;
   }

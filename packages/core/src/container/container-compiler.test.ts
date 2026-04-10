@@ -19,9 +19,7 @@ describe('ContainerCompiler', () => {
     @Provider()
     class BootProvider {
       @OnBoot()
-      onBoot(): void {
-        //
-      }
+      onBoot(): void {}
     }
 
     @Module({

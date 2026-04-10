@@ -30,9 +30,7 @@ describe('Container', () => {
       }
 
       @OnBoot()
-      onBoot(): void {
-        //
-      }
+      onBoot(): void {}
     }
 
     @Module({

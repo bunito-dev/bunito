@@ -1,5 +1,5 @@
 import type { ModuleOptions } from '@bunito/core';
-import { App, LoggerModule, Provider } from '@bunito/core';
+import { App, Logger, LoggerModule, Provider } from '@bunito/core';
 
 @Provider()
 class BarService {
@@ -12,9 +12,7 @@ class BarService {
   injects: [BarService],
 })
 class FooService {
-  constructor(private readonly barService: BarService) {
-    //
-  }
+  constructor(private readonly barService: BarService) {}
 
   foo(): string[] {
     return ['foo'];
@@ -30,14 +28,15 @@ const AppModule: ModuleOptions = {
   providers: [FooService, BarService],
 };
 
-const app = await App.create('example', AppModule);
+const app = await App.create(AppModule);
 
-const fooService = await app.resolve(FooService);
-const barService = await app.resolve(BarService);
+const logger = await app.resolve(Logger);
+const foo = await app.resolve(FooService);
+const bar = await app.resolve(BarService);
 
-app.logger?.debug(`fooService.foo()`, fooService.foo());
-app.logger?.debug(`fooService.bar()`, fooService.bar());
-app.logger?.debug(`barService.bar()`, barService.bar());
+logger.debug('FooService#foo', foo.foo());
+logger.debug('FooService#bar', foo.bar());
+logger.debug('barService#bar', bar.bar());
 
 await app.boot();
 await app.destroy();
