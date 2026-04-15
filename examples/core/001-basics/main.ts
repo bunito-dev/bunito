@@ -36,7 +36,7 @@ const bar = await app.resolve(BarService);
 
 logger.debug('FooService#foo', foo.foo());
 logger.debug('FooService#bar', foo.bar());
-logger.debug('barService#bar', bar.bar());
+logger.debug('BarService#bar', bar.bar());
 
 await app.start();
 await app.shutdown();
