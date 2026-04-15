@@ -1,51 +1,61 @@
-import type { Class } from '@bunito/common';
-import { isString } from '@bunito/common';
+import { isObject, isString, str } from '@bunito/common';
 import type { ResolveConfig } from '../config';
-import { ConfigService } from '../config';
-import { OnInit, Provider } from '../container';
+import { Container, OnInit, Provider } from '../container';
+import { ConfigurationException } from '../exceptions';
 import { LOG_LEVELS } from './constants';
-import type { LogFormatter } from './decorators';
+import type { FormatterExtension } from './formatters';
+import { FORMATTER_EXTENSION } from './formatters';
 import { LoggerConfig } from './logger.config';
 import type { WriteLogOptions } from './types';
 
 @Provider({
   scope: 'singleton',
-  injects: [LoggerConfig, ConfigService],
+  injects: [LoggerConfig, Container],
 })
 export class LoggerService {
-  private static readonly formatters = new Map<string, Class<LogFormatter>>();
-
-  static registerFormatter(format: string, formatter: Class<LogFormatter>): void {
-    LoggerService.formatters.set(format, formatter);
-  }
-
   private readonly stdout = process.stdout;
 
-  private readonly formatter: LogFormatter | undefined;
+  private formatter: FormatterExtension | undefined;
 
   constructor(
     private readonly config: ResolveConfig<typeof LoggerConfig>,
-    private readonly configService: ConfigService,
+    private readonly container: Container,
   ) {
-    const { format } = config;
-
-    const Formatter = LoggerService.formatters.get(format);
-
-    if (!Formatter) {
-      return;
-    }
-
-    this.formatter = new Formatter(process.stdout);
+    //
   }
 
   @OnInit()
-  configureFormatter(): void {
-    this.formatter?.configure?.(this.configService);
+  async configureFormatter(): Promise<void> {
+    const { format } = this.config;
+
+    const { providerId, moduleId } =
+      this.container
+        .getExtensions<string>(FORMATTER_EXTENSION)
+        .find(({ options }) => options === format) ?? {};
+
+    if (!providerId) {
+      throw new ConfigurationException(`Logger formatter ${format} not found`, {
+        format,
+      });
+    }
+
+    const formatter = await this.container.resolveProvider(providerId, {
+      moduleId,
+    });
+
+    if (!isObject(formatter) || !('formatLog' in formatter)) {
+      throw new ConfigurationException(str`${format} is not a valid logger formatter`, {
+        format,
+        formatter,
+      });
+    }
+
+    this.formatter = formatter as FormatterExtension;
   }
 
   writeLog(options: WriteLogOptions): void {
-    const { level: kind, args, ...formatOptions } = options;
-    const value = LOG_LEVELS[kind];
+    const { level: name, args, ...formatOptions } = options;
+    const value = LOG_LEVELS[name];
 
     if (LOG_LEVELS[this.config.level] > value) {
       return;
@@ -73,7 +83,7 @@ export class LoggerService {
 
     const buffer = this.formatter?.formatLog({
       level: {
-        kind,
+        name,
         value,
       },
       message,

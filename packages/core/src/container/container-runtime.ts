@@ -1,79 +1,174 @@
-import { isObject, NestedMap, str } from '@bunito/common';
+import type { CallableInstance, Fn } from '@bunito/common';
+import { isObject, str } from '@bunito/common';
 import { RuntimeException } from '../exceptions';
+import {
+  GLOBAL_SCOPE_ID,
+  MODULE_ID,
+  PARENT_MODULE_IDS,
+  REQUEST_ID,
+  ROOT_MODULE_ID,
+} from './constants';
 import type { ContainerCompiler } from './container-compiler';
-import { Id } from './id';
-import { MODULE_ID, REQUEST_ID } from './predefined';
 import type {
-  CallableInstance,
-  CompiledInjection,
-  LifecycleHandler,
-  LifecycleHandlers,
-  LifecycleProps,
+  InjectionDefinition,
+  ModuleId,
+  ProviderEvent,
+  ProviderEvents,
   ProviderId,
+  ProviderInstanceDefinition,
+  ProviderInstanceOptions,
   ResolveProviderOptions,
   ScopeId,
-  ScopeInstance,
 } from './types';
 
 export class ContainerRuntime {
-  static SCOPE_ID = new Id('SCOPE_ID');
+  private readonly providers = new Map<
+    ScopeId,
+    Map<ProviderId, ProviderInstanceDefinition>
+  >();
 
-  private readonly scopeInstances = new NestedMap<ScopeId, ProviderId, ScopeInstance>();
-
-  private readonly bootstrap: LifecycleHandler[] = [];
-
-  constructor(private readonly compiler: ContainerCompiler) {}
-
-  setInstance(providerId: ProviderId, instance: unknown): void {
-    this.scopeInstances.set(ContainerRuntime.SCOPE_ID, providerId, {
-      instance,
-    });
+  constructor(private readonly compiler: ContainerCompiler) {
+    //
   }
 
-  async destroyScope(scopeId?: ScopeId): Promise<void> {
-    if (!scopeId) {
-      for (const scopeId of this.scopeInstances.keys()) {
-        await this.destroyScope(scopeId);
+  async bootModule(): Promise<void> {
+    const handlers: Fn<Promise<void>>[] = [];
+
+    await this.createBootHandlers(this.compiler.rootModuleId, handlers);
+
+    await Promise.all(handlers.map((handler) => handler()));
+  }
+
+  async destroyScopes(): Promise<void> {
+    for (const scopeId of this.providers.keys()) {
+      await this.destroyScope(scopeId);
+    }
+  }
+
+  async destroyScope(scopeId: ScopeId): Promise<void> {
+    const providers = this.providers.get(scopeId);
+
+    if (!providers) {
+      return;
+    }
+
+    for (const [providerId, { onDestroy }] of providers) {
+      if (!onDestroy) {
+        continue;
       }
 
-      return;
+      await onDestroy();
+
+      providers.delete(providerId);
     }
 
-    for (const { onDestroy } of this.scopeInstances.values(scopeId)) {
-      await onDestroy?.();
-    }
-
-    this.scopeInstances.delete(scopeId);
+    this.providers.delete(scopeId);
   }
 
-  async triggerBootstrap(): Promise<void> {
-    await Promise.all(this.bootstrap.map((handler) => handler()));
-  }
-
-  async resolveProvider<TInstance>(
+  setProvider(
     providerId: ProviderId,
-    options: ResolveProviderOptions,
-  ): Promise<TInstance | undefined> {
-    const scopeInstance = this.scopeInstances.get(ContainerRuntime.SCOPE_ID, providerId);
+    instance: unknown,
+    options: ProviderInstanceOptions = {},
+  ): void {
+    const { scopeId = GLOBAL_SCOPE_ID, onResolve, onDestroy } = options;
 
-    if (scopeInstance) {
-      await scopeInstance.onResolve?.();
-      return scopeInstance.instance as TInstance;
-    }
+    this.providers
+      .getOrInsertComputed(scopeId, () => new Map())
+      .set(providerId, {
+        instance,
+        onResolve,
+        onDestroy,
+      });
+  }
 
-    const { moduleId, requestId } = options;
+  async tryGetProvider(
+    providerId: ProviderId,
+    scopeId = GLOBAL_SCOPE_ID,
+  ): Promise<unknown> {
+    const scopeInstance = this.providers.get(scopeId)?.get(providerId);
 
-    const providerMatch = this.compiler.locateProvider(providerId, moduleId);
-
-    if (!providerMatch) {
+    if (!scopeInstance) {
       return;
     }
 
-    const { provider, moduleId: providerModuleId } = providerMatch;
+    const { instance, onResolve } = scopeInstance;
+
+    if (onResolve) {
+      await onResolve();
+    }
+
+    return instance;
+  }
+
+  async resolveProvider(
+    providerId: ProviderId,
+    options: ResolveProviderOptions = {},
+  ): Promise<unknown> {
+    const { moduleId = this.compiler.rootModuleId, requestId } = options;
+
+    const instance = await this.tryResolveProvider(providerId, {
+      requestId,
+      moduleId,
+    });
+
+    if (instance === undefined) {
+      throw new RuntimeException(
+        str`Provider ${providerId} not found in ${moduleId} module`,
+        {
+          providerId,
+          requestId,
+          moduleId,
+        },
+      );
+    }
+
+    return instance;
+  }
+
+  async tryResolveProvider(
+    providerId: ProviderId,
+    options: ResolveProviderOptions = {},
+  ): Promise<unknown> {
+    const { moduleId = this.compiler.rootModuleId, requestId } = options;
+
+    switch (providerId) {
+      case REQUEST_ID:
+        return requestId;
+
+      case MODULE_ID:
+        return moduleId;
+
+      case ROOT_MODULE_ID:
+        return this.compiler.rootModuleId;
+
+      case PARENT_MODULE_IDS:
+        return this.compiler.getModule(moduleId).parents;
+    }
+
+    let instance = await this.tryGetProvider(providerId);
+
+    if (instance !== undefined) {
+      return instance;
+    }
+
+    const [providerModuleId, description] = this.compiler.getProvider(
+      providerId,
+      moduleId,
+    );
+
+    if (!providerModuleId || !description) {
+      return;
+    }
+
+    if ('useValue' in description) {
+      return description.useValue;
+    }
+
+    const { scope, injects, events } = description;
 
     let scopeId: ScopeId | undefined;
 
-    switch (provider.kind === 'value' ? 'transient' : provider.scope) {
+    switch (scope) {
       case 'singleton':
         scopeId = providerModuleId;
         break;
@@ -85,65 +180,35 @@ export class ContainerRuntime {
       case 'request':
         scopeId = requestId;
         break;
+
+      default:
     }
 
-    if (scopeId) {
-      const scopeInstance = this.scopeInstances.get(scopeId, providerId);
+    if (scopeId !== undefined) {
+      instance = await this.tryGetProvider(providerId, scopeId);
 
-      if (scopeInstance) {
-        await scopeInstance.onResolve?.();
-        return scopeInstance.instance as TInstance;
+      if (instance !== undefined) {
+        return instance;
       }
     }
 
-    let instance: unknown;
-    let handlers: LifecycleHandlers;
+    const args = await this.resolveProviderArgs(providerId, injects, {
+      requestId,
+      moduleId: providerModuleId,
+    });
 
-    switch (provider.kind) {
-      case 'class': {
-        const { useClass, injects, lifecycle } = provider;
-
-        const params = await this.resolveProviderParams(providerId, injects, {
-          moduleId: providerModuleId,
-          requestId,
-        });
-
-        instance = new useClass(...params);
-        handlers = this.processLifecycleHandlers(instance, lifecycle);
-        break;
-      }
-
-      case 'factory': {
-        const { useFactory, injects } = provider;
-
-        const params = await this.resolveProviderParams(providerId, injects, {
-          moduleId: providerModuleId,
-          requestId,
-        });
-
-        instance = useFactory(...params);
-        handlers = {};
-        break;
-      }
-
-      case 'value': {
-        const { useValue } = provider;
-
-        instance = useValue;
-        handlers = {};
-        break;
-      }
+    if ('useClass' in description) {
+      instance = new description.useClass(...args);
+    } else if ('useFactory' in description) {
+      instance = description.useFactory(...args);
     }
 
-    const { onInit, onResolve, onDestroy } = handlers;
-
-    if (scopeId && instance !== undefined) {
-      this.scopeInstances.set(scopeId, providerId, {
-        instance,
-        onResolve,
-        onDestroy,
-      });
+    if (instance === undefined) {
+      return;
     }
+
+    const onInit = this.createProviderHandler(instance, 'onInit', events);
+    const onResolve = this.createProviderHandler(instance, 'onResolve', events);
 
     if (onInit) {
       await onInit();
@@ -151,94 +216,115 @@ export class ContainerRuntime {
       await onResolve();
     }
 
-    return instance as TInstance;
+    if (scopeId !== undefined) {
+      const onDestroy = this.createProviderHandler(instance, 'onDestroy', events);
+
+      this.setProvider(providerId, instance, { scopeId, onResolve, onDestroy });
+    }
+
+    return instance;
   }
 
-  private async resolveProviderParams(
+  async resolveProviderArgs(
     providerId: ProviderId,
-    injects: CompiledInjection[],
+    injections: InjectionDefinition[],
     options: ResolveProviderOptions,
   ): Promise<unknown[]> {
-    const params: unknown[] = [];
+    const args: unknown[] = [];
 
-    const { requestId, moduleId } = options;
+    for (const [
+      index,
+      { providerId: injectedProviderId, defaultValue },
+    ] of injections.entries()) {
+      const arg = await this.tryResolveProvider(injectedProviderId, options);
 
-    for (const [index, { providerId: injectionId, optional }] of injects.entries()) {
-      let param: unknown;
-
-      switch (injectionId) {
-        case REQUEST_ID:
-          param = requestId;
-          break;
-
-        case MODULE_ID:
-          param = moduleId;
-          break;
-
-        default:
-          param = await this.resolveProvider(injectionId, options);
+      if (arg !== undefined) {
+        args.push(arg);
+        continue;
       }
 
-      if (param === undefined) {
-        if (!optional) {
-          throw new RuntimeException(
-            str`Injection ${injectionId} for ${providerId} provider not found at #${index} in ${moduleId}`,
-            {
-              injectionId,
-              providerId,
-              index,
-              options,
-            },
-          );
-        }
-
-        param = null;
+      if (defaultValue !== undefined) {
+        args.push(defaultValue);
+        continue;
       }
 
-      params.push(param);
+      throw new RuntimeException(
+        str`Missing ${injectedProviderId} at #${index} is ${providerId} provider`,
+        {
+          index,
+          providerId,
+          injectedProviderId,
+        },
+      );
     }
 
-    return params;
+    return args;
   }
 
-  private processLifecycleHandlers(
+  private createProviderHandler(
     instance: unknown,
-    props: LifecycleProps | undefined,
-  ): LifecycleHandlers {
-    if (!isObject(instance) || !props) {
-      return {};
+    event: ProviderEvent,
+    events: ProviderEvents | undefined,
+  ): Fn<Promise<void>> | undefined {
+    const propKey = events?.[event];
+    if (!propKey) {
+      return;
     }
 
-    const callable = instance as CallableInstance;
-    const handlers: LifecycleHandlers = {};
+    const callableInstance = instance as CallableInstance<Promise<void>>;
 
-    for (const [event, propKey] of props) {
-      const handler = async () => {
-        if (callable[propKey]) {
-          await callable[propKey]();
-        }
-
-        if (event !== 'onResolve') {
-          callable[propKey] = () =>
-            RuntimeException.reject(
-              str`Provider ${instance} lifecycle event ${event} cannot be called twice`,
-              {
-                instance,
-                event,
-                propKey,
-              },
-            );
-        }
-      };
-
-      if (event === 'onBoot') {
-        this.bootstrap.push(handler);
-        props.delete(event);
-      } else {
-        handlers[event] = handler;
+    return async () => {
+      if (!callableInstance[propKey]) {
+        return;
       }
+
+      await callableInstance[propKey]();
+
+      if (event === 'onResolve') {
+        return;
+      }
+
+      callableInstance[propKey] = () =>
+        RuntimeException.reject(str`Provider handler ${propKey} cannot be called twice`, {
+          propKey,
+          event,
+        });
+    };
+  }
+
+  private async createBootHandlers(
+    moduleId: ModuleId,
+    found: Fn<Promise<void>>[],
+    instances = new WeakSet<object>(),
+  ): Promise<void> {
+    const { providers, children } = this.compiler.getModule(moduleId);
+
+    for (const childId of children) {
+      await this.createBootHandlers(childId, found, instances);
     }
 
-    return handlers;
+    for (const [providerId, { events }] of providers.definitions) {
+      if (!events?.onBoot) {
+        continue;
+      }
+
+      const instance = await this.resolveProvider(providerId, {
+        moduleId,
+      });
+
+      if (!isObject(instance) || instances.has(instance)) {
+        continue;
+      }
+
+      instances.add(instance);
+
+      const handler = this.createProviderHandler(instance, 'onBoot', events);
+
+      if (!handler) {
+        continue;
+      }
+
+      found.push(handler);
+    }
   }
 }

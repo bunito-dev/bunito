@@ -1,5 +1,4 @@
-import { Controller } from '@bunito/core';
-import { OnGet, OnResponse } from '@bunito/http';
+import { Controller, OnGet, OnResponse } from '@bunito/http';
 import { FooService } from './foo.service';
 
 @Controller({

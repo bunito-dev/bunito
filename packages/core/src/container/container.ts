@@ -1,58 +1,58 @@
-import type { Class } from '@bunito/common';
-import { str } from '@bunito/common';
 import { RuntimeException } from '../exceptions';
 import { ContainerCompiler } from './container-compiler';
 import { ContainerRuntime } from './container-runtime';
 import { Id } from './id';
 import type {
-  ControllerNode,
+  ComponentDefinition,
+  ComponentKey,
+  ExtensionDefinition,
   ModuleId,
-  ModuleLike,
-  ProviderId,
+  ModuleOptionsLike,
+  RequestId,
   ResolveProviderOptions,
   ResolveToken,
   Token,
 } from './types';
 
 export class Container {
-  readonly controllers: ControllerNode[] = [];
+  private readonly compiler: ContainerCompiler;
 
-  private readonly moduleId: ModuleId;
+  private readonly runtime: ContainerRuntime;
 
-  constructor(
-    moduleLike: ModuleLike,
-    readonly compiler: ContainerCompiler = new ContainerCompiler(),
-    readonly runtime: ContainerRuntime = new ContainerRuntime(compiler),
-  ) {
-    this.moduleId = compiler.compileModule(moduleLike);
-    this.setInstance(Container, this);
-  }
+  constructor(moduleOptionsLike: ModuleOptionsLike) {
+    this.compiler = new ContainerCompiler(moduleOptionsLike);
+    this.runtime = new ContainerRuntime(this.compiler);
 
-  async setup(): Promise<void> {
-    for (const [providerId, moduleId] of this.processModule(this.moduleId)) {
-      await this.runtime.resolveProvider(providerId, {
-        moduleId,
-      });
-    }
-
-    this.setup = () => RuntimeException.reject('Container setup cannot be called twice');
+    this.runtime.setProvider(Id.for(Container), this);
   }
 
   async boot(): Promise<void> {
-    await this.runtime.triggerBootstrap();
-
-    this.boot = () => RuntimeException.reject('Container boot cannot be called twice');
+    await this.triggerAction('boot');
   }
 
   async destroy(): Promise<void> {
-    await this.runtime.destroyScope();
-
-    this.destroy = () =>
-      RuntimeException.reject('Container destroy cannot be called twice');
+    await this.triggerAction('destroy');
   }
 
-  setInstance(token: Token, instance: unknown): void {
-    this.runtime.setInstance(Id.for(token), instance);
+  async cleanup(requestId: RequestId): Promise<void> {
+    await this.runtime.destroyScope(requestId);
+  }
+
+  getExtensions<TOptions = unknown>(
+    extensionKey: ComponentKey,
+  ): ExtensionDefinition<TOptions>[] {
+    return this.compiler.getExtensions(extensionKey) as ExtensionDefinition<TOptions>[];
+  }
+
+  getComponents<TOptions = unknown, TFieldOptions = unknown, TMethodOptions = unknown>(
+    componentKey: ComponentKey,
+    moduleId?: ModuleId,
+  ): ComponentDefinition<TOptions, TFieldOptions, TMethodOptions>[] {
+    return this.compiler.getComponents(componentKey, moduleId) as ComponentDefinition<
+      TOptions,
+      TFieldOptions,
+      TMethodOptions
+    >[];
   }
 
   resolveProvider<TInstance>(
@@ -63,27 +63,11 @@ export class Container {
     token: TToken,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<ResolveToken<TToken>>;
-  resolveProvider(
-    token: unknown,
-    options?: Partial<ResolveProviderOptions>,
-  ): Promise<unknown>;
   async resolveProvider(
-    token: unknown,
-    options: Partial<ResolveProviderOptions> = {},
+    token: Token,
+    options: ResolveProviderOptions = {},
   ): Promise<unknown> {
-    const instance = await this.tryResolveProvider(token as Token, options);
-
-    if (!instance) {
-      throw new RuntimeException(
-        str`Could not resolve ${token} in ${options.moduleId} module`,
-        {
-          token,
-          ...options,
-        },
-      );
-    }
-
-    return instance;
+    return this.runtime.resolveProvider(Id.for(token), options);
   }
 
   tryResolveProvider<TInstance>(
@@ -94,62 +78,25 @@ export class Container {
     token: TToken,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<ResolveToken<TToken> | undefined>;
-  tryResolveProvider(
-    token: unknown,
-    options?: Partial<ResolveProviderOptions>,
-  ): Promise<unknown>;
-  tryResolveProvider(
-    token: unknown,
-    options: Partial<ResolveProviderOptions> = {},
+  async tryResolveProvider(
+    token: Token,
+    options: ResolveProviderOptions = {},
   ): Promise<unknown> {
-    return this.runtime.resolveProvider(Id.for(token as Token), {
-      moduleId: this.moduleId,
-      ...options,
-    });
+    return this.runtime.tryResolveProvider(Id.for(token), options);
   }
 
-  private processModule(
-    moduleId: ModuleId,
-    bootProviders: [ProviderId, ModuleId][] = [],
-    parents: Class[] = [],
-  ): [ProviderId, ModuleId][] {
-    const { useClass, controllers, providers, imports } =
-      this.compiler.getModule(moduleId);
+  private async triggerAction(action: 'boot' | 'destroy'): Promise<void> {
+    switch (action) {
+      case 'boot':
+        await this.runtime.bootModule();
+        break;
 
-    if (useClass) {
-      parents.push(useClass);
+      case 'destroy':
+        await this.runtime.destroyScopes();
+        break;
     }
 
-    for (const controllerId of controllers) {
-      const providerMatch = this.compiler.locateProvider(controllerId, moduleId);
-
-      if (!providerMatch) {
-        continue;
-      }
-
-      const { provider } = providerMatch;
-
-      if (provider.kind !== 'class') {
-        continue;
-      }
-
-      this.controllers.push({
-        moduleId,
-        useClass: provider.useClass,
-        parentClasses: parents,
-      });
-    }
-
-    for (const importedModuleId of imports) {
-      this.processModule(importedModuleId, bootProviders, [...parents]);
-    }
-
-    for (const [providerId, provider] of providers) {
-      if (provider.kind === 'class' && provider.lifecycle?.has('onBoot')) {
-        bootProviders.push([providerId, moduleId]);
-      }
-    }
-
-    return bootProviders;
+    this[action] = () =>
+      RuntimeException.reject(`Container ${action} cannot be called twice`);
   }
 }

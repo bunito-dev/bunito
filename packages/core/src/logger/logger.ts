@@ -1,12 +1,12 @@
-import type { Class, Fn } from '@bunito/common';
 import { isFn, isString, resolveObjectName } from '@bunito/common';
 import type { RequestId } from '../container';
 import { Provider, REQUEST_ID } from '../container';
 import { LoggerService } from './logger.service';
-import type { LogArgs, WriteLogOptions } from './types';
+import type { LogArgs, LogLevel, LogTrace, WriteLogOptions } from './types';
 
 @Provider({
   scope: 'request',
+  global: true,
   injects: [
     LoggerService,
     {
@@ -27,7 +27,7 @@ export class Logger {
     this.traceId = requestId?.index;
   }
 
-  setContext(contextLike: string | Class | Fn, description?: string): void {
+  setContext(contextLike: string | { name: string }, description?: string): void {
     let context: string | undefined;
 
     if (isFn(contextLike)) {
@@ -92,25 +92,26 @@ export class Logger {
     return args[0];
   }
 
-  trace(): Omit<Logger, 'trace' | 'setContext'> {
+  trace(): LogTrace {
     const now = Date.now();
 
-    const writeLog = (options: WriteLogOptions) => {
+    const writeLogWithDuration = (level: LogLevel, args: LogArgs) => {
       this.writeLog({
+        level,
+        args,
         duration: Date.now() - now,
-        ...options,
       });
     };
 
     return {
-      fatal: (...args) => writeLog({ level: 'FATAL', args }),
-      error: (...args) => writeLog({ level: 'ERROR', args }),
-      warn: (...args) => writeLog({ level: 'WARN', args }),
-      info: (...args) => writeLog({ level: 'INFO', args }),
-      ok: (...args) => writeLog({ level: 'OK', args }),
-      verbose: (...args) => writeLog({ level: 'VERBOSE', args }),
+      fatal: (...args) => writeLogWithDuration('FATAL', args),
+      error: (...args) => writeLogWithDuration('ERROR', args),
+      warn: (...args) => writeLogWithDuration('WARN', args),
+      info: (...args) => writeLogWithDuration('INFO', args),
+      ok: (...args) => writeLogWithDuration('OK', args),
+      verbose: (...args) => writeLogWithDuration('VERBOSE', args),
       debug: (...args) => {
-        writeLog({ level: 'DEBUG', args });
+        writeLogWithDuration('DEBUG', args);
         return args[0];
       },
     };

@@ -1,8 +1,9 @@
 import { resolveObjectName, resolveSymbolKey } from '@bunito/common';
+import { RuntimeException } from '../exceptions';
 import type { Token } from './types';
 
 export class Id {
-  private static nameIndexes = new Map<string, number>();
+  private static uniqueCounters = new Map<string, number>();
 
   private static objectIds = new WeakMap<object, Id>();
 
@@ -13,9 +14,9 @@ export class Id {
   }
 
   static unique(name: string): Id {
-    const index = (Id.nameIndexes.get(name) ?? 0) + 1;
+    const index = (Id.uniqueCounters.get(name) ?? 0) + 1;
 
-    Id.nameIndexes.set(name, index);
+    Id.uniqueCounters.set(name, index);
 
     return new Id(name, index);
   }
@@ -27,30 +28,59 @@ export class Id {
 
     switch (typeof token) {
       case 'function':
-      case 'object': {
-        let id = Id.objectIds.get(token);
-
-        if (!id) {
-          id = Id.unique(resolveObjectName(token) ?? 'anonymous');
-          Id.objectIds.set(token, id);
-        }
-
-        return id;
-      }
+      case 'object':
+        return Id.forObject(token);
 
       case 'string':
+        return Id.forString(token);
+
       case 'symbol': {
-        const sym = typeof token === 'string' ? Symbol.for(token) : token;
-        let id = Id.symbolIds.get(sym);
-
-        if (!id) {
-          id = Id.unique(resolveSymbolKey(sym) ?? 'unknown');
-          Id.symbolIds.set(sym, id);
-        }
-
-        return id;
+        return Id.forSymbol(token);
       }
     }
+  }
+
+  private static forObject(token: object): Id {
+    let id = Id.objectIds.get(token);
+
+    if (!id) {
+      id = Id.unique(resolveObjectName(token) ?? 'anonymous');
+      Id.objectIds.set(token, id);
+    }
+
+    return id;
+  }
+
+  private static forString(token: string): Id {
+    if (!token) {
+      throw new RuntimeException('Token must be a non-empty string');
+    }
+    const key = Symbol.for(token);
+    let id = Id.symbolIds.get(key);
+
+    if (!id) {
+      id = Id.unique(token);
+      Id.symbolIds.set(key, id);
+    }
+
+    return id;
+  }
+
+  private static forSymbol(token: symbol): Id {
+    let id = Id.symbolIds.get(token);
+
+    if (!id) {
+      const name = resolveSymbolKey(token);
+
+      if (!name) {
+        throw new RuntimeException('Token must be a non-empty symbol');
+      }
+
+      id = Id.unique(name);
+      Id.symbolIds.set(token, id);
+    }
+
+    return id;
   }
 
   constructor(

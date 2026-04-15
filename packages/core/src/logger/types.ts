@@ -1,13 +1,14 @@
 import type { LOG_LEVELS } from './constants';
+import type { Logger } from './logger';
 
-export type LogLevelKind = keyof typeof LOG_LEVELS;
+export type LogLevel = keyof typeof LOG_LEVELS;
 
-export type LogLevel = {
-  kind: LogLevelKind;
+export type LogFormat = 'json' | 'pretty' | (string & {});
+
+export type LogLevelOptions = {
+  name: LogLevel;
   value: number;
 };
-
-export type LogFormat = 'json' | 'prettify' | (string & {});
 
 export type LogArgs<TArg0 = unknown> = [TArg0, ...unknown[]];
 
@@ -18,13 +19,8 @@ export type LogOptions<TLevel> = {
   duration?: number;
 };
 
-export type WriteLogOptions = LogOptions<LogLevelKind> & {
-  args: LogArgs;
-};
+export type LogTrace = Omit<Logger, 'trace' | 'setContext'>;
 
-export type FormatLogOptions = LogOptions<LogLevel> & {
-  error?: Error;
-  message?: string;
-  data?: unknown[];
-  timestamp: string;
+export type WriteLogOptions = LogOptions<LogLevel> & {
+  args: LogArgs;
 };

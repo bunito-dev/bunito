@@ -1,15 +1,8 @@
-import './polyfill';
-import type { Class } from '../helpers';
+import type { Class } from '@bunito/common';
 
-export function getDecoratorMetadata<TResult>(
+export function getDecoratorMetadata<TMetadata>(
   target: Class,
   key: PropertyKey,
-): TResult | undefined {
-  const metadata = target[Symbol.metadata];
-
-  if (!metadata) {
-    return;
-  }
-
-  return metadata[key] as TResult;
+): TMetadata | undefined {
+  return target[Symbol.metadata ?? Symbol.for('Symbol.metadata')]?.[key] as TMetadata;
 }

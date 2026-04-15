@@ -38,5 +38,5 @@ logger.debug('FooService#foo', foo.foo());
 logger.debug('FooService#bar', foo.bar());
 logger.debug('barService#bar', bar.bar());
 
-await app.boot();
-await app.destroy();
+await app.start();
+await app.shutdown();

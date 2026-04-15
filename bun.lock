@@ -23,7 +23,7 @@
     },
     "packages/common": {
       "name": "@bunito/common",
-      "version": "0.0.3",
+      "version": "0.0.4",
       "dependencies": {
         "zod": "catalog:",
       },
@@ -33,9 +33,9 @@
     },
     "packages/core": {
       "name": "@bunito/core",
-      "version": "0.0.3",
+      "version": "0.0.4",
       "dependencies": {
-        "@bunito/common": "workspace:*",
+        "@bunito/common": "workspace:0.0.4",
       },
       "devDependencies": {
         "@types/bun": "catalog:",
@@ -43,10 +43,10 @@
     },
     "packages/http": {
       "name": "@bunito/http",
-      "version": "0.0.3",
+      "version": "0.0.4",
       "dependencies": {
-        "@bunito/common": "workspace:*",
-        "@bunito/core": "workspace:*",
+        "@bunito/common": "workspace:0.0.4",
+        "@bunito/core": "workspace:0.0.4",
         "zod": "catalog:",
       },
       "devDependencies": {

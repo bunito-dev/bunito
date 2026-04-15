@@ -1,11 +1,7 @@
-import { Exception } from '@bunito/common';
+import { Exception } from './exception';
 
 export class InternalException extends Exception {
-  constructor(
-    message?: string | undefined,
-    data?: Record<string, unknown>,
-    cause?: unknown,
-  ) {
+  constructor(message: string, data?: Record<string, unknown>, cause?: unknown) {
     super(message, data, cause);
 
     this.name = 'InternalException';

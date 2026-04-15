@@ -1,17 +1,13 @@
 import type { Class, Fn } from '@bunito/common';
+import type { ConfigFactoryOptions } from '../config';
 import type { Id } from './id';
 
-export type CallableInstance<TResult = unknown> = Record<
-  PropertyKey,
-  Fn<Promise<TResult> | TResult>
->;
-
-export type Token<TInner = unknown> =
-  | symbol
+export type Token<TValue = unknown> =
   | string
+  | symbol
   | object
-  | Class<TInner>
-  | Fn<TInner>;
+  | Class<TValue>
+  | Fn<TValue>;
 
 export type ResolveToken<TToken> =
   TToken extends Class<infer TInstance>
@@ -24,156 +20,179 @@ export type RequestId = Id;
 
 export type ScopeId = Id;
 
-export type ScopeKind = 'singleton' | 'module' | 'request' | 'transient';
+export type InjectionOptions =
+  | {
+      token: Token;
+      optional: true;
+    }
+  | {
+      token: Token;
+      defaultValue: unknown;
+    };
 
-export type ScopeInstance = {
-  instance: unknown;
-  onResolve?: LifecycleHandler;
-  onDestroy?: LifecycleHandler;
-};
+export type InjectionOptionsLike = Token | InjectionOptions;
 
-export type LifecycleEvent = 'onInit' | 'onResolve' | 'onBoot' | 'onDestroy';
-
-export type LifecycleProps = Map<LifecycleEvent, PropertyKey>;
-
-export type LifecycleHandler = () => Promise<void>;
-
-export type LifecycleHandlers = Partial<
-  Record<LifecycleEvent, LifecycleHandler | undefined>
->;
-
-export type InjectionLike = Token | InjectionOptions;
-
-export type InjectionOptions = {
-  token: Token;
-  optional?: true;
-};
-
-export type CompiledInjection = {
+export type InjectionDefinition = {
   providerId: ProviderId;
-  optional: boolean;
-};
-
-// modules
-
-export type ModuleId = Id;
-
-export type ModuleLike = Class | ModuleOptions;
-
-export type ModuleOptions = {
-  token?: Token;
-  imports?: Array<ModuleLike | null>;
-  providers?: Array<ProviderLike | null>;
-  controllers?: Array<ControllerRef | null>;
-  exports?: Array<ProviderLike | null>;
-};
-
-export type ClassModuleOptions = Omit<ModuleOptions, 'token'> & {
-  scope?: ScopeKind;
-  injects?: Array<InjectionLike | null>;
-};
-
-export type ModuleDefinition = {
-  useClass: Class | undefined;
-  imports: ModuleLike[];
-  providers: ProviderLike[];
-  controllers: ControllerRef[];
-  exports: ProviderLike[];
-};
-
-export type CompiledModule = {
-  useClass: Class | undefined;
-  imports: Set<ModuleId>;
-  providers: Map<ProviderId, CompiledProvider>;
-  controllers: Set<ControllerId>;
-  exports: Map<ProviderId, ModuleId>;
-};
-
-// controllers
-
-export type ControllerId = Id;
-
-export type ControllerRef = Class;
-
-export type ControllerOptions = {
-  scope?: ScopeKind;
-  injects?: Array<InjectionLike | null>;
-};
-
-export type ControllerNode = {
-  moduleId: ModuleId;
-  parentClasses: Class[];
-  useClass: Class;
+  defaultValue: unknown;
 };
 
 // providers
 
 export type ProviderId = Id;
 
-export type ProviderLike = Token | ProviderOptions;
+export type ProviderScope = 'singleton' | 'module' | 'request' | 'transient';
 
-export type ClassProviderMetadata = Omit<ClassProviderOptions, 'useClass'>;
+export type ProviderEvent = 'onInit' | 'onResolve' | 'onBoot' | 'onDestroy';
 
-export type ClassProviderOptions<
-  TInstance = unknown,
-  TInjection = InjectionLike | null,
+export type ProviderEvents = Partial<Record<ProviderEvent, PropertyKey>>;
+
+export type ProviderDecoratorOptions = Omit<ProviderClassOptions, 'useClass'>;
+
+export type ProviderClassOptions<
+  TClass extends Class = Class,
+  TInjection = InjectionOptionsLike,
 > = {
   token?: Token;
-  scope?: ScopeKind;
-  useClass: Class<TInstance>;
+  global?: true;
+  scope?: ProviderScope;
+  useClass: TClass;
   injects?: TInjection[];
 };
 
-export type FactoryProviderOptions<
-  TResult = unknown,
-  TInjection = InjectionLike | null,
+export type ProviderFactoryOptions<
+  TFactory extends Fn = Fn,
+  TInjection = InjectionOptionsLike,
 > = {
   token?: Token;
-  scope?: ScopeKind;
-  useFactory: Fn<TResult>;
+  global?: true;
+  scope?: ProviderScope;
+  useFactory: TFactory;
   injects?: TInjection[];
 };
 
-export type ValueProviderOptions<TValue = unknown> = {
+export type ProviderValueOptions = {
   token: Token;
-  useValue: TValue;
+  global?: true;
+  scope?: null;
+  useValue: unknown;
+  injects?: null;
 };
 
 export type ProviderOptions =
-  | ClassProviderOptions
-  | FactoryProviderOptions
-  | ValueProviderOptions;
+  | ProviderClassOptions
+  | ProviderFactoryOptions
+  | ProviderValueOptions;
 
-export type CompiledClassProvider<TInstance = unknown> = Required<
-  Omit<ClassProviderOptions<TInstance, CompiledInjection>, 'token'>
+export type ProviderOptionsLike = Fn | Class | ProviderOptions;
+
+export type ProviderBaseDefinition<TOptions extends ProviderOptions> = Required<
+  Omit<TOptions, 'token' | 'global'>
 > & {
-  kind: 'class';
-  lifecycle: LifecycleProps;
+  events?: ProviderEvents;
 };
 
-export type CompiledFactoryProvider<TResult = unknown> = Required<
-  Omit<FactoryProviderOptions<TResult, CompiledInjection>, 'token'>
-> & {
-  kind: 'factory';
+export type ProviderClassDefinition = ProviderBaseDefinition<
+  ProviderClassOptions<Class, InjectionDefinition>
+>;
+
+export type ProviderFactoryDefinition = ProviderBaseDefinition<
+  ProviderFactoryOptions<Fn, InjectionDefinition>
+>;
+
+export type ProviderValueDefinition = ProviderBaseDefinition<ProviderValueOptions>;
+
+export type ProviderDefinition =
+  | ProviderClassDefinition
+  | ProviderFactoryDefinition
+  | ProviderValueDefinition;
+
+export type ProviderInstanceOptions = {
+  scopeId?: ScopeId;
+  onResolve?: Fn<Promise<void>>;
+  onDestroy?: Fn<Promise<void>>;
 };
 
-export type CompiledValueProvider<TValue = unknown> = Required<
-  Omit<ValueProviderOptions<TValue>, 'token'>
-> & {
-  kind: 'value';
+export type ProviderInstanceDefinition = Omit<ProviderInstanceOptions, 'scopeId'> & {
+  instance: unknown;
 };
-
-export type CompiledProvider =
-  | CompiledClassProvider
-  | CompiledFactoryProvider
-  | CompiledValueProvider;
 
 export type ResolveProviderOptions = {
-  moduleId: ModuleId;
+  moduleId?: ModuleId;
   requestId?: RequestId;
 };
 
-export type ProviderMatch = {
+// extensions
+
+export type ExtensionKey = symbol;
+
+export type ExtensionDefinition<TOptions = unknown> = {
   moduleId: ModuleId;
-  provider: CompiledProvider;
+  providerId: ProviderId;
+  options: TOptions;
+};
+
+export type ExtensionDecoratorOptions<
+  TOmit extends keyof ProviderDecoratorOptions = never,
+> = Omit<ProviderDecoratorOptions, 'token' | TOmit>;
+
+// components
+
+export type ComponentKey = symbol;
+
+export type ComponentProp<TOptions = unknown> = {
+  propKey: PropertyKey;
+  options: TOptions;
+};
+
+export type ComponentDefinition<
+  TOptions = unknown,
+  TFieldOptions = unknown,
+  TMethodOptions = unknown,
+> = {
+  parentModuleIds: Set<ModuleId>;
+  moduleId: ModuleId;
+  providerId: ProviderId;
+  options?: TOptions[];
+  fields?: ComponentProp<TFieldOptions>[];
+  methods?: ComponentProp<TMethodOptions>[];
+};
+
+export type ComponentPartialDefinition = Omit<
+  ComponentDefinition,
+  'moduleId' | 'parentModuleIds'
+>;
+
+export type ComponentDecoratorOptions<
+  TOmit extends keyof ProviderDecoratorOptions = never,
+> = Omit<ProviderDecoratorOptions, 'global' | 'token' | TOmit>;
+
+// modules
+
+export type ModuleId = Id;
+
+export type ModuleDecoratorOptions = ModuleOptions &
+  Omit<ProviderDecoratorOptions, 'token'>;
+
+export type ModuleOptions = {
+  imports?: ModuleOptionsLike[];
+  configs?: ConfigFactoryOptions<unknown>[];
+  providers?: ProviderOptionsLike[];
+  exports?: Array<Token | ProviderOptions>;
+} & Partial<Record<keyof Bonito.ModuleComponents, Class[]>>;
+
+export type ModuleOptionsLike = Class | ModuleOptions;
+
+export type ModuleDefinition = {
+  parents: Set<ModuleId>;
+  children: Set<ModuleId>;
+  providers: {
+    available: Map<ProviderId, ModuleId>;
+    definitions: Map<ProviderId, ProviderDefinition>;
+    exported: Set<ProviderId>;
+  };
+  components: {
+    options?: Map<ComponentKey, unknown[]>;
+    definitions?: Map<ComponentKey, ComponentPartialDefinition[]>;
+  };
 };

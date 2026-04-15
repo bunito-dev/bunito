@@ -1,9 +1,10 @@
+import './globals';
+
 export * from './constants';
 export * from './container';
 export * from './container-compiler';
 export * from './container-runtime';
 export * from './decorators';
 export * from './id';
-export * from './predefined';
 export * from './types';
 export * from './utils';

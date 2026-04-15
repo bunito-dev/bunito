@@ -1,8 +1,8 @@
-import { LoggerModule, Module } from '@bunito/core';
-import { HttpModule, RoutingModule } from '@bunito/http';
+import { LoggerModule, Module, ServerModule } from '@bunito/core';
+import { HttpModule } from '@bunito/http';
 import { FooModule } from './foo';
 
 @Module({
-  imports: [LoggerModule, HttpModule, FooModule, RoutingModule],
+  imports: [LoggerModule, ServerModule, HttpModule, FooModule],
 })
 export class AppModule {}

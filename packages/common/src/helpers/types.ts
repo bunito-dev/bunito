@@ -1,13 +1,11 @@
 // biome-ignore lint/suspicious/noExplicitAny: Internal usage only
 export type Any = any;
 
-export type Class<TInstance = unknown, TArgs extends Any[] = Any[]> = new (
+export type Class<TInstance = Any, TArgs extends Any[] = Any[]> = new (
   ...args: TArgs
 ) => TInstance;
 
-export type Fn<TResult = unknown, TArgs extends Any[] = Any[]> = (
-  ...args: TArgs
-) => TResult;
+export type Fn<TResult = Any, TArgs extends Any[] = Any[]> = (...args: TArgs) => TResult;
 
 export type Optional<TObject, TKey extends keyof TObject> = Partial<Pick<TObject, TKey>> &
   Omit<TObject, TKey>;
@@ -28,3 +26,7 @@ export type ResolveField<TValue, TKey extends PropertyKey> = TValue extends obje
     ? TValue[TKey]
     : undefined
   : undefined;
+
+export type CallableInstance<TResult = unknown> = Record<PropertyKey, Fn<TResult>>;
+
+export type MaybePromise<TValue = unknown> = Promise<TValue> | TValue;

@@ -1,6 +1,5 @@
-import { Controller } from '@bunito/core';
 import type { OnRequestContext } from '@bunito/http';
-import { OnGet } from '@bunito/http';
+import { Controller, OnGet } from '@bunito/http';
 import { BarService } from './bar.service';
 import { BarSchema } from './schemas';
 

@@ -1,16 +1,18 @@
-import type { Any, Class, Fn } from '../helpers';
+import type { Class, Fn } from '../helpers';
 
-export type Decorator<
-  TTarget extends Class | Fn,
-  TContext extends DecoratorContext = DecoratorContext,
-> = (target: TTarget, context: TContext) => TTarget;
+export type Decorator<TTarget, TContext extends DecoratorContext = DecoratorContext> = (
+  target: TTarget,
+  context: TContext,
+) => TTarget;
 
-export type ClassDecorator<TTarget extends Class = Class<Any>> = Decorator<
+export type ClassDecorator<TTarget extends Class = Class> = Decorator<
   TTarget,
   ClassDecoratorContext
 >;
 
-export type ClassMethodDecorator<TTarget extends Fn = Fn<Any>> = Decorator<
+export type ClassFieldDecorator<TTarget> = Decorator<TTarget, ClassFieldDecoratorContext>;
+
+export type ClassMethodDecorator<TTarget extends Fn = Fn> = Decorator<
   TTarget,
   ClassMethodDecoratorContext
 >;

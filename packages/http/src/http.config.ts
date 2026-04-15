@@ -1,9 +1,12 @@
 import { defineConfig } from '@bunito/core';
+import { HTTP_CONTENT_TYPES } from './constants';
+import type { HttpContentType } from './types';
 
 export const HttpConfig = defineConfig<{
-  port: number | string;
-}>('HttpConfig', ({ getEnvAs }) => {
+  defaultContentType: HttpContentType;
+}>('Http', ({ getEnv }) => {
   return {
-    port: getEnvAs(['HTTP_PORT', 'PORT'], 'port') ?? 3000,
+    defaultContentType:
+      getEnv('DEFAULT_CONTENT_TYPE', 'string', HTTP_CONTENT_TYPES) ?? 'application/json',
   };
 });

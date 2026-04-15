@@ -1,70 +1,109 @@
-import type { Class, Fn } from '@bunito/common';
-import type { ModuleLike, ResolveToken } from '../container';
+import { isString } from '@bunito/common';
+import type {
+  ModuleOptionsLike,
+  ResolveProviderOptions,
+  ResolveToken,
+  Token,
+} from '../container';
 import { Container } from '../container';
+import { RuntimeException } from '../exceptions';
 import { Logger } from '../logger';
 
 export class App {
-  static async create(moduleLike: ModuleLike, name?: string): Promise<App> {
-    const container = new Container(moduleLike);
-    const logger = await container.tryResolveProvider(Logger);
-
-    const app = new App(name, logger, container);
-
-    await app.runAction('setup', 'Initialized');
-
+  static async start(name: string, moduleOptions: ModuleOptionsLike): Promise<App>;
+  static async start(moduleOptions: ModuleOptionsLike): Promise<App>;
+  static async start(
+    arg0: string | ModuleOptionsLike,
+    arg1: ModuleOptionsLike = {},
+  ): Promise<App> {
+    const app = await App.create(arg0 as string, arg1);
+    await app.start();
     return app;
   }
 
-  constructor(
-    name: string | undefined,
-    readonly logger: Logger | undefined,
-    private readonly container: Container,
-  ) {
+  static async create(name: string, moduleOptions: ModuleOptionsLike): Promise<App>;
+  static async create(moduleOptions: ModuleOptionsLike): Promise<App>;
+  static async create(
+    arg0: string | ModuleOptionsLike,
+    arg1: ModuleOptionsLike = {},
+  ): Promise<App> {
+    let moduleOptions: ModuleOptionsLike;
+    let name: string | undefined;
+
+    if (isString(arg0)) {
+      name = arg0;
+      moduleOptions = arg1;
+    } else {
+      moduleOptions = arg0;
+    }
+
+    const container = new Container(moduleOptions);
+    const logger = await container.tryResolveProvider(Logger);
+
     logger?.setContext(App, name);
-    container.setInstance(App, this);
+
+    return new App(container, logger);
   }
 
-  resolve<TToken extends Class | Fn>(token: TToken): Promise<ResolveToken<TToken>>;
-  resolve<TInstance = unknown>(token: symbol | string): Promise<TInstance>;
-  resolve(token: unknown): Promise<unknown> {
-    return this.container.resolveProvider(token);
+  protected constructor(
+    protected readonly container: Container,
+    readonly logger: Logger | undefined,
+  ) {
+    //
   }
 
-  tryResolve<TToken extends Class | Fn>(
+  async start(): Promise<void> {
+    await this.triggerAction('start');
+  }
+
+  async shutdown(): Promise<void> {
+    await this.triggerAction('shutdown');
+  }
+
+  resolve<TInstance>(
+    token: Token<TInstance>,
+    options?: Partial<ResolveProviderOptions>,
+  ): Promise<TInstance>;
+  resolve<TToken extends Token>(
     token: TToken,
-  ): Promise<ResolveToken<TToken> | undefined>;
-  tryResolve<TInstance = unknown>(token: symbol | string): Promise<TInstance | undefined>;
-  tryResolve(token: unknown): Promise<unknown> {
-    return this.container.tryResolveProvider(token);
+    options?: Partial<ResolveProviderOptions>,
+  ): Promise<ResolveToken<TToken>>;
+  async resolve(token: Token, options: ResolveProviderOptions = {}): Promise<unknown> {
+    return this.container.resolveProvider(token, options);
   }
 
-  async boot(): Promise<boolean> {
-    return this.runAction('boot', 'Started');
-  }
-
-  async destroy(): Promise<boolean> {
-    return this.runAction('destroy', 'Destroyed');
-  }
-
-  protected async runAction(
-    action: 'setup' | 'boot' | 'destroy',
-    message: string,
-  ): Promise<boolean> {
+  protected async triggerAction(action: 'start' | 'shutdown'): Promise<void> {
     const trace = this.logger?.trace();
 
     try {
-      await this.container[action]();
-    } catch (error) {
+      switch (action) {
+        case 'start':
+          await this.container.boot();
+          trace?.ok('Ready');
+          break;
+
+        case 'shutdown':
+          await this.container.destroy();
+          trace?.debug('Shutdown');
+          break;
+      }
+    } catch (err) {
       if (!trace) {
-        throw error;
+        throw err;
       }
 
-      trace?.fatal(error);
-      return false;
+      trace?.fatal('Unhandled Error', err);
+      return;
     }
 
-    trace?.ok(message);
+    this[action] = async () => {
+      const err = new RuntimeException(`App ${action} cannot be called twice`);
 
-    return true;
+      if (!this.logger) {
+        throw err;
+      }
+
+      this.logger?.fatal('Unhandled Error', err);
+    };
   }
 }

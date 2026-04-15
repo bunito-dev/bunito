@@ -1,28 +1,35 @@
-import type { Fn } from '@bunito/common';
-import type { FactoryProviderOptions } from '../container';
+import type { Fn, Mandatory } from '@bunito/common';
+import type { ProviderFactoryOptions } from '../container';
+import type { ConfigService } from './config.service';
+
+export type ConfigFactory<TConfig> = (
+  configService: ConfigService,
+) => Promise<TConfig> | TConfig;
+
+export type ConfigFactoryOptions<TConfig> = Mandatory<
+  ProviderFactoryOptions<ConfigFactory<TConfig>>,
+  'token'
+>;
 
 export type ResolveConfig<TValue> =
-  TValue extends FactoryProviderOptions<infer TConfig> ? Awaited<TConfig> : TValue;
+  TValue extends ConfigFactoryOptions<infer TConfig> ? Awaited<TConfig> : TValue;
 
-export type ConfigEnvKey = keyof NodeJS.ProcessEnv | (string & {});
-export type ConfigEnvKeysLike = ConfigEnvKey | ConfigEnvKey[];
+export type EnvKey = keyof NodeJS.ProcessEnv | (string & {});
 
-export type ConfigValueParser<TOutput = string> =
+export type EnvKeyLike = EnvKey | EnvKey[];
+
+export type ValueParser<TOutput = string> =
   | Fn<TOutput | undefined, [string]>
   | {
       safeParse: (data: unknown) => { success: true; data: TOutput } | { success: false };
     };
 
-export type ConfigValueFormat =
-  | 'boolean'
-  | 'port'
-  | ConfigValueNumberFormat
-  | ConfigValueStringFormat;
+export type ValueFormat = 'boolean' | 'port' | ValueNumberFormat | ValueStringFormat;
 
-export type ConfigValueNumberFormat = 'toDecimal' | 'toInteger';
+export type ValueNumberFormat = 'toDecimal' | 'toInteger';
 
-export type ConfigValueNumberOptions =
+export type ValueNumberOptions =
   | [min: number, max?: number]
   | [min: undefined, max: number];
 
-export type ConfigValueStringFormat = 'string' | 'toUpperCase' | 'toLowerCase';
+export type ValueStringFormat = 'string' | 'toUpperCase' | 'toLowerCase';

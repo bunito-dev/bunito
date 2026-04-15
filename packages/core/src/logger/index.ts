@@ -1,7 +1,6 @@
-import './formatters';
+import './globals';
 
 export * from './constants';
-export * from './decorators';
 export * from './formatters';
 export * from './logger';
 export * from './logger.config';

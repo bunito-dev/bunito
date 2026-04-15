@@ -1,5 +1,5 @@
 import { Module } from '@bunito/core';
-import { UsesPath } from '@bunito/http';
+import { UsePath } from '@bunito/http';
 import { BarModule } from './bar';
 import { FooController } from './foo.controller';
 import { FooService } from './foo.service';
@@ -9,5 +9,5 @@ import { FooService } from './foo.service';
   controllers: [FooController],
   providers: [FooService],
 })
-@UsesPath('/foo')
+@UsePath('/foo')
 export class FooModule {}

@@ -1,4 +1,4 @@
-import type { HttpStatus } from './types';
+import type { HttpStatus, RouteSegment } from './types';
 
 export const HTTP_SUCCESS_STATUS_CODES = {
   CONTINUE: 100,
@@ -41,3 +41,13 @@ export const HTTP_CONTENT_TYPES = [
   'application/json', //
   'text/plain',
 ] as const;
+
+export const HTTP_CONTROLLER = Symbol('http(CONTROLLER)');
+
+export const DYNAMIC_SEGMENT_ALIASES = {
+  param: ':',
+  any: '*',
+  wildcard: '**',
+} as const satisfies Record<Exclude<RouteSegment['kind'], 'static'>, string>;
+
+export const DYNAMIC_SEGMENT_KEYS = Object.values(DYNAMIC_SEGMENT_ALIASES);
