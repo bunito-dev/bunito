@@ -2,11 +2,11 @@ import { describe, expect, it } from 'bun:test';
 import { isClass } from './is-class';
 
 describe('isClass', () => {
-  it('should return true for classes', () => {
+  it('returns true for classes', () => {
     expect(isClass(class TestClass {})).toBeTrue();
   });
 
-  it('should return false for non-class functions', () => {
+  it('returns false for non-class functions', () => {
     expect(
       isClass(function test() {
         return undefined;
@@ -15,7 +15,7 @@ describe('isClass', () => {
     expect(isClass(() => undefined)).toBeFalse();
   });
 
-  it('should return false for non-functions', () => {
+  it('returns false for non-functions', () => {
     expect(isClass({})).toBeFalse();
     expect(isClass(null)).toBeFalse();
   });

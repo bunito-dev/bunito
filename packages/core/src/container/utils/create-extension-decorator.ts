@@ -8,7 +8,7 @@ export function createExtensionDecorator<
 >(
   extensionKey: ExtensionKey,
   options?: TOptions,
-  providerOptions?: ProviderDecoratorOptions,
+  providerOptions: ProviderDecoratorOptions = {},
 ): ClassDecorator<TExtension> {
   return (target, { metadata }) => {
     metadata[DECORATOR_METADATA_KEYS.EXTENSION_KEY] = extensionKey;
@@ -17,9 +17,10 @@ export function createExtensionDecorator<
       metadata[DECORATOR_METADATA_KEYS.EXTENSION_OPTIONS] = options;
     }
 
-    if (providerOptions) {
-      metadata[DECORATOR_METADATA_KEYS.PROVIDER_OPTIONS] = providerOptions;
-    }
+    metadata[DECORATOR_METADATA_KEYS.PROVIDER_OPTIONS] = {
+      scope: 'singleton',
+      ...providerOptions,
+    };
 
     return target;
   };

@@ -249,6 +249,8 @@ export class HttpRouter implements RouterExtension {
 
       return result;
     }
+
+    throw new HttpException('NOT_FOUND');
   }
 
   private async handleResponse(

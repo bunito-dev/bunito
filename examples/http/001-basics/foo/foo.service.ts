@@ -1,12 +1,13 @@
 import { Provider } from '@bunito/core';
 
 @Provider({
+  // Request scope makes it easy to demonstrate that a fresh provider instance is created per call.
   scope: 'request',
 })
 export class FooService {
-  constructor(readonly createdAt = Date.now()) {}
+  constructor(readonly createdAt = Date()) {}
 
-  foo() {
-    return 'foo';
+  hello() {
+    return `Hello from FooService! (created at ${this.createdAt})`;
   }
 }

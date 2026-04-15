@@ -1,4 +1,4 @@
-export * from './app';
+export { App } from './app';
 export type { ConfigFactory, ConfigFactoryOptions, ResolveConfig } from './config';
 export { ConfigModule, ConfigService, defineConfig } from './config';
 export type {
@@ -25,7 +25,12 @@ export {
   REQUEST_ID,
   ROOT_MODULE_ID,
 } from './container';
-export * from './exceptions';
+export {
+  ConfigurationException,
+  Exception,
+  InternalException,
+  RuntimeException,
+} from './exceptions';
 export type { LogTrace } from './logger';
 export { Logger, LoggerModule } from './logger';
 export { ServerModule } from './server';

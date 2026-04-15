@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { isString } from './is-string';
 
 describe('isString', () => {
-  it('should return true only for string primitives', () => {
+  it('returns true only for string primitives', () => {
     expect(isString('value')).toBeTrue();
     expect(isString('')).toBeTrue();
     expect(isString('', false)).toBeFalse();

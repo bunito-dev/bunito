@@ -2,13 +2,13 @@ import { describe, expect, it } from 'bun:test';
 import { str } from './str';
 
 describe('str', () => {
-  it('should stringify primitive values', () => {
+  it('stringifies primitive values', () => {
     expect(str`value ${'text'} ${12} ${123n} ${true} ${false} ${null}`).toBe(
       'value text 12 123 true false null',
     );
   });
 
-  it('should stringify symbols, named callables and objects', () => {
+  it('stringifies symbols, named callables and objects', () => {
     class NamedClass {}
 
     function namedFn() {
@@ -28,7 +28,7 @@ describe('str', () => {
     ).toBe('items shared local NamedClass namedFn [object] custom-value');
   });
 
-  it('should fall back for anonymous symbols, callables and objects with plain tags', () => {
+  it('falls back for anonymous symbols, callables and objects with plain tags', () => {
     const anonymousClass = Object.defineProperty(class {}, 'name', {
       value: '',
       configurable: true,
@@ -47,7 +47,7 @@ describe('str', () => {
     ).toBe('items [symbol] [class] [fn] [object] ');
   });
 
-  it('should stringify arrays using the dedicated fallback label', () => {
+  it('stringifies arrays using the dedicated fallback label', () => {
     expect(str`items ${[1, 2, 3]}`).toBe('items [array]');
   });
 });

@@ -157,6 +157,16 @@ Current baseline:
 - `bun run coverage` should pass
 - Coverage is expected to stay at `100%` functions and lines
 
+### Test File Layout
+
+Keep tests aligned with the source tree at the file level:
+
+- every exported implementation file should have its own sibling test file
+- example: `packages/core/src/container/id.ts` should be covered by `packages/core/src/container/id.test.ts`
+- do not create tests for `index.ts` barrel files
+- type-only and interface-only files do not need dedicated test files
+- prefer putting assertions for a file's behavior into that file's dedicated test instead of grouping many source files into one broad test file
+
 ## Documentation Notes
 
 The project documentation is intentionally lightweight right now.

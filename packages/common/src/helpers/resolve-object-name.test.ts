@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { resolveObjectName } from './resolve-object-name';
 
 describe('resolveObjectName', () => {
-  it('should resolve names for function values', () => {
+  it('resolves names for function values', () => {
     function namedFunction() {
       return undefined;
     }
@@ -13,12 +13,12 @@ describe('resolveObjectName', () => {
     expect(resolveObjectName(NamedClass)).toBe('NamedClass');
   });
 
-  it('should resolve constructor names for object instances', () => {
+  it('resolves constructor names for object instances', () => {
     expect(resolveObjectName([])).toBe('Array');
     expect(resolveObjectName(new Date())).toBe('Date');
   });
 
-  it('should return undefined for anonymous functions without names', () => {
+  it('returns undefined for anonymous functions without names', () => {
     const anonymousFn = Object.defineProperty(() => undefined, 'name', {
       value: '',
       configurable: true,

@@ -331,7 +331,7 @@ export class ContainerCompiler {
                 );
               }
 
-              exportedProviders.add(exportedId);
+              exportedProviders.add(providerId);
             }
           }
 

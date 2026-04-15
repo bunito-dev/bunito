@@ -18,7 +18,7 @@ export function Module<TModule extends Class>(
     if (scope || injects) {
       metadata[DECORATOR_METADATA_KEYS.PROVIDER_OPTIONS] = {
         scope,
-        inject: injects,
+        injects,
       } satisfies ProviderDecoratorOptions;
     }
 

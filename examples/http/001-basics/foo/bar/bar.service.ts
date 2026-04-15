@@ -5,9 +5,14 @@ import { Provider } from '@bunito/core';
 export class BarService {
   constructor(readonly createdAt = Date.now()) {}
 
-  async bar(delay = 100) {
+  hello() {
+    return `Hello from BarService! (created at ${this.createdAt})`;
+  }
+
+  async delayedHello(delay: number) {
+    // A tiny async example used by the validated delay endpoint.
     await setTimeout(delay);
 
-    return 'bar';
+    return `Delayed (${delay}ms) hello from BarService! (created at ${this.createdAt})`;
   }
 }
