@@ -1,6 +1,6 @@
 # Architecture
 
-This is a short overview of the current bunito runtime model.
+This is a short overview of how bunito is currently put together.
 
 ## Packages
 
@@ -18,22 +18,23 @@ App.create()
     -> ContainerCompiler
     -> ContainerRuntime
   -> optional Logger
-  -> setup hooks
-  -> app.boot()
-    -> boot hooks
-    -> optional HttpModule startup
+  -> provider resolution and setup
+  -> boot hooks
+  -> optional server startup when server-related modules are present
 ```
 
 ## Core Concepts
 
 ### Modules
 
-Applications are composed from plain module objects or classes decorated with `@Module()`.
+Applications are built from plain module objects or classes decorated with `@Module()`.
 Modules can define:
 
 - `imports`
 - `providers`
+- `configs`
 - `controllers`
+- `routers`
 - `exports`
 
 ### Providers
@@ -55,9 +56,9 @@ Supported scopes:
 
 `@bunito/http` builds on `@bunito/core`:
 
-- `HttpModule` integrates the server with lifecycle hooks
-- `RoutingService` discovers handlers from controller metadata
-- route decorators define request and response behavior
+- `HttpModule` registers the HTTP router integration
+- controllers are discovered from decorator metadata
+- route decorators define request, response, and exception behavior
 - `zod` can be used for request validation
 
 ## Examples

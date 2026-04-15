@@ -1,6 +1,6 @@
 # Getting Started
 
-The fastest way to get oriented is to run the examples that already live in this repository.
+The fastest way to understand bunito is to run the examples already in this repository.
 
 ## 1. Install Dependencies
 
@@ -25,6 +25,7 @@ This example shows:
 - registering providers
 - resolving providers from the container
 - using `LoggerModule`
+- running app lifecycle hooks with `start()` and `shutdown()`
 
 ## 3. Run The HTTP Example
 
@@ -43,10 +44,13 @@ Main files:
 This example shows:
 
 - composing modules with `@Module()`
-- using `HttpModule` and `RoutingModule`
+- wiring `ServerModule` and `HttpModule`
 - defining controllers and handlers with HTTP decorators
+- composing route prefixes with `@UsePath()` and `@Controller()`
 - request-scoped providers
+- response shaping with `@OnResponse()`
 - `zod`-based request validation
+- route params and wildcard routes
 
 ## 4. Validate The Repository
 

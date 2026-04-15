@@ -35,6 +35,7 @@ bun run http:001-basics
 - Update tests together with behavior changes.
 - Update docs when public usage or project conventions change.
 - Keep exports in package `src/index.ts` files in sync with public API.
+- Keep examples current with the actual API and runtime behavior.
 
 ## Validation
 
@@ -57,6 +58,8 @@ When relevant, update:
 - package README files in `packages/*`
 - [`docs/`](./docs)
 - [`AGENTS.md`](./AGENTS.md)
+
+The current examples in [`examples/`](./examples) are part of the onboarding surface, so update them when behavior or recommended usage changes.
 
 ## Sensitive Areas
 

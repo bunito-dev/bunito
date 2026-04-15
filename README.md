@@ -1,12 +1,12 @@
 # bunito
 
-`bunito` is a small Bun-first TypeScript framework split into focused packages.
+`bunito` is a small Bun-first TypeScript framework split into a few focused packages.
 
 - `@bunito/common`: shared helpers, metadata primitives, and base exceptions
 - `@bunito/core`: app lifecycle, dependency injection, modules, config, and logger
 - `@bunito/http`: HTTP integration built on top of `@bunito/core`
 
-The repository also contains two runnable examples in [`examples/`](./examples):
+The repository includes two runnable examples in [`examples/`](./examples):
 
 - `examples/core/001-basics`
 - `examples/http/001-basics`
@@ -27,8 +27,8 @@ bun run core:001-basics
 bun run http:001-basics
 ```
 
-The core example shows basic app creation and provider resolution.
-The HTTP example shows modules, controllers, route decorators, and request validation.
+The core example shows the container, providers, and app lifecycle.
+The HTTP example shows modules, controllers, routes, and request validation.
 
 ## Development
 
@@ -45,9 +45,9 @@ Coverage is enforced at `100%` for functions and lines.
 
 ## Packages
 
-- [`packages/common/README.md`](./packages/common/README.md)
-- [`packages/core/README.md`](./packages/core/README.md)
-- [`packages/http/README.md`](./packages/http/README.md)
+- [`packages/common/README.md`](./packages/common/README.md): internal shared helpers and metadata utilities
+- [`packages/core/README.md`](./packages/core/README.md): app lifecycle, DI container, modules, config, logger, and server primitives
+- [`packages/http/README.md`](./packages/http/README.md): HTTP controllers, routing decorators, validation, and exceptions
 
 ## Docs
 

@@ -22,6 +22,12 @@ bun run coverage
 
 Tests should usually live next to the source under test as `*.test.ts`.
 
+Current convention in this repo:
+
+- each exported implementation file should have its own sibling test file
+- do not add dedicated tests for `index.ts` barrels
+- type-only and interface-only files do not need standalone tests
+
 Examples:
 
 - `packages/core/src/logger/logger.ts`
@@ -35,4 +41,4 @@ When fixing a bug:
 2. implement the fix
 3. run the full validation set
 
-If a behavior is intentionally unfinished, prefer documenting it in project docs or roadmap notes instead of leaving stale references to removed files.
+If a behavior is intentionally unfinished, document it in project docs or roadmap notes instead of leaving stale references to removed files.

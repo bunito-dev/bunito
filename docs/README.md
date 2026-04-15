@@ -1,6 +1,7 @@
 # Docs
 
 This directory contains short project-level notes for bunito.
+The docs are intentionally lightweight and meant for quick orientation.
 
 ## Files
 

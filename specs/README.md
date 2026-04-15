@@ -8,3 +8,4 @@ The main useful file here today is:
 - [`adr/template.md`](./adr/template.md)
 
 If the project starts recording architectural decisions again, keep them under `specs/adr/`.
+For day-to-day orientation, prefer the package README files and the short docs in [`docs/`](../docs).
