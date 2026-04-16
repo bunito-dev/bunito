@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { DECORATOR_METADATA_KEYS } from '@bunito/core/container';
-import { HTTP_CONTROLLER } from '../constants';
+import { DECORATOR_METADATA_KEYS } from '@bunito/container';
+import { CONTROLLER_COMPONENT } from '../constants';
 import { OnDelete, OnGet, OnPost, OnPut, OnRequest } from './on-request.decorator';
 
 describe('OnRequest', () => {
@@ -14,7 +14,7 @@ describe('OnRequest', () => {
 
     expect(
       (metadata[DECORATOR_METADATA_KEYS.COMPONENT_METHODS] as Map<symbol, unknown[]>).get(
-        HTTP_CONTROLLER,
+        CONTROLLER_COMPONENT,
       ),
     ).toEqual([
       {
@@ -41,7 +41,7 @@ describe('OnGet', () => {
 
     expect(
       (metadata[DECORATOR_METADATA_KEYS.COMPONENT_METHODS] as Map<symbol, unknown[]>).get(
-        HTTP_CONTROLLER,
+        CONTROLLER_COMPONENT,
       ),
     ).toEqual([
       {
@@ -68,7 +68,7 @@ describe('OnPost', () => {
 
     expect(
       (metadata[DECORATOR_METADATA_KEYS.COMPONENT_METHODS] as Map<symbol, unknown[]>).get(
-        HTTP_CONTROLLER,
+        CONTROLLER_COMPONENT,
       ),
     ).toEqual([
       {
@@ -95,7 +95,7 @@ describe('OnPut', () => {
 
     expect(
       (metadata[DECORATOR_METADATA_KEYS.COMPONENT_METHODS] as Map<symbol, unknown[]>).get(
-        HTTP_CONTROLLER,
+        CONTROLLER_COMPONENT,
       ),
     ).toEqual([
       {
@@ -122,7 +122,7 @@ describe('OnDelete', () => {
 
     expect(
       (metadata[DECORATOR_METADATA_KEYS.COMPONENT_METHODS] as Map<symbol, unknown[]>).get(
-        HTTP_CONTROLLER,
+        CONTROLLER_COMPONENT,
       ),
     ).toEqual([
       {

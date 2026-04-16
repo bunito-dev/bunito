@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { DECORATOR_METADATA_KEYS } from '@bunito/core/container';
-import { HTTP_CONTROLLER } from '../constants';
+import { DECORATOR_METADATA_KEYS } from '@bunito/container';
+import { CONTROLLER_COMPONENT } from '../constants';
 import { Controller } from './controller.decorator';
 
 describe('Controller', () => {
@@ -12,11 +12,11 @@ describe('Controller', () => {
     Controller('/users')(ExampleController, { metadata } as never);
 
     expect(metadata[DECORATOR_METADATA_KEYS.COMPONENT_KEYS]).toEqual(
-      new Set([HTTP_CONTROLLER]),
+      new Set([CONTROLLER_COMPONENT]),
     );
     expect(
       (metadata[DECORATOR_METADATA_KEYS.COMPONENT_OPTIONS] as Map<symbol, unknown[]>).get(
-        HTTP_CONTROLLER,
+        CONTROLLER_COMPONENT,
       ),
     ).toEqual([{ kind: 'path', path: '/users' }]);
     expect(metadata[DECORATOR_METADATA_KEYS.PROVIDER_OPTIONS]).toEqual({

@@ -5,7 +5,8 @@ import type {
   ResolveField,
   StripUndefined,
 } from '@bunito/common';
-import type { Logger, RequestId } from '@bunito/core';
+import type { RequestId } from '@bunito/container';
+import type { Logger } from '@bunito/logger';
 import type { ZodObject, ZodType, z } from 'zod';
 import type {
   HTTP_CONTENT_TYPES,

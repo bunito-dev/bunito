@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test';
 import {
+  CONTROLLER_COMPONENT,
   DYNAMIC_SEGMENT_ALIASES,
   DYNAMIC_SEGMENT_KEYS,
   HTTP_CONTENT_TYPES,
-  HTTP_CONTROLLER,
   HTTP_ERROR_STATUS_CODES,
   HTTP_STATUS_MESSAGES,
   HTTP_SUCCESS_STATUS_CODES,
@@ -52,7 +52,7 @@ describe('HTTP_CONTENT_TYPES', () => {
 
 describe('HTTP_CONTROLLER', () => {
   it('uses a symbol token for controller components', () => {
-    expect(HTTP_CONTROLLER).toBeSymbol();
+    expect(CONTROLLER_COMPONENT).toBeSymbol();
   });
 });
 

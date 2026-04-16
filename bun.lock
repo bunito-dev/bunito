@@ -13,7 +13,8 @@
     "examples": {
       "name": "@bunito/examples",
       "dependencies": {
-        "@bunito/core": "workspace:*",
+        "@bunito/bunito": "workspace:*",
+        "@bunito/cli": "workspace:*",
         "@bunito/http": "workspace:*",
         "zod": "catalog:",
       },
@@ -21,21 +22,39 @@
         "@types/bun": "catalog:",
       },
     },
-    "packages/common": {
-      "name": "@bunito/common",
-      "version": "0.0.4",
+    "packages/bunito": {
+      "name": "@bunito/bunito",
+      "version": "0.0.5",
       "dependencies": {
+        "@bunito/common": "workspace:0.0.5",
+        "@bunito/config": "workspace:0.0.5",
+        "@bunito/container": "workspace:0.0.5",
+        "@bunito/logger": "workspace:0.0.5",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+      },
+    },
+    "packages/cli": {
+      "name": "@bunito/cli",
+      "version": "0.0.5",
+      "bin": {
+        "bunito": "./src/cli.ts",
+      },
+      "dependencies": {
+        "@bunito/common": "workspace:0.0.5",
         "zod": "catalog:",
       },
       "devDependencies": {
         "@types/bun": "catalog:",
       },
     },
-    "packages/core": {
-      "name": "@bunito/core",
-      "version": "0.0.4",
+    "packages/cmd": {
+      "name": "@bunito/cmd",
+      "version": "0.0.5",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.4",
+        "@bunito/common": "workspace:0.0.5",
+        "@bunito/container": "workspace:0.0.5",
       },
       "devDependencies": {
         "@types/bun": "catalog:",
@@ -43,11 +62,73 @@
     },
     "packages/http": {
       "name": "@bunito/http",
-      "version": "0.0.4",
+      "version": "0.0.5",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.4",
-        "@bunito/core": "workspace:0.0.4",
+        "@bunito/common": "workspace:0.0.5",
+        "@bunito/config": "workspace:0.0.5",
+        "@bunito/container": "workspace:0.0.5",
+        "@bunito/logger": "workspace:0.0.5",
+        "@bunito/server": "workspace:0.0.5",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
         "zod": "catalog:",
+      },
+      "optionalDependencies": {
+        "zod": "^4.3.0",
+      },
+    },
+    "packages/runtime/common": {
+      "name": "@bunito/common",
+      "version": "0.0.5",
+      "dependencies": {
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+      },
+    },
+    "packages/runtime/config": {
+      "name": "@bunito/config",
+      "version": "0.0.5",
+      "dependencies": {
+        "@bunito/common": "workspace:0.0.5",
+        "@bunito/container": "workspace:0.0.5",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+      },
+    },
+    "packages/runtime/container": {
+      "name": "@bunito/container",
+      "version": "0.0.5",
+      "dependencies": {
+        "@bunito/common": "workspace:0.0.5",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+      },
+    },
+    "packages/runtime/logger": {
+      "name": "@bunito/logger",
+      "version": "0.0.5",
+      "dependencies": {
+        "@bunito/common": "workspace:0.0.5",
+        "@bunito/config": "workspace:0.0.5",
+        "@bunito/container": "workspace:0.0.5",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+      },
+    },
+    "packages/runtime/server": {
+      "name": "@bunito/server",
+      "version": "0.0.5",
+      "dependencies": {
+        "@bunito/common": "workspace:0.0.5",
+        "@bunito/config": "workspace:0.0.5",
+        "@bunito/container": "workspace:0.0.5",
+        "@bunito/logger": "workspace:0.0.5",
       },
       "devDependencies": {
         "@types/bun": "catalog:",
@@ -77,13 +158,25 @@
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.4.11", "", { "os": "win32", "cpu": "x64" }, "sha512-A8D3JM/00C2KQgUV3oj8Ba15EHEYwebAGCy5Sf9GAjr5Y3+kJIYOiESoqRDeuRZueuMdCsbLZIUqmPhpYXJE9A=="],
 
-    "@bunito/common": ["@bunito/common@workspace:packages/common"],
+    "@bunito/bunito": ["@bunito/bunito@workspace:packages/bunito"],
 
-    "@bunito/core": ["@bunito/core@workspace:packages/core"],
+    "@bunito/cli": ["@bunito/cli@workspace:packages/cli"],
+
+    "@bunito/cmd": ["@bunito/cmd@workspace:packages/cmd"],
+
+    "@bunito/common": ["@bunito/common@workspace:packages/runtime/common"],
+
+    "@bunito/config": ["@bunito/config@workspace:packages/runtime/config"],
+
+    "@bunito/container": ["@bunito/container@workspace:packages/runtime/container"],
 
     "@bunito/examples": ["@bunito/examples@workspace:examples"],
 
     "@bunito/http": ["@bunito/http@workspace:packages/http"],
+
+    "@bunito/logger": ["@bunito/logger@workspace:packages/runtime/logger"],
+
+    "@bunito/server": ["@bunito/server@workspace:packages/runtime/server"],
 
     "@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
 

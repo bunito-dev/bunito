@@ -1,5 +1,3 @@
-import './globals';
-
 export {
   Controller,
   OnDelete,

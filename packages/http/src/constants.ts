@@ -42,7 +42,7 @@ export const HTTP_CONTENT_TYPES = [
   'text/plain',
 ] as const;
 
-export const HTTP_CONTROLLER = Symbol('http(CONTROLLER)');
+export const CONTROLLER_COMPONENT = Symbol('component(CONTROLLER)');
 
 export const DYNAMIC_SEGMENT_ALIASES = {
   param: ':',

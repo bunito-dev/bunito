@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import { getDecoratorMetadata } from '@bunito/common';
-import { ConfigModule } from '@bunito/core';
-import { DECORATOR_METADATA_KEYS } from '@bunito/core/container';
+import { ConfigModule } from '@bunito/config';
+import { DECORATOR_METADATA_KEYS } from '@bunito/container';
+import { ServerModule } from '@bunito/server';
 import { HttpConfig } from './http.config';
 import { HttpModule } from './http.module';
 import { HttpRouter } from './http.router';
@@ -11,14 +12,12 @@ describe('HttpModule', () => {
     expect(
       getDecoratorMetadata<{
         imports?: unknown[];
-        configs?: unknown[];
-        routers?: unknown[];
+        uses?: unknown[];
         exports?: unknown[];
       }>(HttpModule, DECORATOR_METADATA_KEYS.MODULE_OPTIONS),
     ).toEqual({
-      imports: [ConfigModule],
-      configs: [HttpConfig],
-      routers: [HttpRouter],
+      imports: [ConfigModule, ServerModule],
+      uses: [HttpConfig, HttpRouter],
       exports: [HttpRouter],
     });
   });

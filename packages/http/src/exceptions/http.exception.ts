@@ -1,5 +1,4 @@
-import { isObject, isString } from '@bunito/common';
-import { Exception } from '@bunito/core';
+import { Exception, isObject, isString } from '@bunito/common';
 import { HTTP_ERROR_STATUS_CODES, HTTP_STATUS_MESSAGES } from '../constants';
 import type { HttpErrorStatus } from '../types';
 

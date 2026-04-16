@@ -1,14 +1,15 @@
 import type { CallableInstance } from '@bunito/common';
 import { isString } from '@bunito/common';
-import type { ModuleId, ProviderId, RequestId, ResolveConfig } from '@bunito/core';
-import { Container, OnInit } from '@bunito/core';
-import type { FetchContext, RouterExtension } from '@bunito/core/server';
-import { Router } from '@bunito/core/server';
+import type { ResolveConfig } from '@bunito/config';
+import type { ModuleId, ProviderId, RequestId } from '@bunito/container';
+import { Container, OnInit } from '@bunito/container';
+import type { FetchContext, RouterExtension } from '@bunito/server';
+import { Router } from '@bunito/server';
 import { ZodError } from 'zod';
 import {
+  CONTROLLER_COMPONENT,
   DYNAMIC_SEGMENT_ALIASES,
   DYNAMIC_SEGMENT_KEYS,
-  HTTP_CONTROLLER,
 } from './constants';
 import { HttpException, ValidationException } from './exceptions';
 import { HttpConfig } from './http.config';
@@ -49,12 +50,14 @@ export class HttpRouter implements RouterExtension {
       ControllerOptions,
       unknown,
       ControllerMethodOptions
-    >(HTTP_CONTROLLER);
+    >(CONTROLLER_COMPONENT);
 
-    for (const { providerId, moduleId, options: opts, methods } of components) {
-      if (!providerId || !methods) {
+    for (const component of components) {
+      if (!('useProviderId' in component) || !component.methods.length) {
         continue;
       }
+
+      const { useProviderId: providerId, moduleId, options: opts, methods } = component;
 
       const parentPaths: HttpPath[] = [];
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { DECORATOR_METADATA_KEYS } from '@bunito/core/container';
-import { HTTP_CONTROLLER } from '../constants';
+import { DECORATOR_METADATA_KEYS } from '@bunito/container';
+import { CONTROLLER_COMPONENT } from '../constants';
 import { OnException } from './on-exception.decorator';
 
 describe('OnException', () => {
@@ -14,7 +14,7 @@ describe('OnException', () => {
 
     expect(
       (metadata[DECORATOR_METADATA_KEYS.COMPONENT_METHODS] as Map<symbol, unknown[]>).get(
-        HTTP_CONTROLLER,
+        CONTROLLER_COMPONENT,
       ),
     ).toEqual([
       {

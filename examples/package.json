@@ -3,11 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "core:001-basics": "bun ./core/001-basics/main.ts",
-    "http:001-basics": "bun --watch ./http/001-basics/main.ts"
+    "001-basics": "bunito start 001-basics",
+    "002-http": "bunito start 002-http"
   },
   "dependencies": {
-    "@bunito/core": "workspace:*",
+    "@bunito/bunito": "workspace:*",
+    "@bunito/cli": "workspace:*",
     "@bunito/http": "workspace:*",
     "zod": "catalog:"
   },

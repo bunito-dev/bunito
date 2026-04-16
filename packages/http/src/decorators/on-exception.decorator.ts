@@ -1,6 +1,6 @@
 import type { ClassMethodDecorator } from '@bunito/common';
-import { createComponentMethodDecorator } from '@bunito/core/container';
-import { HTTP_CONTROLLER } from '../constants';
+import { createComponentMethodDecorator } from '@bunito/container';
+import { CONTROLLER_COMPONENT } from '../constants';
 import type {
   ControllerMethodOptions,
   OnExceptionHandler,
@@ -11,7 +11,7 @@ export function OnException<THandler extends OnExceptionHandler>(
   options: OnExceptionOptions = {},
 ): ClassMethodDecorator<THandler> {
   return createComponentMethodDecorator<ControllerMethodOptions, THandler>(
-    HTTP_CONTROLLER,
+    CONTROLLER_COMPONENT,
     {
       kind: 'onException',
       method: 'ALL',
