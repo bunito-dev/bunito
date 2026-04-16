@@ -6,11 +6,8 @@ import { Container, OnInit } from '@bunito/container';
 import type { FetchContext, RouterExtension } from '@bunito/server';
 import { Router } from '@bunito/server';
 import { ZodError } from 'zod';
-import {
-  CONTROLLER_COMPONENT,
-  DYNAMIC_SEGMENT_ALIASES,
-  DYNAMIC_SEGMENT_KEYS,
-} from './constants';
+import { DYNAMIC_SEGMENT_ALIASES, DYNAMIC_SEGMENT_KEYS } from './constants';
+import { CONTROLLER_COMPONENT } from './controllers';
 import { HttpException, ValidationException } from './exceptions';
 import { HttpConfig } from './http.config';
 import type {

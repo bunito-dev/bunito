@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { DECORATOR_METADATA_KEYS } from '@bunito/container';
-import { CONTROLLER_COMPONENT } from '../constants';
+import { CONTROLLER_COMPONENT } from './constants';
 import { Controller } from './controller.decorator';
 
 describe('Controller', () => {

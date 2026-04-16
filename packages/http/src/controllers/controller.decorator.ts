@@ -2,8 +2,8 @@ import type { Class, ClassDecorator } from '@bunito/common';
 import { isObject, isString } from '@bunito/common';
 import type { ComponentDecoratorOptions } from '@bunito/container';
 import { createComponentDecorator } from '@bunito/container';
-import { CONTROLLER_COMPONENT } from '../constants';
 import type { ControllerOptions, HttpPath } from '../types';
+import { CONTROLLER_COMPONENT } from './constants';
 
 export function Controller<TController extends Class>(
   options?: ComponentDecoratorOptions,

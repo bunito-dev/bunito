@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'bun:test';
 import {
-  CONTROLLER_COMPONENT,
   DYNAMIC_SEGMENT_ALIASES,
   DYNAMIC_SEGMENT_KEYS,
   HTTP_CONTENT_TYPES,
@@ -47,12 +46,6 @@ describe('HTTP_STATUS_MESSAGES', () => {
 describe('HTTP_CONTENT_TYPES', () => {
   it('lists supported default response types', () => {
     expect(HTTP_CONTENT_TYPES).toEqual(['application/json', 'text/plain']);
-  });
-});
-
-describe('HTTP_CONTROLLER', () => {
-  it('uses a symbol token for controller components', () => {
-    expect(CONTROLLER_COMPONENT).toBeSymbol();
   });
 });
 

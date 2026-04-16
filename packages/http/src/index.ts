@@ -8,7 +8,7 @@ export {
   OnRequest,
   OnResponse,
   UsePath,
-} from './decorators';
+} from './controllers';
 export { HttpException, ValidationException } from './exceptions';
 export { HttpModule } from './http.module';
 export { HttpRouter } from './http.router';

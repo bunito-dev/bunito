@@ -42,8 +42,6 @@ export const HTTP_CONTENT_TYPES = [
   'text/plain',
 ] as const;
 
-export const CONTROLLER_COMPONENT = Symbol('component(CONTROLLER)');
-
 export const DYNAMIC_SEGMENT_ALIASES = {
   param: ':',
   any: '*',

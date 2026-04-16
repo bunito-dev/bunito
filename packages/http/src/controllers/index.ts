@@ -1,3 +1,4 @@
+export * from './constants';
 export * from './controller.decorator';
 export * from './on-exception.decorator';
 export * from './on-request.decorator';
