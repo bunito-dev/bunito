@@ -57,6 +57,7 @@ export type RouteContext<
   url: URL;
   path: HttpPath;
   method: HttpMethod;
+  contentType: HttpContentType;
   data: Partial<EmptyFallback<TData, Record<string, unknown>>>;
   query: EmptyFallback<TQuery, Record<string, string | string[]>>;
   params: EmptyFallback<TParams, Record<string, string>>;
@@ -121,6 +122,7 @@ export type OnRequestOptions = {
   method?: RouteMethod;
   path?: HttpPath;
   schema?: OnRequestSchema | null;
+  priority?: 'high' | 'low' | null;
 };
 
 export type OnRequestHandler = Fn<unknown, [context: OnRequestContext<Any, Any>]>;

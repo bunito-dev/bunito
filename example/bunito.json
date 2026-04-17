@@ -1,0 +1,19 @@
+{
+  "apps": {
+    "101-basics": {
+      "entry": "apps/101-basics/main.ts"
+    },
+    "201-http-simple": {
+      "entry": "apps/201-http-simple/main.ts",
+      "envs": {
+        "PORT": 4201
+      }
+    },
+    "202-http-json-body": {
+      "entry": "apps/202-http-json-body/main.ts",
+      "envs": {
+        "PORT": 4202
+      }
+    }
+  }
+}

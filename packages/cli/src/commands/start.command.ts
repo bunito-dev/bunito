@@ -1,53 +1,104 @@
-import * as process from 'node:process';
-import { spawn } from 'bun';
-import { z } from 'zod';
-import { Command } from './command';
+import process from 'node:process';
+import { styleText } from 'node:util';
+import type { Project } from '../project';
 
-export const StartOptionsSchema = z.object({
-  apps: z.array(z.string()),
-  watch: z.boolean().default(false).describe('Watch for changes'),
-  help: z.boolean().default(false),
-});
+export class StartCommand {
+  private readonly textDecoder = new TextDecoder();
 
-export class StartCommand extends Command<typeof StartOptionsSchema> {
-  constructor() {
-    super(StartOptionsSchema, {
-      w: 'watch',
-      h: 'help',
-    });
-  }
+  constructor(private readonly project: Project) {}
 
-  override async execute(): Promise<void> {
-    const { watch, help } = this.options;
+  public async run(options: {
+    apps: Set<string> | undefined;
+    watch: boolean;
+    prod: boolean;
+  }): Promise<void> {
+    const pending: Promise<unknown>[] = [];
 
-    if (help) {
-      console.log('Usage: bunito [command] [app]');
-      return;
+    const apps = this.project.getApps(options.apps);
+
+    if (!apps.length) {
+      throw new Error('No apps found');
     }
 
-    const apps = await this.readApps(this.options.apps);
-    const cwd = process.cwd();
+    for (const { prefix, entry, envs = {} } of apps) {
+      let optionalPrefix = '';
 
-    await Promise.all(
-      apps.map(({ main }) => {
-        const cmd = ['bun', 'run'];
+      if (apps.length > 1) {
+        optionalPrefix = prefix;
+      }
 
-        if (watch) {
-          cmd.push('--watch');
+      const args = ['bun', 'run'];
+
+      if (options.watch) {
+        args.push('--watch', '--no-clear-screen');
+      }
+
+      const proc = Bun.spawn([...args, entry], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+        stdin: 'inherit',
+        env: {
+          ...process.env,
+          NODE_ENV: options.prod ? 'production' : 'development',
+          ...envs,
+        },
+      });
+
+      pending.push(
+        this.pipeStreamWithPrefix(
+          optionalPrefix,
+          proc.stdout.getReader(),
+          process.stdout,
+        ),
+        this.pipeStreamWithPrefix(
+          optionalPrefix,
+          proc.stderr.getReader(),
+          process.stderr,
+        ),
+        proc.exited.then((code) => {
+          if (!code) {
+            console.log(
+              `${optionalPrefix}${styleText(['italic', 'gray'], `Exit with code ${code}`)}`,
+            );
+          } else {
+            console.log(
+              `${optionalPrefix}${styleText(['italic', 'red'], `Exit with code ${code}`)}`,
+            );
+          }
+        }),
+      );
+    }
+
+    await Promise.all(pending);
+  }
+
+  private async pipeStreamWithPrefix(
+    prefix: string,
+    input: ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>,
+    output: NodeJS.WriteStream,
+  ): Promise<void> {
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await input.read();
+
+      if (done) {
+        if (buffer) {
+          output.write(`${prefix}${buffer}\n`);
         }
 
-        cmd.push(main);
+        break;
+      }
 
-        const proc = spawn({
-          cmd,
-          cwd,
-          stdin: 'inherit',
-          stdout: 'inherit',
-          stderr: 'inherit',
-        });
+      buffer += this.textDecoder.decode(value, { stream: true });
 
-        return proc.exited;
-      }),
-    );
+      const lines = buffer.split('\n');
+
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        output.write(`${prefix}${line}\n`);
+      }
+    }
   }
 }

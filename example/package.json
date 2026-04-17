@@ -1,0 +1,23 @@
+{
+  "name": "example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "cli": "bunito",
+    "start:all": "bunito start",
+    "start:101-basics": "bunito start 101-basics",
+    "start:201-http-simple": "bunito start 201-http-simple",
+    "start:202-http-json-body": "bunito start 202-http-json-body"
+  },
+  "dependencies": {
+    "@bunito/bunito": "workspace:*",
+    "@bunito/http": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@bunito/cli": "workspace:*"
+  },
+  "engines": {
+    "bun": ">=1.3.11"
+  }
+}

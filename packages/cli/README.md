@@ -3,7 +3,7 @@
 ## Installation
 
 ```bash
-bun add @bunito/cli
+bun install --global @bunito/cli
 ```
 
 ## License

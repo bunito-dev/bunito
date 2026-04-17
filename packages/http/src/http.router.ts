@@ -7,7 +7,7 @@ import type { FetchContext, RouterExtension } from '@bunito/server';
 import { Router } from '@bunito/server';
 import { ZodError } from 'zod';
 import { DYNAMIC_SEGMENT_ALIASES, DYNAMIC_SEGMENT_KEYS } from './constants';
-import { CONTROLLER_COMPONENT } from './controllers';
+import { CONTROLLER_COMPONENT } from './controller';
 import { HttpException, ValidationException } from './exceptions';
 import { HttpConfig } from './http.config';
 import type {
@@ -17,7 +17,6 @@ import type {
   HttpPath,
   OnExceptionMatch,
   OnRequestMatch,
-  OnRequestSchema,
   OnResponseMatch,
   RouteContext,
   RouteHandler,
@@ -70,6 +69,7 @@ export class HttpRouter implements RouterExtension {
       }
 
       const parentSegments = processTokenizedPath(...tokenizePath(...parentPaths));
+      const parentNode = this.touchNode(parentSegments);
 
       for (const { propKey, options } of methods) {
         let node: RouteNode;
@@ -84,7 +84,7 @@ export class HttpRouter implements RouterExtension {
           }
 
           default:
-            node = this.touchNode(parentSegments);
+            node = parentNode;
         }
 
         const handler = this.createRouteHandler(providerId, moduleId, propKey);
@@ -94,7 +94,12 @@ export class HttpRouter implements RouterExtension {
 
         switch (options.kind) {
           case 'onRequest': {
-            const { method = 'ALL', schema = null, path = '/' } = options;
+            const {
+              method = 'ALL',
+              schema = null,
+              path = '/',
+              priority = null,
+            } = options;
 
             node.handlers.onRequest?.push({
               handler,
@@ -102,6 +107,7 @@ export class HttpRouter implements RouterExtension {
                 method,
                 path,
                 schema,
+                priority,
               },
             });
             break;
@@ -143,11 +149,13 @@ export class HttpRouter implements RouterExtension {
       url,
       path,
       method,
+      contentType:
+        request.headers.get('Content-Type') ?? this.config.defaultRequestContentType,
       logger,
       data,
       query: normalizeSearchParams(url.searchParams),
       params: {},
-      body: await this.readRequestBody(request),
+      body: null,
     };
 
     let response: Response | undefined;
@@ -191,63 +199,53 @@ export class HttpRouter implements RouterExtension {
     return response;
   }
 
-  private async readRequestBody(request: Request): Promise<unknown> {
-    if (request.body) {
-      const contentType =
-        request.headers.get('Content-Type') ?? this.config.defaultContentType;
-
-      switch (contentType) {
-        case 'application/json':
-          return await request.json();
-
-        case 'text/plain':
-          return await request.text();
-
-        default:
-          return request.body;
-      }
-    }
-
-    return null;
-  }
-
-  private async prepareRequestContext(
-    params: Record<string, string>,
-    context: RouteContext,
-    schema: OnRequestSchema | null,
-  ): Promise<RouteContext> {
-    const result: RouteContext = {
-      ...context,
-      params,
-    };
-
-    if (!schema) {
-      return result;
-    }
-
-    const parsed = await schema.parseAsync(result);
-
-    Object.assign(result, parsed);
-
-    return result;
-  }
-
   private async handleRequest(
     requestId: RequestId,
     routeContext: RouteContext,
     routeMatches: OnRequestMatch[],
   ): Promise<unknown> {
-    for (const { handler, params, options } of routeMatches) {
-      const result = await handler(
-        requestId,
-        await this.prepareRequestContext(params, routeContext, options.schema),
-      );
+    for (const targetPriority of ['high', null, 'low']) {
+      for (const {
+        handler,
+        params,
+        options: { schema, priority },
+      } of routeMatches) {
+        if (priority !== targetPriority) {
+          continue;
+        }
 
-      if (result === undefined) {
-        continue;
+        let context = {
+          ...routeContext,
+          params,
+        };
+
+        const { query, body } = routeContext;
+
+        if (schema) {
+          const parsed = await schema.parseAsync({
+            query,
+            body,
+            params,
+          });
+
+          context = {
+            ...context,
+            ...parsed,
+          } as RouteContext;
+        }
+
+        const result = await handler(requestId, context);
+
+        if (context.body !== body) {
+          routeContext.body = context.body;
+        }
+
+        if (result === undefined) {
+          continue;
+        }
+
+        return result;
       }
-
-      return result;
     }
 
     throw new HttpException('NOT_FOUND');
@@ -278,7 +276,7 @@ export class HttpRouter implements RouterExtension {
       throw new HttpException('NOT_FOUND');
     }
 
-    switch (this.config.defaultContentType) {
+    switch (this.config.defaultResponseContentType) {
       case 'application/json':
         return Response.json(responseData);
 
@@ -311,7 +309,9 @@ export class HttpRouter implements RouterExtension {
 
     try {
       for (const { handler } of routeMatches) {
-        const response = await handler(requestId, exception, routeContext);
+        const response = await handler(requestId, exception, {
+          ...routeContext,
+        });
 
         if (response instanceof Response) {
           return response;
@@ -330,7 +330,7 @@ export class HttpRouter implements RouterExtension {
       logger?.fatal('Unhandled exception', cause);
     }
 
-    switch (this.config.defaultContentType) {
+    switch (this.config.defaultResponseContentType) {
       case 'application/json':
         return Response.json(unhandledException.toJSON(), {
           status: statusCode,

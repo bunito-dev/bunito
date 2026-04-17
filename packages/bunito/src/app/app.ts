@@ -1,4 +1,4 @@
-import { isString, RuntimeException } from '@bunito/common';
+import { RuntimeException } from '@bunito/common';
 import type {
   ModuleOptionsLike,
   ResolveProviderOptions,
@@ -9,37 +9,17 @@ import { Container } from '@bunito/container';
 import { Logger } from '../logger';
 
 export class App {
-  static async start(name: string, moduleOptions: ModuleOptionsLike): Promise<App>;
-  static async start(moduleOptions: ModuleOptionsLike): Promise<App>;
-  static async start(
-    arg0: string | ModuleOptionsLike,
-    arg1: ModuleOptionsLike = {},
-  ): Promise<App> {
-    const app = await App.create(arg0 as string, arg1);
+  static async start(moduleOptions: ModuleOptionsLike): Promise<App> {
+    const app = await App.create(moduleOptions);
     await app.start();
     return app;
   }
 
-  static async create(name: string, moduleOptions: ModuleOptionsLike): Promise<App>;
-  static async create(moduleOptions: ModuleOptionsLike): Promise<App>;
-  static async create(
-    arg0: string | ModuleOptionsLike,
-    arg1: ModuleOptionsLike = {},
-  ): Promise<App> {
-    let moduleOptions: ModuleOptionsLike;
-    let name: string | undefined;
-
-    if (isString(arg0)) {
-      name = arg0;
-      moduleOptions = arg1;
-    } else {
-      moduleOptions = arg0;
-    }
-
+  static async create(moduleOptions: ModuleOptionsLike): Promise<App> {
     const container = new Container(moduleOptions);
     const logger = await container.tryResolveProvider(Logger);
 
-    logger?.setContext(App, name);
+    logger?.setContext(App);
 
     return new App(container, logger);
   }

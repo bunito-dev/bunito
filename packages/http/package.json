@@ -18,6 +18,7 @@
     "access": "public"
   },
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
     "./internals": "./src/internals.ts"
@@ -36,7 +37,6 @@
     "@bunito/server": "workspace:0.0.5"
   },
   "devDependencies": {
-    "@types/bun": "catalog:",
     "zod": "catalog:"
   },
   "optionalDependencies": {

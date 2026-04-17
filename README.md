@@ -6,10 +6,10 @@
 - `@bunito/core`: app lifecycle, dependency injection, modules, config, and logger
 - `@bunito/http`: HTTP integration built on top of `@bunito/core`
 
-The repository includes two runnable examples in [`examples/`](./examples):
+The repository includes two runnable example apps in [`example/`](./example):
 
-- `examples/core/001-basics`
-- `examples/http/001-basics`
+- `example/apps/001-basics`
+- `example/http/002-http`
 
 ## Getting Started
 

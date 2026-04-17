@@ -1,5 +1,5 @@
 export * from './constants';
-export * from './controllers';
+export * from './controller';
 export * from './exceptions';
 export * from './http.config';
 export * from './http.module';

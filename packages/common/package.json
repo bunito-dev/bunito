@@ -1,0 +1,46 @@
+{
+  "name": "@bunito/common",
+  "version": "0.0.5",
+  "description": "Internal shared helpers, metadata utilities, and base exceptions used by bunito packages.",
+  "keywords": [
+    "bunito",
+    "internal",
+    "utilities",
+    "metadata",
+    "exceptions"
+  ],
+  "author": "Stanisław Głogowski <hello@bunito.dev>",
+  "license": "MIT",
+  "homepage": "https://bunito.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bunito-dev/bunito.git",
+    "directory": "packages/common"
+  },
+  "bugs": {
+    "url": "https://github.com/bunito-dev/bunito/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./biome.json": "./biome.json",
+    "./tsconfig.json": "./tsconfig.json"
+  },
+  "files": [
+    "src",
+    "!src/**/*.test.ts",
+    "README.md",
+    "LICENSE",
+    "biome.json",
+    "tsconfig.json"
+  ],
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "bun": ">=1.3.11"
+  }
+}

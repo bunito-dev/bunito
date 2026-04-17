@@ -5,16 +5,22 @@ import type { HttpContentType } from './types';
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      DEFAULT_CONTENT_TYPE?: string;
+      DEFAULT_REQUEST_CONTENT_TYPE?: string;
+      DEFAULT_RESPONSE_CONTENT_TYPE?: string;
     }
   }
 }
 
 export const HttpConfig = defineConfig<{
-  defaultContentType: HttpContentType;
+  defaultRequestContentType: HttpContentType;
+  defaultResponseContentType: HttpContentType;
 }>('Http', ({ getEnv }) => {
   return {
-    defaultContentType:
-      getEnv('DEFAULT_CONTENT_TYPE', 'string', HTTP_CONTENT_TYPES) ?? 'application/json',
+    defaultRequestContentType:
+      getEnv('DEFAULT_REQUEST_CONTENT_TYPE', 'string', HTTP_CONTENT_TYPES) ??
+      'application/json',
+    defaultResponseContentType:
+      getEnv('DEFAULT_RESPONSE_CONTENT_TYPE', 'string', HTTP_CONTENT_TYPES) ??
+      'application/json',
   };
 });

@@ -1,5 +1,6 @@
 export {
   Controller,
+  OnAll,
   OnDelete,
   OnException,
   OnGet,
@@ -8,7 +9,7 @@ export {
   OnRequest,
   OnResponse,
   UsePath,
-} from './controllers';
+} from './controller';
 export { HttpException, ValidationException } from './exceptions';
 export { HttpModule } from './http.module';
 export { HttpRouter } from './http.router';

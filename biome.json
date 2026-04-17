@@ -1,80 +1,8 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
+  "extends": ["./packages/common/biome.json"],
   "files": {
     "ignoreUnknown": true,
     "includes": ["**/*.ts"]
-  },
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineEnding": "lf",
-    "bracketSpacing": true,
-    "lineWidth": 90,
-    "expand": "auto",
-    "formatWithErrors": false
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "style": {
-        "useImportType": {
-          "level": "error",
-          "options": {
-            "style": "separatedType"
-          }
-        },
-        "useConsistentArrayType": "error",
-        "useNodejsImportProtocol": "error",
-        "useConst": "error",
-        "noParameterAssign": "error"
-      },
-      "correctness": {
-        "noUnusedVariables": "error",
-        "noUnusedImports": "error"
-      },
-      "suspicious": {
-        "noExplicitAny": "warn"
-      },
-      "complexity": {
-        "noForEach": "off",
-        "useOptionalChain": "error"
-      }
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "enabled": true,
-      "arrowParentheses": "always",
-      "bracketSameLine": false,
-      "bracketSpacing": true,
-      "quoteProperties": "asNeeded",
-      "semicolons": "always",
-      "trailingCommas": "all",
-      "quoteStyle": "single"
-    },
-    "linter": {
-      "enabled": true
-    }
-  },
-  "json": {
-    "formatter": {
-      "enabled": true,
-      "trailingCommas": "none"
-    }
   }
 }
