@@ -1,16 +1,5 @@
 import { defineConfig } from '@bunito/config';
 
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      PORT?: string;
-      HOSTNAME?: string;
-      SERVER_PORT?: string;
-      SERVER_HOSTNAME?: string;
-    }
-  }
-}
-
 export const ServerConfig = defineConfig<{
   port: number;
   hostname: string;

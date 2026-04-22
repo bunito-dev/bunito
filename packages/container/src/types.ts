@@ -1,6 +1,14 @@
 import type { Class, Fn } from '@bunito/common';
 import type { Id } from './id';
 
+declare global {
+  namespace Bunito {
+    interface ModuleOptionalProviders {
+      extensions: import('@bunito/common').Class[];
+    }
+  }
+}
+
 export type Token<TValue = unknown> =
   | string
   | symbol
@@ -36,17 +44,29 @@ export type InjectionDefinition = {
   defaultValue: unknown;
 };
 
+export type ClassPropDefinition<TFieldOptions = unknown, TMethodOptions = unknown> =
+  | { kind: 'field'; propKey: PropertyKey; options: TFieldOptions }
+  | { kind: 'method'; propKey: PropertyKey; options: TMethodOptions };
+
 // providers
 
 export type ProviderId = Id;
 
 export type ProviderScope = 'singleton' | 'module' | 'request' | 'transient';
 
-export type ProviderEvent = 'onInit' | 'onResolve' | 'onBoot' | 'onDestroy';
+export type ProviderEventName =
+  | 'OnBoot'
+  | 'OnInit'
+  | 'OnResolve'
+  | 'OnDestroy'
+  | (string & {});
 
-export type ProviderEvents = Partial<Record<ProviderEvent, PropertyKey>>;
+export type ProviderEventOptions = {
+  propKey: PropertyKey;
+  disposable: boolean;
+};
 
-export type ProviderDecoratorOptions = Omit<ProviderClassOptions, 'useClass'>;
+export type ProviderEvents = Partial<Record<ProviderEventName, ProviderEventOptions>>;
 
 export type ProviderClassOptions<
   TClass extends Class = Class,
@@ -131,29 +151,18 @@ export type ExtensionDefinition<TOptions = unknown> = {
   options: TOptions;
 };
 
-export type ExtensionDecoratorOptions<
-  TOmit extends keyof ProviderDecoratorOptions = never,
-> = Omit<ProviderDecoratorOptions, 'token' | TOmit>;
-
 // components
 
 export type ComponentKey = symbol;
-
-export type ComponentProp<TOptions = unknown> = {
-  propKey: PropertyKey;
-  options: TOptions;
-};
 
 export type ComponentBaseDefinition<
   TOptions = unknown,
   TFieldOptions = unknown,
   TMethodOptions = unknown,
 > = {
-  parentModuleIds: Set<ModuleId>;
   moduleId: ModuleId;
   options: TOptions[];
-  fields: ComponentProp<TFieldOptions>[];
-  methods: ComponentProp<TMethodOptions>[];
+  props: ClassPropDefinition<TFieldOptions, TMethodOptions>[];
 };
 
 export type ComponentClassDefinition<
@@ -180,29 +189,19 @@ export type ComponentDefinition<
   | ComponentClassDefinition<TOptions, TFieldOptions, TMethodOptions>
   | ComponentProviderDefinition<TOptions, TFieldOptions, TMethodOptions>;
 
-export type ComponentPartialDefinition = Omit<
-  ComponentDefinition,
-  'moduleId' | 'parentModuleIds'
->;
-
-export type ComponentDecoratorOptions<
-  TOmit extends keyof ProviderDecoratorOptions = never,
-> = Omit<ProviderDecoratorOptions, 'global' | 'token' | TOmit>;
-
 // modules
 
 export type ModuleId = Id;
 
-export type ModuleDecoratorOptions = ModuleOptions &
-  Omit<ProviderDecoratorOptions, 'token'>;
-
 export type ModuleOptions = {
   imports?: ModuleOptionsLike[];
-  uses?: ProviderOptionsLike[];
+  providers?: ProviderOptionsLike[];
   exports?: Array<Token | ProviderOptions>;
-};
+} & Partial<Bunito.ModuleOptionalProviders>;
 
 export type ModuleOptionsLike = Class | ModuleOptions;
+
+export type ModuleComponentDefinition = Omit<ComponentDefinition, 'moduleId'>;
 
 export type ModuleDefinition = {
   parents: Set<ModuleId>;
@@ -214,6 +213,6 @@ export type ModuleDefinition = {
   };
   components: {
     options?: Map<ComponentKey, unknown[]>;
-    definitions: Map<ComponentKey, ComponentPartialDefinition[]>;
+    definitions: Map<ComponentKey, ModuleComponentDefinition[]>;
   };
 };

@@ -1,5 +1,5 @@
 import type { CallableInstance, Fn } from '@bunito/common';
-import { isObject, RuntimeException, str } from '@bunito/common';
+import { isObject, RuntimeException } from '@bunito/common';
 import {
   GLOBAL_SCOPE_ID,
   MODULE_ID,
@@ -11,7 +11,7 @@ import type { ContainerCompiler } from './container-compiler';
 import type {
   InjectionDefinition,
   ModuleId,
-  ProviderEvent,
+  ProviderEventName,
   ProviderEvents,
   ProviderId,
   ProviderInstanceDefinition,
@@ -30,21 +30,22 @@ export class ContainerRuntime {
     //
   }
 
-  async bootModule(): Promise<void> {
+  async triggerProviders(eventName: ProviderEventName): Promise<void> {
     const handlers: Fn<Promise<void>>[] = [];
 
-    await this.createBootHandlers(this.compiler.rootModuleId, handlers);
+    await this.createProviderHandlers(this.compiler.rootModuleId, eventName, handlers);
 
     await Promise.all(handlers.map((handler) => handler()));
   }
 
-  async destroyScopes(): Promise<void> {
-    for (const scopeId of this.providers.keys()) {
-      await this.destroyScope(scopeId);
+  async destroyProviders(scopeId?: ScopeId): Promise<void> {
+    if (!scopeId) {
+      for (const scopeId of this.providers.keys()) {
+        await this.destroyProviders(scopeId);
+      }
+      return;
     }
-  }
 
-  async destroyScope(scopeId: ScopeId): Promise<void> {
     const providers = this.providers.get(scopeId);
 
     if (!providers) {
@@ -111,14 +112,7 @@ export class ContainerRuntime {
     });
 
     if (instance === undefined) {
-      throw new RuntimeException(
-        str`Provider ${providerId} not found in ${moduleId} module`,
-        {
-          providerId,
-          requestId,
-          moduleId,
-        },
-      );
+      return RuntimeException.throw`Provider ${providerId} not found in ${moduleId} module`;
     }
 
     return instance;
@@ -128,6 +122,12 @@ export class ContainerRuntime {
     providerId: ProviderId,
     options: ResolveProviderOptions = {},
   ): Promise<unknown> {
+    let instance = await this.tryGetProvider(providerId);
+
+    if (instance !== undefined) {
+      return instance;
+    }
+
     const { moduleId = this.compiler.rootModuleId, requestId } = options;
 
     switch (providerId) {
@@ -142,12 +142,6 @@ export class ContainerRuntime {
 
       case PARENT_MODULE_IDS:
         return this.compiler.getModule(moduleId).parents;
-    }
-
-    let instance = await this.tryGetProvider(providerId);
-
-    if (instance !== undefined) {
-      return instance;
     }
 
     const [providerModuleId, description] = this.compiler.getProvider(
@@ -206,8 +200,8 @@ export class ContainerRuntime {
       return;
     }
 
-    const onInit = this.createProviderHandler(instance, 'onInit', events);
-    const onResolve = this.createProviderHandler(instance, 'onResolve', events);
+    const onInit = this.createProviderHandler(instance, 'OnInit', events);
+    const onResolve = this.createProviderHandler(instance, 'OnResolve', events);
 
     if (onInit) {
       await onInit();
@@ -247,14 +241,7 @@ export class ContainerRuntime {
         continue;
       }
 
-      throw new RuntimeException(
-        str`Missing ${injectedProviderId} at #${index} is ${providerId} provider`,
-        {
-          index,
-          providerId,
-          injectedProviderId,
-        },
-      );
+      return RuntimeException.throw`Missing ${injectedProviderId} at #${index} is ${providerId} provider`;
     }
 
     return args;
@@ -262,13 +249,16 @@ export class ContainerRuntime {
 
   private createProviderHandler(
     instance: unknown,
-    event: ProviderEvent,
+    eventName: ProviderEventName,
     events: ProviderEvents | undefined,
   ): Fn<Promise<void>> | undefined {
-    const propKey = events?.[event];
-    if (!propKey) {
+    const options = events?.[eventName];
+
+    if (!options) {
       return;
     }
+
+    const { propKey, disposable } = options;
 
     const callableInstance = instance as CallableInstance<Promise<void>>;
 
@@ -279,31 +269,29 @@ export class ContainerRuntime {
 
       await callableInstance[propKey]();
 
-      if (event === 'onResolve') {
+      if (!disposable) {
         return;
       }
 
       callableInstance[propKey] = () =>
-        RuntimeException.reject(str`Provider handler ${propKey} cannot be called twice`, {
-          propKey,
-          event,
-        });
+        RuntimeException.reject`Provider handler ${propKey} cannot be called twice`;
     };
   }
 
-  private async createBootHandlers(
+  private async createProviderHandlers(
     moduleId: ModuleId,
+    eventName: ProviderEventName,
     found: Fn<Promise<void>>[],
     instances = new WeakSet<object>(),
   ): Promise<void> {
     const { providers, children } = this.compiler.getModule(moduleId);
 
     for (const childId of children) {
-      await this.createBootHandlers(childId, found, instances);
+      await this.createProviderHandlers(childId, eventName, found, instances);
     }
 
     for (const [providerId, { events }] of providers.definitions) {
-      if (!events?.onBoot) {
+      if (!events?.[eventName]) {
         continue;
       }
 
@@ -317,7 +305,7 @@ export class ContainerRuntime {
 
       instances.add(instance);
 
-      const handler = this.createProviderHandler(instance, 'onBoot', events);
+      const handler = this.createProviderHandler(instance, eventName, events);
 
       if (!handler) {
         continue;

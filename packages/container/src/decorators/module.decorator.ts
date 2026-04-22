@@ -1,25 +1,23 @@
-import type { Class, ClassDecorator } from '@bunito/common';
-import { DECORATOR_METADATA_KEYS } from '../constants';
-import type {
-  ModuleDecoratorOptions,
-  ModuleOptions,
-  ProviderDecoratorOptions,
-} from '../types';
+import { ConfigurationException } from '@bunito/common';
+import type { ModuleOptions } from '../types';
+import { DECORATOR_METADATA_KEYS } from './constants';
+import { Provider } from './provider.decorator';
+import type { ClassDecorator, ModuleDecoratorOptions } from './types';
 
-export function Module<TModule extends Class>(
-  options?: ModuleDecoratorOptions,
-): ClassDecorator<TModule> {
-  const { scope, injects, ...moduleOptions } = options ?? {};
+export function Module(options: ModuleDecoratorOptions = {}): ClassDecorator {
+  const { injects, ...moduleOptions } = options;
 
-  return (target, { metadata }) => {
-    metadata[DECORATOR_METADATA_KEYS.MODULE_OPTIONS] =
-      moduleOptions satisfies ModuleOptions;
+  return (target, context) => {
+    const { metadata } = context;
 
-    if (scope || injects) {
-      metadata[DECORATOR_METADATA_KEYS.PROVIDER_OPTIONS] = {
-        scope,
-        injects,
-      } satisfies ProviderDecoratorOptions;
+    if (metadata[DECORATOR_METADATA_KEYS.module]) {
+      ConfigurationException.throw`@Module() decorator already exists in ${target}`;
+    }
+
+    metadata[DECORATOR_METADATA_KEYS.module] = moduleOptions satisfies ModuleOptions;
+
+    if (injects) {
+      Provider({ injects })(target, context);
     }
 
     return target;

@@ -26,7 +26,7 @@ class FooService {
 const app = await App.create({
   // In this example we build the module inline to show the smallest possible app setup.
   imports: [LoggerModule],
-  uses: [FooService, BarService],
+  providers: [FooService, BarService],
 });
 
 const logger = await app.resolve(Logger);

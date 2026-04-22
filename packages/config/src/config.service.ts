@@ -15,16 +15,23 @@ import { formatValueAs } from './utils';
   scope: 'singleton',
 })
 export class ConfigService {
-  readonly isCI = process.env.CI === 'true';
+  readonly isCI: boolean;
 
-  readonly isProd = process.env.NODE_ENV === 'production';
+  readonly isProd: boolean;
 
-  readonly isDev = (process.env.NODE_ENV ?? 'development') === 'development';
+  readonly isTest: boolean;
 
-  readonly isTest = process.env.NODE_ENV === 'test';
+  readonly isDev: boolean;
 
   constructor() {
     this.getEnv = this.getEnv.bind(this);
+
+    const nodeEnv = process.env.NODE_ENV?.toLowerCase();
+
+    this.isCI = nodeEnv === 'ci' || process.env.CI?.toLowerCase() === 'true';
+    this.isProd = nodeEnv === 'production';
+    this.isTest = nodeEnv === 'test';
+    this.isDev = !this.isCI && !this.isProd && !this.isTest;
   }
 
   getEnv(keyLike: EnvKeyLike): string | undefined;

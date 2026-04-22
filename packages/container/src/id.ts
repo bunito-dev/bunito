@@ -1,4 +1,4 @@
-import { RuntimeException, resolveObjectName, resolveSymbolKey } from '@bunito/common';
+import { inspectName, RuntimeException } from '@bunito/common';
 import type { Token } from './types';
 
 export class Id {
@@ -43,7 +43,7 @@ export class Id {
     let id = Id.objectIds.get(token);
 
     if (!id) {
-      id = Id.unique(resolveObjectName(token) ?? 'anonymous');
+      id = Id.unique(inspectName(token));
       Id.objectIds.set(token, id);
     }
 
@@ -52,8 +52,9 @@ export class Id {
 
   private static forString(token: string): Id {
     if (!token) {
-      throw new RuntimeException('Token must be a non-empty string');
+      return RuntimeException.throw`Token must be a non-empty string`;
     }
+
     const key = Symbol.for(token);
     let id = Id.symbolIds.get(key);
 
@@ -69,11 +70,7 @@ export class Id {
     let id = Id.symbolIds.get(token);
 
     if (!id) {
-      const name = resolveSymbolKey(token);
-
-      if (!name) {
-        throw new RuntimeException('Token must be a non-empty symbol');
-      }
+      const name = inspectName(token);
 
       id = Id.unique(name);
       Id.symbolIds.set(token, id);
@@ -86,6 +83,10 @@ export class Id {
     readonly name: string,
     readonly index = 0,
   ) {}
+
+  [Bun.inspect.custom](): string {
+    return this.toString();
+  }
 
   toString(): string {
     return this.index ? `${this.name}#${this.index}` : this.name;

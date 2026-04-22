@@ -2,6 +2,22 @@ import type { Fn, Mandatory } from '@bunito/common';
 import type { ProviderFactoryOptions } from '@bunito/container';
 import type { ConfigService } from './config.service';
 
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      NODE_ENV?: string;
+      CI?: string;
+      TZ?: string;
+    }
+  }
+
+  namespace Bunito {
+    interface ModuleOptionalProviders {
+      configs: ConfigFactoryOptions<unknown>[];
+    }
+  }
+}
+
 export type ConfigFactory<TConfig> = (
   configService: ConfigService,
 ) => Promise<TConfig> | TConfig;

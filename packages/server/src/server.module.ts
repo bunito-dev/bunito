@@ -5,7 +5,8 @@ import { ServerService } from './server.service';
 
 @Module({
   imports: [ConfigModule],
-  uses: [ServerConfig, ServerService],
+  configs: [ServerConfig],
+  providers: [ServerService],
   exports: [ServerService],
 })
 export class ServerModule {}

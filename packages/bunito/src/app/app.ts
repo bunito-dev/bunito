@@ -9,12 +9,6 @@ import { Container } from '@bunito/container';
 import { Logger } from '../logger';
 
 export class App {
-  static async start(moduleOptions: ModuleOptionsLike): Promise<App> {
-    const app = await App.create(moduleOptions);
-    await app.start();
-    return app;
-  }
-
   static async create(moduleOptions: ModuleOptionsLike): Promise<App> {
     const container = new Container(moduleOptions);
     const logger = await container.tryResolveProvider(Logger);
@@ -22,6 +16,12 @@ export class App {
     logger?.setContext(App);
 
     return new App(container, logger);
+  }
+
+  static async start(moduleOptions: ModuleOptionsLike): Promise<App> {
+    const app = await App.create(moduleOptions);
+    await app.start();
+    return app;
   }
 
   protected constructor(
@@ -57,12 +57,13 @@ export class App {
     try {
       switch (action) {
         case 'start':
-          await this.container.boot();
+          await this.container.triggerProviders('OnBoot');
           trace?.ok('Ready');
           break;
 
         case 'shutdown':
-          await this.container.destroy();
+          await this.container.triggerProviders('OnShutdown');
+          await this.container.destroyProviders();
           trace?.debug('Shutdown');
           break;
       }

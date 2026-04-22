@@ -1,3 +1,5 @@
+export const LOGGER_EXTENSION = Symbol('logger(EXTENSION)');
+
 export const LOG_LEVELS = {
   FATAL: 60,
   ERROR: 50,

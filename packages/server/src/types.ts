@@ -1,36 +1,70 @@
 import type { Buffer } from 'node:buffer';
 import type { MaybePromise } from '@bunito/common';
 import type { RequestId } from '@bunito/container';
-import type { Logger } from '@bunito/logger';
-import type { ServerWebSocket } from 'bun';
+import type { HTTP_ERROR_STATUS_CODES } from './constants';
 
-export type FetchContext = {
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      PORT?: string;
+      HOSTNAME?: string;
+      SERVER_PORT?: string;
+      SERVER_HOSTNAME?: string;
+    }
+  }
+}
+
+export type Server = Bun.Server<WebSocketData>;
+
+export type ServerOptions = Bun.Serve.Options<WebSocketData>;
+
+export type ServerFactory = (options: ServerOptions) => Server;
+
+export type ServerRouteOptions = {
+  path: HttpPath;
+  method?: HttpMethod | null;
+};
+
+export type ServerRouteHandler = (
+  request: ServerRequest,
+  server: Server,
+) => MaybePromise<Response | undefined>;
+
+export type ServerRoutes = Record<
+  HttpPath,
+  Partial<Record<HttpMethod, ServerRouteHandler>>
+>;
+
+export type ServerRequest = Request & {
+  params?: Record<string, string>;
+};
+
+export type ServerWebSocket = Bun.ServerWebSocket<WebSocketData>;
+
+export type RequestQuery = Record<string, string | string[]>;
+
+export type RequestContext = {
   requestId: RequestId;
   url: URL;
-  data: Record<string, unknown>;
-  logger?: Logger;
-  upgrade: (headers?: HeadersInit) => boolean;
+  path?: HttpPath;
+  method: HttpMethod;
+  params: Record<string, string>;
+  query: RequestQuery;
+  body: unknown;
+  state: Record<string, unknown>;
+  upgrade: (headers?: HeadersInit) => void;
 };
 
-export type FetchHandler = (
+export type RequestHandler = (
   request: Request,
-  context: FetchContext,
-) => MaybePromise<Response | undefined | true>;
+  context: RequestContext,
+) => MaybePromise<Response | null | undefined>;
 
-export type WebSocketData = {
-  connectionId?: RequestId;
-  url: URL;
-  data: Record<string, unknown>;
-  logger?: Logger;
-};
+export type HttpPath = `/${string}`;
 
-export type WebSocketContext = {
-  connectionId: RequestId;
-  url: URL;
-  data: Record<string, unknown>;
-  logger?: Logger;
-  socket: ServerWebSocket<WebSocketData>;
-};
+export type HttpMethod = Bun.Serve.HTTPMethod;
+
+export type HttpErrorStatus = keyof typeof HTTP_ERROR_STATUS_CODES;
 
 export type WebSocketEvent =
   | {
@@ -46,11 +80,17 @@ export type WebSocketEvent =
       reason: string;
     }
   | {
-      name: 'message';
-      data: string | Buffer<ArrayBuffer>;
+      name: 'text';
+      data: string;
+    }
+  | {
+      name: 'binary';
+      data: Buffer<ArrayBuffer>;
     };
+
+export type WebSocketData = Omit<RequestContext, 'body' | 'upgrade'>;
 
 export type WebSocketHandler = (
   event: WebSocketEvent,
-  context: WebSocketContext,
-) => MaybePromise<undefined | true>;
+  socket: ServerWebSocket,
+) => MaybePromise<true | undefined>;

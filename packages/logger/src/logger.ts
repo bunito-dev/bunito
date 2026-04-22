@@ -1,4 +1,4 @@
-import { isFn, isString, resolveObjectName } from '@bunito/common';
+import { isFn, isString } from '@bunito/common';
 import type { RequestId } from '@bunito/container';
 import { Provider, REQUEST_ID } from '@bunito/container';
 import { LoggerService } from './logger.service';
@@ -31,7 +31,7 @@ export class Logger {
     let context: string | undefined;
 
     if (isFn(contextLike)) {
-      context = resolveObjectName(contextLike);
+      context = contextLike.name;
     } else if (isString(contextLike, true)) {
       context = contextLike;
     }

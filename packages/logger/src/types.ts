@@ -1,6 +1,15 @@
 import type { LOG_LEVELS } from './constants';
 import type { Logger } from './logger';
 
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      LOG_LEVEL?: string;
+      LOG_FORMAT?: string;
+    }
+  }
+}
+
 export type LogLevel = keyof typeof LOG_LEVELS;
 
 export type LogFormat = 'json' | 'pretty' | (string & {});
@@ -23,4 +32,11 @@ export type LogTrace = Omit<Logger, 'trace' | 'setContext'>;
 
 export type WriteLogOptions = LogOptions<LogLevel> & {
   args: LogArgs;
+};
+
+export type FormatLogOptions = LogOptions<LogLevelOptions> & {
+  error?: Error;
+  message?: string;
+  data?: unknown[];
+  timestamp: Date;
 };

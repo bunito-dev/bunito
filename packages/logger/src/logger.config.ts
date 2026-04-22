@@ -2,15 +2,6 @@ import { defineConfig } from '@bunito/config';
 import { LOG_LEVELS } from './constants';
 import type { LogFormat, LogLevel } from './types';
 
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      LOG_LEVEL?: string;
-      LOG_FORMAT?: string;
-    }
-  }
-}
-
 export const LoggerConfig = defineConfig<{
   level: LogLevel;
   format: LogFormat;

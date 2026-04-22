@@ -1,9 +1,9 @@
-# `@bunito/logger`
+# `@bunito/server`
 
 ## Installation
 
 ```bash
-bun add @bunito/logger
+bun add @bunito/server
 ```
 
 ## License

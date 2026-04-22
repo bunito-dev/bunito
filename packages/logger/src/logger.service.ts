@@ -1,10 +1,9 @@
-import { ConfigurationException, isObject, isString, str } from '@bunito/common';
+import { ConfigurationException, isFn, isObject, isString } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import { Container, OnInit, Provider } from '@bunito/container';
-import { LOG_LEVELS } from './constants';
-import type { FormatterExtension } from './formatters';
-import { FORMATTER_EXTENSION } from './formatters';
+import { LOG_LEVELS, LOGGER_EXTENSION } from './constants';
 import { LoggerConfig } from './logger.config';
+import type { LoggerExtension } from './logger.extension';
 import type { WriteLogOptions } from './types';
 
 @Provider({
@@ -14,7 +13,7 @@ import type { WriteLogOptions } from './types';
 export class LoggerService {
   private readonly stdout = process.stdout;
 
-  private formatter: FormatterExtension | undefined;
+  private extension: LoggerExtension | undefined;
 
   constructor(
     private readonly config: ResolveConfig<typeof LoggerConfig>,
@@ -24,32 +23,28 @@ export class LoggerService {
   }
 
   @OnInit()
-  async configureFormatter(): Promise<void> {
+  async configure(): Promise<void> {
     const { format } = this.config;
 
-    const { providerId, moduleId } =
-      this.container
-        .getExtensions<string>(FORMATTER_EXTENSION)
-        .find(({ options }) => options === format) ?? {};
+    const definition = this.container
+      .getExtensions<string>(LOGGER_EXTENSION)
+      .find(({ options }) => options === format);
 
-    if (!providerId) {
-      throw new ConfigurationException(`Logger formatter ${format} not found`, {
-        format,
-      });
+    if (!definition) {
+      return ConfigurationException.throw`Logger format ${format} not supported`;
     }
 
-    const formatter = await this.container.resolveProvider(providerId, {
+    const { providerId, moduleId } = definition;
+
+    const extension = await this.container.resolveProvider<LoggerExtension>(providerId, {
       moduleId,
     });
 
-    if (!isObject(formatter) || !('formatLog' in formatter)) {
-      throw new ConfigurationException(str`${format} is not a valid logger formatter`, {
-        format,
-        formatter,
-      });
+    if (!isObject(extension) || !isFn(extension.formatLog)) {
+      return ConfigurationException.throw`${extension} is not a valid LoggerExtension`;
     }
 
-    this.formatter = formatter as FormatterExtension;
+    this.extension = extension;
   }
 
   writeLog(options: WriteLogOptions): void {
@@ -80,7 +75,7 @@ export class LoggerService {
       data.push(arg);
     }
 
-    const buffer = this.formatter?.formatLog({
+    const buffer = this.extension?.formatLog({
       level: {
         name,
         value,

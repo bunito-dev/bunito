@@ -1,12 +1,9 @@
-import { ConfigModule } from '@bunito/config';
 import { Module } from '@bunito/container';
 import { ServerModule } from '@bunito/server';
-import { HttpConfig } from './http.config';
-import { HttpRouter } from './http.router';
+import { HttpExtension } from './http.extension';
 
 @Module({
-  imports: [ConfigModule, ServerModule],
-  uses: [HttpConfig, HttpRouter],
-  exports: [HttpRouter],
+  imports: [ServerModule],
+  extensions: [HttpExtension],
 })
 export class HttpModule {}

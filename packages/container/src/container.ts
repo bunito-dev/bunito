@@ -1,4 +1,3 @@
-import { RuntimeException } from '@bunito/common';
 import { ContainerCompiler } from './container-compiler';
 import { ContainerRuntime } from './container-runtime';
 import { Id } from './id';
@@ -8,6 +7,7 @@ import type {
   ExtensionDefinition,
   ModuleId,
   ModuleOptionsLike,
+  ProviderEventName,
   RequestId,
   ResolveProviderOptions,
   ResolveToken,
@@ -26,16 +26,20 @@ export class Container {
     this.runtime.setProvider(Id.for(Container), this);
   }
 
-  async boot(): Promise<void> {
-    await this.triggerAction('boot');
+  async destroyProviders(): Promise<void> {
+    await this.runtime.destroyProviders();
   }
 
-  async destroy(): Promise<void> {
-    await this.triggerAction('destroy');
+  async destroyRequest(requestId: RequestId): Promise<void> {
+    await this.runtime.destroyProviders(requestId);
   }
 
-  async cleanup(requestId: RequestId): Promise<void> {
-    await this.runtime.destroyScope(requestId);
+  setProvider(token: Token, instance: unknown): void {
+    this.runtime.setProvider(Id.for(token), instance);
+  }
+
+  triggerProviders(eventName: ProviderEventName): Promise<void> {
+    return this.runtime.triggerProviders(eventName);
   }
 
   getExtensions<TOptions = unknown>(
@@ -83,20 +87,5 @@ export class Container {
     options: ResolveProviderOptions = {},
   ): Promise<unknown> {
     return this.runtime.tryResolveProvider(Id.for(token), options);
-  }
-
-  private async triggerAction(action: 'boot' | 'destroy'): Promise<void> {
-    switch (action) {
-      case 'boot':
-        await this.runtime.bootModule();
-        break;
-
-      case 'destroy':
-        await this.runtime.destroyScopes();
-        break;
-    }
-
-    this[action] = () =>
-      RuntimeException.reject(`Container ${action} cannot be called twice`);
   }
 }

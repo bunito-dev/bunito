@@ -114,7 +114,7 @@ describe('ContainerRuntime', () => {
     expect(await runtime.resolveProvider(Id.for('value'))).toBe(42);
 
     await runtime.bootModule();
-    await runtime.destroyScope(requestId);
+    await runtime.destroyProviders(requestId);
     await runtime.destroyScopes();
 
     expect(LifecycleProvider.initCount).toBe(1);
@@ -156,7 +156,7 @@ describe('ContainerRuntime', () => {
 
     expect(await runtime.tryGetProvider(providerId, scopeId)).toEqual({ value: 1 });
 
-    await runtime.destroyScope(scopeId);
+    await runtime.destroyProviders(scopeId);
     await runtime.destroyScopes();
 
     expect(calls).toEqual(['resolve', 'destroy']);

@@ -1,26 +1,17 @@
 import type { Class } from '@bunito/common';
-import {
-  ConfigurationException,
-  getDecoratorMetadata,
-  isClass,
-  isFn,
-  isObject,
-  str,
-} from '@bunito/common';
-import { DECORATOR_METADATA_KEYS } from './constants';
+import { ConfigurationException, isClass, isFn, isObject } from '@bunito/common';
+import { getDecoratorMetadata } from './decorators';
 import { Id } from './id';
 import type {
   ComponentDefinition,
   ComponentKey,
-  ComponentPartialDefinition,
-  ComponentProp,
   ExtensionDefinition,
   ExtensionKey,
+  ModuleComponentDefinition,
   ModuleDefinition,
   ModuleId,
   ModuleOptions,
   ModuleOptionsLike,
-  ProviderDecoratorOptions,
   ProviderDefinition,
   ProviderEvents,
   ProviderId,
@@ -52,9 +43,7 @@ export class ContainerCompiler {
     const module = this.modules.get(moduleId);
 
     if (!module) {
-      throw new ConfigurationException(str`Module ${moduleId} not found`, {
-        moduleId,
-      });
+      return ConfigurationException.throw`Module ${moduleId} not found`;
     }
 
     return module;
@@ -123,7 +112,6 @@ export class ContainerCompiler {
       found.push({
         ...definition,
         moduleId,
-        parentModuleIds: module.parents,
         options: [...currentOptions, ...options],
       } as ComponentDefinition);
     }
@@ -141,15 +129,7 @@ export class ContainerCompiler {
     const moduleId = Id.for(optionsLike);
 
     if (parentIds.has(moduleId)) {
-      const parentPath = [...parentIds].map((parentId) => str`${parentId}`).join(' → ');
-
-      throw new ConfigurationException(
-        str`Circular dependency detected ${parentPath} in ${moduleId} module`,
-        {
-          moduleId,
-          parentIds,
-        },
-      );
+      return ConfigurationException.throw`Circular dependency detected ${parentIds} in ${moduleId} module`;
     }
 
     let definition = this.modules.get(moduleId);
@@ -182,16 +162,10 @@ export class ContainerCompiler {
     let options: ModuleOptions | undefined;
 
     if (isClass(optionsLike)) {
-      options = getDecoratorMetadata(optionsLike, DECORATOR_METADATA_KEYS.MODULE_OPTIONS);
+      options = getDecoratorMetadata(optionsLike, 'module');
 
       if (!options) {
-        throw new ConfigurationException(
-          str`@Module() decorator is missing in ${moduleId} module`,
-          {
-            moduleId,
-            moduleOptions: options,
-          },
-        );
+        return ConfigurationException.throw`@Module() decorator is missing in ${moduleId} module`;
       }
 
       const [providerId, providerDefinition] = this.tryCompileProvider(
@@ -204,15 +178,16 @@ export class ContainerCompiler {
         providers.definitions.set(providerId, providerDefinition);
       }
 
-      components.options = getDecoratorMetadata<Map<ComponentKey, unknown[]>>(
-        optionsLike,
-        DECORATOR_METADATA_KEYS.COMPONENT_OPTIONS,
-      );
+      components.options = getDecoratorMetadata(optionsLike, 'classOptions');
     } else {
       options = optionsLike as ModuleOptions;
     }
 
-    const { exports: exportsOption, uses: usesOptions, imports: importsOption } = options;
+    const {
+      exports: exportsOption,
+      imports: importsOption,
+      ...providersGroups
+    } = options;
 
     if (importsOption?.length) {
       const moduleIds = new Set([...parentIds, moduleId]);
@@ -239,8 +214,10 @@ export class ContainerCompiler {
       }
     }
 
-    if (usesOptions) {
-      for (const providerOptionsLike of usesOptions) {
+    const providersOption = Object.values(providersGroups).flat(1);
+
+    if (providersOption.length) {
+      for (const providerOptionsLike of providersOption) {
         const [providerId, providerDefinition] = this.tryCompileProvider(
           moduleId,
           providerOptionsLike,
@@ -265,13 +242,7 @@ export class ContainerCompiler {
         }
 
         if (!providerId) {
-          throw new ConfigurationException(
-            str`Missing provider options for ${providerOptionsLike} in ${moduleId} module`,
-            {
-              moduleId,
-              providerOptions: providerOptionsLike,
-            },
-          );
+          return ConfigurationException.throw`Missing provider options for ${providerOptionsLike} in ${moduleId} module`;
         }
       }
     }
@@ -283,14 +254,7 @@ export class ContainerCompiler {
 
         if (exportedModuleId) {
           if (providers.exported.has(exportedId)) {
-            throw new ConfigurationException(
-              `Provider ${exportedId} is already exported in ${exportedModuleId} module`,
-              {
-                moduleId,
-                providerId: exportedId,
-                providerModuleId: exportedModuleId,
-              },
-            );
+            return ConfigurationException.throw`Provider ${exportedId} is already exported in ${exportedModuleId} module`;
           }
 
           providers.exported.add(exportedId);
@@ -303,14 +267,7 @@ export class ContainerCompiler {
           if (exportedIds) {
             for (const providerId of exportedIds) {
               if (providers.exported.has(providerId)) {
-                throw new ConfigurationException(
-                  `Provider ${providerId} is already exported in ${exportedId} module`,
-                  {
-                    moduleId,
-                    providerId,
-                    providerModuleId: exportedId,
-                  },
-                );
+                return ConfigurationException.throw`Provider ${providerId} is already exported in ${exportedId} module`;
               }
 
               providers.exported.add(providerId);
@@ -320,13 +277,7 @@ export class ContainerCompiler {
           continue;
         }
 
-        throw new ConfigurationException(
-          str`Provider ${exportedId} not found in ${moduleId} module`,
-          {
-            moduleId,
-            providerId: exportedId,
-          },
-        );
+        return ConfigurationException.throw`Provider ${exportedId} not found in ${moduleId} module`;
       }
     }
 
@@ -339,21 +290,21 @@ export class ContainerCompiler {
     defaultScope: ProviderScope = 'singleton',
   ): [providerId?: ProviderId, definition?: ProviderDefinition] {
     let options: ProviderOptions | undefined;
+    let events: ProviderEvents | undefined;
 
     if (isClass(optionsLike)) {
-      const decoratorOptions = getDecoratorMetadata<ProviderDecoratorOptions>(
-        optionsLike,
-        DECORATOR_METADATA_KEYS.PROVIDER_OPTIONS,
-      );
+      const decoratorOptions = getDecoratorMetadata(optionsLike, 'provider');
 
       if (!decoratorOptions) {
         return [];
       }
 
       options = {
-        ...decoratorOptions,
+        ...decoratorOptions.options,
         useClass: optionsLike,
       };
+
+      events = decoratorOptions.events;
     } else if (isFn(optionsLike)) {
       options = {
         useFactory: optionsLike,
@@ -368,16 +319,12 @@ export class ContainerCompiler {
     if (isObject(options)) {
       if ('useClass' in options) {
         const { injects = [], token = options.useClass, ...commonOptions } = options;
-
         providerId = Id.for(token);
         definition = {
           scope: defaultScope,
           injects: resolveInjections(injects),
-          events: getDecoratorMetadata<ProviderEvents>(
-            options.useClass,
-            DECORATOR_METADATA_KEYS.PROVIDER_EVENTS,
-          ),
           ...commonOptions,
+          events,
         };
       } else if ('useFactory' in options) {
         const { injects = [], token = options.useFactory, ...commonOptions } = options;
@@ -387,6 +334,7 @@ export class ContainerCompiler {
           scope: defaultScope,
           injects: resolveInjections(injects),
           ...commonOptions,
+          events,
         };
       } else if ('useValue' in options) {
         const { injects = [], token, ...commonOptions } = options;
@@ -396,6 +344,7 @@ export class ContainerCompiler {
           scope: null,
           injects: null,
           ...commonOptions,
+          events,
         };
       }
 
@@ -409,79 +358,55 @@ export class ContainerCompiler {
 
   private tryCompileClassToken(
     classToken: Class,
-    componentsDefinitions: Map<ComponentKey, ComponentPartialDefinition[]>,
+    componentsDefinitions: Map<ComponentKey, ModuleComponentDefinition[]>,
     moduleId: ModuleId,
     providerId?: ProviderId,
   ): boolean {
-    if (providerId) {
-      const extensionKey = getDecoratorMetadata<ExtensionKey>(
-        classToken,
-        DECORATOR_METADATA_KEYS.EXTENSION_KEY,
-      );
+    let result = false;
 
-      if (extensionKey) {
-        const extensions = this.extensions.getOrInsertComputed(
-          extensionKey,
-          () => new Map(),
-        );
+    if (providerId) {
+      const extension = getDecoratorMetadata(classToken, 'extension');
+
+      if (extension) {
+        const { key, options } = extension;
+
+        const extensions = this.extensions.getOrInsertComputed(key, () => new Map());
 
         if (!extensions.has(providerId)) {
           extensions.set(providerId, {
             providerId,
             moduleId,
-            options: getDecoratorMetadata(
-              classToken,
-              DECORATOR_METADATA_KEYS.EXTENSION_OPTIONS,
-            ),
+            options,
           });
         }
 
-        return true;
+        result = true;
       }
     }
 
-    const componentKeys = getDecoratorMetadata<Set<ComponentKey>>(
-      classToken,
-      DECORATOR_METADATA_KEYS.COMPONENT_KEYS,
-    );
+    const component = getDecoratorMetadata(classToken, 'component');
 
-    if (!componentKeys) {
-      return false;
+    if (!component) {
+      return result;
     }
 
-    const options = getDecoratorMetadata<Map<ComponentKey, unknown[]>>(
-      classToken,
-      DECORATOR_METADATA_KEYS.COMPONENT_OPTIONS,
-    );
+    const { key, options = [] } = component;
 
-    const fields = getDecoratorMetadata<Map<ComponentKey, ComponentProp[]>>(
-      classToken,
-      DECORATOR_METADATA_KEYS.COMPONENT_FIELDS,
-    );
+    const classOptions = getDecoratorMetadata(classToken, 'classOptions')?.get(key) ?? [];
 
-    const methods = getDecoratorMetadata<Map<ComponentKey, ComponentProp[]>>(
-      classToken,
-      DECORATOR_METADATA_KEYS.COMPONENT_METHODS,
-    );
+    const props = getDecoratorMetadata(classToken, 'classProps')?.get(key) ?? [];
 
-    const commonDefinition: Partial<ComponentDefinition> = providerId
-      ? {
-          useProviderId: providerId,
-        }
-      : {
-          useClass: classToken,
-        };
+    const definition: Partial<ComponentDefinition> = providerId
+      ? { useProviderId: providerId }
+      : { useClass: classToken };
 
-    for (const componentKey of componentKeys) {
-      componentsDefinitions
-        .getOrInsertComputed(componentKey, () => [])
-        .push({
-          ...commonDefinition,
-          options: options?.get(componentKey) ?? [],
-          fields: fields?.get(componentKey) ?? [],
-          methods: methods?.get(componentKey) ?? [],
-        });
-    }
+    componentsDefinitions
+      .getOrInsertComputed(key, () => [])
+      .push({
+        ...definition,
+        options: [options, ...classOptions],
+        props,
+      });
 
     return true;
   }

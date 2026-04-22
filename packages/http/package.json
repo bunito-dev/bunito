@@ -20,8 +20,7 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts",
-    "./internals": "./src/internals.ts"
+    ".": "./src/index.ts"
   },
   "files": [
     "src",

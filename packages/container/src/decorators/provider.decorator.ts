@@ -1,12 +1,24 @@
-import type { Class, ClassDecorator } from '@bunito/common';
-import { DECORATOR_METADATA_KEYS } from '../constants';
-import type { ProviderDecoratorOptions } from '../types';
+import { DECORATOR_METADATA_KEYS } from './constants';
+import type { ClassDecorator, ProviderDecoratorOptions, ProviderMetadata } from './types';
 
-export function Provider<TProvider extends Class>(
-  options?: ProviderDecoratorOptions,
-): ClassDecorator<TProvider> {
-  return (target, { metadata }) => {
-    metadata[DECORATOR_METADATA_KEYS.PROVIDER_OPTIONS] = options ?? {};
+export function Provider(options: ProviderDecoratorOptions = {}): ClassDecorator {
+  return (target, context) => {
+    const { metadata } = context;
+
+    metadata[DECORATOR_METADATA_KEYS.provider] ??= {};
+
+    const providerMetadata = metadata[
+      DECORATOR_METADATA_KEYS.provider
+    ] as ProviderMetadata;
+
+    if (providerMetadata.options !== undefined) {
+      providerMetadata.options = {
+        ...providerMetadata.options,
+        ...options,
+      };
+    }
+
+    providerMetadata.options = options;
 
     return target;
   };

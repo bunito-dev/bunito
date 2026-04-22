@@ -14,5 +14,4 @@ export {
   isString,
   isSymbol,
   RuntimeException,
-  str,
 } from '@bunito/common';

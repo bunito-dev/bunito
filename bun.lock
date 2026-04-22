@@ -14,6 +14,7 @@
       "dependencies": {
         "@bunito/bunito": "workspace:*",
         "@bunito/http": "workspace:*",
+        "@bunito/server": "workspace:*",
         "zod": "catalog:",
       },
       "devDependencies": {
