@@ -47,6 +47,7 @@
         "noExplicitAny": "warn"
       },
       "complexity": {
+        "noStaticOnlyClass": "off",
         "noForEach": "off",
         "useOptionalChain": "error"
       }

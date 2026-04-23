@@ -1,7 +1,7 @@
 import type { Fn } from '@bunito/common';
 import { isObject, isString } from '@bunito/common';
-import type { ClassMethodDecorator } from '@bunito/container';
-import { ClassMethod } from '@bunito/container';
+import type { ClassMethodDecorator } from '@bunito/container/internals';
+import { ClassMethod } from '@bunito/container/internals';
 import type { HttpMethod, HttpPath } from '@bunito/server';
 import { CONTROLLER_COMPONENT } from '../constants';
 import type { RouteOptions } from '../types';

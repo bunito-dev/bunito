@@ -2,17 +2,17 @@ import type { CallableInstance } from '@bunito/common';
 import { ConfigurationException, isFn, isObject } from '@bunito/common';
 import type { ModuleId, ProviderId } from '@bunito/container';
 import { Container, Id, OnInit, PARENT_MODULE_IDS } from '@bunito/container';
-import type {
-  HttpMethod,
-  HttpPath,
-  RequestContext,
-  ServerRouteOptions,
-} from '@bunito/server';
-import { HttpException, ServerExtension } from '@bunito/server';
-import type { ZodType } from 'zod';
+import type { HttpMethod, HttpPath, ServerRouteOptions } from '@bunito/server/internals';
+import { HttpException, RequestContext, ServerExtension } from '@bunito/server/internals';
+import type { ZodError, ZodType } from 'zod';
 import { CONTROLLER_COMPONENT, MIDDLEWARE_EXTENSION } from './constants';
-import { NotFoundException } from './exceptions';
-import { Params, Query } from './injections';
+import {
+  InternalServerErrorException,
+  NotFoundException,
+  NotImplementedException,
+  ValidationFailedException,
+} from './exceptions';
+import { Body, Params, Query } from './injections';
 import type { Middleware } from './middleware';
 import type {
   ControllerOptions,
@@ -57,10 +57,12 @@ export class HttpExtension implements ServerExtension {
       if (isFn(middleware.beforeRequest)) {
         middleware.beforeRequest = middleware.beforeRequest.bind(middleware);
       }
+
       if (isFn(middleware.serializeResponseData)) {
         middleware.serializeResponseData =
           middleware.serializeResponseData.bind(middleware);
       }
+
       if (isFn(middleware.serializeException)) {
         middleware.serializeException = middleware.serializeException.bind(middleware);
       }
@@ -82,41 +84,55 @@ export class HttpExtension implements ServerExtension {
 
         const { moduleId, useProviderId: providerId, options, props } = controller;
 
-        const prefixes: HttpPath[] = [];
-        const middlewareIds = new Set<ProviderId>();
+        const parentPaths: HttpPath[] = [];
         const parentMiddleware: RouteMiddleware = {
+          beforeRequest: [],
           serializeResponseData: [],
           serializeException: [],
-          beforeRequest: [],
         };
 
-        for (const { prefix, middleware } of options) {
-          if (prefix) {
-            prefixes.push(normalizePath(prefix));
-          }
+        for (const opts of options) {
+          switch (opts.kind) {
+            case 'prefix': {
+              parentPaths.push(opts.prefix);
+              break;
+            }
 
-          if (middleware) {
-            for (const middlewareClass of middleware) {
-              const middlewareId = Id.for(middlewareClass);
-              if (!middlewareIds.has(middlewareId)) {
-                const instance = this.middleware.get(middlewareId);
+            case 'middleware': {
+              const middlewareId = Id.for(opts.middleware);
+              const middleware = this.middleware.get(middlewareId);
 
-                if (!instance) {
-                  continue;
-                }
-
-                if (instance.beforeRequest) {
-                  parentMiddleware.beforeRequest.push(instance.beforeRequest);
-                }
-                if (instance.serializeResponseData) {
-                  parentMiddleware.serializeResponseData.push(
-                    instance.serializeResponseData,
-                  );
-                }
-                if (instance.serializeException) {
-                  parentMiddleware.serializeException.push(instance.serializeException);
-                }
+              if (!middleware) {
+                return ConfigurationException.throw`Middleware ${middlewareId} not found in ${providerId} controller`;
               }
+
+              const options = opts.options;
+
+              if (middleware.beforeRequest) {
+                parentMiddleware.beforeRequest ??= [];
+                parentMiddleware.beforeRequest.push({
+                  handler: middleware.beforeRequest,
+                  options,
+                });
+              }
+
+              if (middleware.serializeResponseData) {
+                parentMiddleware.serializeResponseData ??= [];
+                parentMiddleware.serializeResponseData.push({
+                  handler: middleware.serializeResponseData,
+                  options,
+                });
+              }
+
+              if (middleware.serializeException) {
+                parentMiddleware.serializeException ??= [];
+                parentMiddleware.serializeException.push({
+                  handler: middleware.serializeException,
+                  options,
+                });
+              }
+
+              break;
             }
           }
         }
@@ -126,47 +142,22 @@ export class HttpExtension implements ServerExtension {
             continue;
           }
 
-          const middleware: RouteMiddleware = {
-            serializeResponseData: [...parentMiddleware.serializeResponseData],
-            serializeException: [...parentMiddleware.serializeException],
-            beforeRequest: [...parentMiddleware.beforeRequest],
-          };
-
           const {
             propKey,
-            options: { path, method, uses, injects },
+            options: { path, method, injects },
           } = prop;
 
-          if (uses) {
-            for (const middlewareClass of uses) {
-              const middlewareId = Id.for(middlewareClass);
-              if (!middlewareIds.has(middlewareId)) {
-                const instance = this.middleware.get(middlewareId);
-
-                if (!instance) {
-                  continue;
-                }
-
-                if (instance.beforeRequest) {
-                  middleware.beforeRequest.push(instance.beforeRequest);
-                }
-                if (instance.serializeResponseData) {
-                  middleware.serializeResponseData.push(instance.serializeResponseData);
-                }
-                if (instance.serializeException) {
-                  middleware.serializeException.push(instance.serializeException);
-                }
-              }
-            }
-          }
-
-          const normalizedPath = normalizePath(...prefixes, path);
+          const normalizedPath = normalizePath(...parentPaths, path);
 
           this.routes
             .getOrInsertComputed(normalizedPath, () => new Map())
             .getOrInsertComputed(method ?? null, () => [])
             .push({
-              middleware,
+              middleware: {
+                serializeResponseData: [...parentMiddleware.serializeResponseData],
+                serializeException: [...parentMiddleware.serializeException],
+                beforeRequest: [...parentMiddleware.beforeRequest],
+              },
               moduleId,
               propKey,
               providerId,
@@ -192,10 +183,89 @@ export class HttpExtension implements ServerExtension {
     return routes;
   }
 
-  async processRequest(
-    request: Request,
+  async resolveInjection(
     context: RequestContext,
-  ): Promise<Response | null> {
+    moduleId: ModuleId,
+    injection: unknown,
+  ): Promise<unknown> {
+    let token: unknown;
+    let path: string | undefined;
+    let schema: ZodType | undefined;
+
+    if (isObject(injection) && 'token' in injection && 'schema' in injection) {
+      token = injection.token;
+      schema = injection.schema as ZodType;
+    } else {
+      token = injection;
+    }
+
+    let result: unknown;
+
+    switch (token) {
+      case Request:
+        result = context.request;
+        break;
+
+      case Headers:
+        result = context.headers;
+        break;
+
+      case URL:
+        result = context.url;
+        break;
+
+      case Params:
+        result = context.params;
+        path = 'params';
+        break;
+
+      case Query:
+        result = context.query;
+        path = 'query';
+        break;
+
+      case Body:
+        result = context.body;
+        path = 'body';
+
+        if (result === undefined && !schema) {
+          result = context.request.body;
+        }
+        break;
+
+      case RequestContext:
+        result = context;
+        break;
+
+      default:
+        if (token) {
+          result = await this.container.tryResolveProvider(token, {
+            moduleId,
+            requestId: context.requestId,
+          });
+        }
+    }
+
+    if (schema && path) {
+      const parsed = await schema.safeParseAsync(result);
+
+      if (parsed.success) {
+        result = parsed.data;
+      } else {
+        const { error } = parsed;
+
+        for (const issue of error.issues) {
+          issue.path.unshift(path);
+        }
+
+        throw error;
+      }
+    }
+
+    return result ?? null;
+  }
+
+  async processRequest(context: RequestContext): Promise<Response | null> {
     let response: Response | null | undefined;
 
     const { requestId } = context;
@@ -209,8 +279,8 @@ export class HttpExtension implements ServerExtension {
 
           try {
             if (middleware.beforeRequest.length) {
-              for (const beforeRequest of middleware.beforeRequest) {
-                await beforeRequest(context);
+              for (const { handler, options } of middleware.beforeRequest) {
+                await handler(context, options);
               }
             }
 
@@ -231,50 +301,8 @@ export class HttpExtension implements ServerExtension {
             if (!injects) {
               args.push(context);
             } else {
-              for (const inject of injects) {
-                let token: unknown;
-                let schema: ZodType | undefined;
-
-                if (isObject(inject) && 'token' in inject && 'schema' in inject) {
-                  token = inject.token;
-                  schema = inject.schema as ZodType;
-                } else {
-                  token = inject;
-                }
-
-                let arg: unknown = null;
-
-                switch (token) {
-                  case Request:
-                    arg = request;
-                    break;
-
-                  case Headers:
-                    arg = request.headers;
-                    break;
-
-                  case URL:
-                    arg = context.url;
-                    break;
-
-                  case Params:
-                    arg = context.params;
-                    break;
-
-                  case Query:
-                    arg = context.query;
-                    break;
-                }
-
-                if (schema) {
-                  const result = schema.safeParse(arg);
-
-                  if (result.success) {
-                    arg = result.data;
-                  }
-                }
-
-                args.push(arg);
+              for (const injection of injects) {
+                args.push(await this.resolveInjection(context, moduleId, injection));
               }
             }
 
@@ -287,8 +315,8 @@ export class HttpExtension implements ServerExtension {
 
             if (result !== undefined) {
               if (middleware.serializeResponseData.length) {
-                for (const serializeResponseData of middleware.serializeResponseData) {
-                  response = await serializeResponseData(result, context);
+                for (const { handler, options } of middleware.serializeResponseData) {
+                  response = await handler(result, context, options);
 
                   if (response instanceof Response) {
                     break;
@@ -297,22 +325,27 @@ export class HttpExtension implements ServerExtension {
                   response = undefined;
                 }
               } else {
-                exception = new HttpException('NOT_IMPLEMENTED');
+                exception = new NotImplementedException();
               }
             }
           } catch (err) {
-            exception = new HttpException(
-              'INTERNAL_SERVER_ERROR',
-              undefined,
-              undefined,
-              err,
-            );
+            if (HttpException.isInstance(err)) {
+              exception = err;
+            } else if (Error.isError(err) && err.name === 'ZodError') {
+              exception = new ValidationFailedException({
+                errors: (err as ZodError).issues,
+              });
+            } else {
+              context.logger?.fatal('Unhandled error', err);
+
+              exception = new InternalServerErrorException();
+            }
           }
 
           if (exception) {
             if (middleware.serializeException.length) {
-              for (const serializeException of middleware.serializeException) {
-                response = await serializeException(exception, context);
+              for (const { handler, options } of middleware.serializeException) {
+                response = await handler(exception, context, options);
 
                 if (response instanceof Response) {
                   break;

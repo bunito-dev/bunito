@@ -1,12 +1,12 @@
 import { RuntimeException } from '@bunito/common';
+import { Container } from '@bunito/container';
 import type {
   ModuleOptionsLike,
   ResolveProviderOptions,
   ResolveToken,
   Token,
-} from '@bunito/container';
-import { Container } from '@bunito/container';
-import { Logger } from '../logger';
+} from '@bunito/container/internals';
+import { Logger } from '@bunito/logger';
 
 export class App {
   static async create(moduleOptions: ModuleOptionsLike): Promise<App> {

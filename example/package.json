@@ -6,13 +6,13 @@
     "cli": "bunito",
     "start:all": "bunito start",
     "start:101-basics": "bunito start 101-basics",
-    "start:201-server": "bunito start 201-server",
-    "start:202-server": "bunito start 202-server"
+    "start:201-simple-controller": "bunito start 201-simple-controller",
+    "start:202-json-middleware": "bunito start 202-json-middleware",
+    "start:203-multiple-apis": "bunito start 203-multiple-apis"
   },
   "dependencies": {
     "@bunito/bunito": "workspace:*",
     "@bunito/http": "workspace:*",
-    "@bunito/server": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

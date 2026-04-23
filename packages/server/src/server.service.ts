@@ -1,27 +1,26 @@
 import { Buffer } from 'node:buffer';
+import type { Fn } from '@bunito/common';
 import { ConfigurationException, isFn, isObject, isString } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import { Container, Id, OnBoot, OnDestroy, OnInit, Provider } from '@bunito/container';
 import { Logger } from '@bunito/logger';
 import { HTTP_METHODS, SERVER_EXTENSION, SERVER_FACTORY_ID } from './constants';
+import { RequestContext, WebSocketContext } from './contexts';
 import { HttpException } from './exceptions';
 import { ServerConfig } from './server.config';
 import type { ServerExtension } from './server.extension';
 import type {
   HttpMethod,
   HttpPath,
-  RequestContext,
   RequestHandler,
   Server,
   ServerFactory,
   ServerOptions,
-  ServerRequest,
   ServerRoutes,
   ServerWebSocket,
   WebSocketEvent,
   WebSocketHandler,
 } from './types';
-import { extractQuery } from './utils';
 
 @Provider({
   scope: 'singleton',
@@ -158,8 +157,6 @@ export class ServerService {
 
     this.server = (this.factory ?? Bun.serve<unknown>)(options as ServerOptions);
 
-    this.logger?.debug('Options', options);
-
     this.logger?.info(`Started on ${this.server.url}`);
   }
 
@@ -176,16 +173,11 @@ export class ServerService {
   }
 
   private async processRequest(
-    request: ServerRequest,
+    request: Request,
     server: Server,
-    path?: HttpPath,
+    routePath?: HttpPath,
   ): Promise<Response | undefined> {
-    const requestId = Id.for('Request');
-
-    const url = new URL(request.url);
-    const method = request.method as HttpMethod;
-    const query = extractQuery(url);
-    const params = request.params ?? {};
+    const requestId = Id.unique('Request');
 
     const logger = await this.container.tryResolveProvider(Logger, {
       requestId,
@@ -195,42 +187,26 @@ export class ServerService {
 
     const trace = logger?.trace();
 
-    const context: RequestContext = {
-      requestId,
-      url,
-      path,
-      method,
-      query,
-      params,
-      body: null,
-      state: {},
-      upgrade: (headers) => {
-        const { requestId, url, path, method, query, params, state } = context;
-
-        return server.upgrade(request, {
-          headers,
-          data: {
-            requestId,
-            url,
-            path,
-            method,
-            query,
-            params,
-            state,
-          },
-        });
-      },
-    };
+    const context = new RequestContext(requestId, request, routePath, server, trace);
 
     let response: Response | undefined | null;
+    let exception: HttpException | undefined;
+
+    const usedHandlers = new WeakSet<Fn>();
 
     try {
-      if (path) {
-        const handlers = this.handlers.routes.get(path)?.get(method);
+      if (routePath) {
+        const handlers = this.handlers.routes.get(routePath)?.get(context.method);
 
         if (handlers) {
           for (const handler of handlers) {
-            response = await handler(request, context);
+            if (usedHandlers.has(handler)) {
+              continue;
+            }
+
+            usedHandlers.add(handler);
+
+            response = await handler(context);
 
             if (response !== undefined) {
               break;
@@ -241,10 +217,14 @@ export class ServerService {
 
       if (response === undefined) {
         if (this.handlers.request.length) {
-          context.body = null;
-
           for (const handler of this.handlers.request) {
-            response = await handler(request, context);
+            if (usedHandlers.has(handler)) {
+              continue;
+            }
+
+            usedHandlers.add(handler);
+
+            response = await handler(context);
 
             if (response !== undefined) {
               break;
@@ -253,32 +233,32 @@ export class ServerService {
         }
       }
     } catch (err) {
-      let exception: HttpException;
       if (HttpException.isInstance(err)) {
         exception = err;
-        if (err.cause) {
-          trace?.warn('Request error', err.cause);
-        }
       } else {
         trace?.fatal('Unhandled error', err);
 
         exception = new HttpException('INTERNAL_SERVER_ERROR');
       }
-
-      response = exception.toResponse();
     }
 
     if (response === null) {
       response = undefined;
-    } else if (response === undefined) {
-      response = new HttpException('NOT_FOUND').toResponse();
-    } else if (!(response instanceof Response)) {
-      response = new HttpException('NOT_IMPLEMENTED').toResponse();
+    } else if (!exception) {
+      if (response === undefined) {
+        exception = new HttpException('NOT_FOUND');
+      } else if (!(response instanceof Response)) {
+        exception = new HttpException('NOT_IMPLEMENTED');
+      }
+    }
+
+    if (exception) {
+      response = exception.toResponse();
     }
 
     const status = response?.status;
 
-    trace?.debug(`${method} ${url.pathname}${status ? ` ${status}` : ''}`);
+    trace?.debug(`${request.method} ${request.url}${status ? ` ${status}` : ''}`);
 
     await this.container.destroyRequest(requestId);
 
@@ -289,11 +269,21 @@ export class ServerService {
     event: WebSocketEvent,
     socket: ServerWebSocket,
   ): Promise<void> {
+    const context = new WebSocketContext(event, socket);
+
+    const usedHandlers = new WeakSet<Fn>();
+
     try {
       for (const handler of this.handlers.websocket) {
-        const result = await handler(event, socket);
+        if (usedHandlers.has(handler)) {
+          continue;
+        }
 
-        if (result) {
+        usedHandlers.add(handler);
+
+        const result = await handler(context);
+
+        if (result !== false) {
           break;
         }
       }

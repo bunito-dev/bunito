@@ -1,5 +1,5 @@
 import type { Fn, Mandatory } from '@bunito/common';
-import type { ProviderFactoryOptions } from '@bunito/container';
+import type { ProviderFactoryOptions } from '@bunito/container/internals';
 import type { ConfigService } from './config.service';
 
 declare global {

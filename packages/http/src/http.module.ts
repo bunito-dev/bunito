@@ -1,5 +1,5 @@
 import { Module } from '@bunito/container';
-import { ServerModule } from '@bunito/server';
+import { ServerModule } from '@bunito/server/internals';
 import { HttpExtension } from './http.extension';
 
 @Module({

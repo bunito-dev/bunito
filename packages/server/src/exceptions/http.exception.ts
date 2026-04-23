@@ -1,48 +1,46 @@
-import { Exception, isObject } from '@bunito/common';
-import { HTTP_ERROR_STATUS_CODES, HTTP_ERROR_STATUS_MESSAGES } from '../constants';
+import type { RawObject } from '@bunito/common';
+import { Exception, isNumber } from '@bunito/common';
+import {
+  HTTP_ERROR_STATUS_CODES,
+  HTTP_ERROR_STATUS_MAP,
+  HTTP_ERROR_STATUS_MESSAGES,
+} from '../constants';
 import type { HttpErrorStatus } from '../types';
 
-export class HttpException<
-  TData extends Record<string, unknown> = Record<string, unknown>,
-> extends Exception<TData> {
+export class HttpException extends Exception {
   override name = 'HttpException';
 
-  constructor(
-    readonly status: HttpErrorStatus,
-    message?: string,
-    data?: Partial<TData>,
-    cause?: unknown,
-  ) {
-    super(message ?? HTTP_ERROR_STATUS_MESSAGES[status], data, cause);
-  }
+  readonly status: number;
 
-  get statusCode(): number {
-    return HTTP_ERROR_STATUS_CODES[this.status];
-  }
+  readonly data: RawObject | undefined;
 
-  toJSON(): Record<string, unknown> {
-    return isObject(this.data)
-      ? this.data
-      : {
-          error: this.message,
-          data: this.data,
-        };
-  }
+  constructor(status: HttpErrorStatus | number, message?: string, data?: RawObject) {
+    let error = message;
+    let statusName: HttpErrorStatus | undefined;
+    let statusCode: number;
 
-  toResponse(contentType?: 'application/json' | 'text/plain'): Response {
-    const status = this.statusCode;
-
-    switch (contentType) {
-      case 'application/json':
-        return Response.json(this.toJSON(), {
-          status,
-        });
-
-      default:
-        return new Response(this.message, {
-          status,
-          headers: { 'Content-Type': 'text/plain' },
-        });
+    if (isNumber(status)) {
+      statusCode = status;
+      statusName = HTTP_ERROR_STATUS_MAP.get(statusCode);
+    } else {
+      statusCode = HTTP_ERROR_STATUS_CODES[status];
+      statusName = status;
     }
+
+    if (!error && statusName) {
+      error = HTTP_ERROR_STATUS_MESSAGES[statusName];
+    }
+
+    super(error ?? 'Unexpected Error');
+
+    this.status = statusCode;
+    this.data = data;
+  }
+
+  toResponse(): Response {
+    return new Response(this.message, {
+      status: this.status,
+      headers: { 'Content-Type': 'text/plain' },
+    });
   }
 }

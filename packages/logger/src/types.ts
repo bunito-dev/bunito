@@ -10,6 +10,8 @@ declare global {
   }
 }
 
+export type TraceLogger = Omit<Logger, 'trace' | 'setContext'>;
+
 export type LogLevel = keyof typeof LOG_LEVELS;
 
 export type LogFormat = 'json' | 'pretty' | (string & {});
@@ -27,8 +29,6 @@ export type LogOptions<TLevel> = {
   level: TLevel;
   duration?: number;
 };
-
-export type LogTrace = Omit<Logger, 'trace' | 'setContext'>;
 
 export type WriteLogOptions = LogOptions<LogLevel> & {
   args: LogArgs;

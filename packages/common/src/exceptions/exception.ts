@@ -1,8 +1,6 @@
 import type { Class } from '../utils';
 
-export abstract class Exception<
-  TData extends Record<string, unknown> = Record<string, unknown>,
-> extends Error {
+export abstract class Exception extends Error {
   static isInstance<TSelf extends Class<Exception>>(
     this: TSelf,
     error: unknown,
@@ -15,16 +13,13 @@ export abstract class Exception<
 
   override name = 'UnknownException';
 
-  readonly data: Partial<TData> | undefined;
-
-  constructor(message?: string, data?: Partial<TData>, cause?: unknown) {
+  constructor(message?: string, cause?: unknown) {
     super();
 
     if (message) {
       this.message = message;
     }
 
-    this.data = data;
     this.cause = cause;
   }
 }

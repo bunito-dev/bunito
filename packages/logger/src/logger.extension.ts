@@ -1,6 +1,9 @@
 import type { Class } from '@bunito/common';
-import type { ClassDecorator, ProviderDecoratorOptions } from '@bunito/container';
-import { Extension } from '@bunito/container';
+import type {
+  ClassDecorator,
+  ProviderDecoratorOptions,
+} from '@bunito/container/internals';
+import { Extension } from '@bunito/container/internals';
 import { LOGGER_EXTENSION } from './constants';
 import type { FormatLogOptions, LogFormat } from './types';
 

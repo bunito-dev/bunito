@@ -3,6 +3,7 @@ export type {
   Fn,
   Mandatory,
   Optional,
+  RawObject,
 } from '@bunito/common';
 export {
   ConfigurationException,
@@ -10,6 +11,7 @@ export {
   InternalException,
   isClass,
   isFn,
+  isNumber,
   isObject,
   isString,
   isSymbol,

@@ -20,7 +20,8 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./internals": "./src/internals.ts"
   },
   "files": [
     "src",
@@ -38,7 +39,7 @@
   "devDependencies": {
     "zod": "catalog:"
   },
-  "optionalDependencies": {
+  "peerDependencies": {
     "zod": "^4.3.0"
   },
   "engines": {

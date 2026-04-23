@@ -1,7 +1,6 @@
-import type { Buffer } from 'node:buffer';
-import type { MaybePromise } from '@bunito/common';
-import type { RequestId } from '@bunito/container';
+import type { MaybePromise, RawObject } from '@bunito/common';
 import type { HTTP_ERROR_STATUS_CODES } from './constants';
+import type { RequestContext, WebSocketContext } from './contexts';
 
 declare global {
   namespace NodeJS {
@@ -14,57 +13,44 @@ declare global {
   }
 }
 
-export type Server = Bun.Server<WebSocketData>;
+export type Server = Bun.Server<RawObject>;
 
-export type ServerOptions = Bun.Serve.Options<WebSocketData>;
+export type ServerOptions = Bun.Serve.Options<RawObject>;
 
 export type ServerFactory = (options: ServerOptions) => Server;
+
+export type ServerWebSocket = Bun.ServerWebSocket<RawObject>;
 
 export type ServerRouteOptions = {
   path: HttpPath;
   method?: HttpMethod | null;
 };
 
-export type ServerRouteHandler = (
-  request: ServerRequest,
-  server: Server,
-) => MaybePromise<Response | undefined>;
-
 export type ServerRoutes = Record<
   HttpPath,
-  Partial<Record<HttpMethod, ServerRouteHandler>>
+  Partial<
+    Record<
+      HttpMethod,
+      (request: Request, server: Server) => MaybePromise<Response | undefined>
+    >
+  >
 >;
-
-export type ServerRequest = Request & {
-  params?: Record<string, string>;
-};
-
-export type ServerWebSocket = Bun.ServerWebSocket<WebSocketData>;
-
-export type RequestQuery = Record<string, string | string[]>;
-
-export type RequestContext = {
-  requestId: RequestId;
-  url: URL;
-  path?: HttpPath;
-  method: HttpMethod;
-  params: Record<string, string>;
-  query: RequestQuery;
-  body: unknown;
-  state: Record<string, unknown>;
-  upgrade: (headers?: HeadersInit) => void;
-};
-
-export type RequestHandler = (
-  request: Request,
-  context: RequestContext,
-) => MaybePromise<Response | null | undefined>;
 
 export type HttpPath = `/${string}`;
 
 export type HttpMethod = Bun.Serve.HTTPMethod;
 
 export type HttpErrorStatus = keyof typeof HTTP_ERROR_STATUS_CODES;
+
+export type RequestUrl = URL & { pathname: HttpPath };
+
+export type RequestQuery = RawObject<string | string[]>;
+
+export type RequestParams = RawObject<string>;
+
+export type RequestHandler = (
+  context: RequestContext,
+) => MaybePromise<Response | null | undefined>;
 
 export type WebSocketEvent =
   | {
@@ -88,9 +74,6 @@ export type WebSocketEvent =
       data: Buffer<ArrayBuffer>;
     };
 
-export type WebSocketData = Omit<RequestContext, 'body' | 'upgrade'>;
-
 export type WebSocketHandler = (
-  event: WebSocketEvent,
-  socket: ServerWebSocket,
-) => MaybePromise<true | undefined>;
+  context: WebSocketContext,
+) => MaybePromise<false | undefined>;

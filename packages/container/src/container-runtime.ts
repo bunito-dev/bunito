@@ -16,6 +16,7 @@ import type {
   ProviderId,
   ProviderInstanceDefinition,
   ProviderInstanceOptions,
+  RequestId,
   ResolveProviderOptions,
   ScopeId,
 } from './types';
@@ -128,11 +129,11 @@ export class ContainerRuntime {
       return instance;
     }
 
-    const { moduleId = this.compiler.rootModuleId, requestId } = options;
+    const { moduleId = this.compiler.rootModuleId } = options;
 
     switch (providerId) {
       case REQUEST_ID:
-        return requestId;
+        return options.requestId;
 
       case MODULE_ID:
         return moduleId;
@@ -160,6 +161,7 @@ export class ContainerRuntime {
     const { scope, injects, events } = description;
 
     let scopeId: ScopeId | undefined;
+    let requestId: RequestId | undefined;
 
     switch (scope) {
       case 'singleton':
@@ -171,7 +173,8 @@ export class ContainerRuntime {
         break;
 
       case 'request':
-        scopeId = requestId;
+        scopeId = options.requestId;
+        requestId = options.requestId;
         break;
 
       default:
@@ -210,7 +213,7 @@ export class ContainerRuntime {
     }
 
     if (scopeId !== undefined) {
-      const onDestroy = this.createProviderHandler(instance, 'onDestroy', events);
+      const onDestroy = this.createProviderHandler(instance, 'OnDestroy', events);
 
       this.setProvider(providerId, instance, { scopeId, onResolve, onDestroy });
     }

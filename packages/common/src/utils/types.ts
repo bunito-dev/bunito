@@ -15,18 +15,8 @@ export type Mandatory<TObject, TKey extends keyof TObject> = Required<
 > &
   Omit<TObject, TKey>;
 
-export type StripUndefined<TValue> = Exclude<TValue, undefined>;
-
-export type EmptyFallback<TValue, TFallback> = [TValue] extends [never]
-  ? TFallback
-  : TValue;
-
-export type ResolveField<TValue, TKey extends PropertyKey> = TValue extends object
-  ? TKey extends keyof TValue
-    ? TValue[TKey]
-    : undefined
-  : undefined;
-
 export type CallableInstance<TResult = unknown> = Record<PropertyKey, Fn<TResult>>;
 
 export type MaybePromise<TValue = unknown> = Promise<TValue> | TValue;
+
+export type RawObject<TValue = unknown> = Record<string, TValue>;

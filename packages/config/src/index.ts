@@ -1,4 +1,3 @@
-export * from './config.module';
-export * from './config.service';
-export * from './types';
-export * from './utils';
+export { ConfigModule } from './config.module';
+export type { ConfigFactory, ConfigFactoryOptions, ResolveConfig } from './types';
+export { defineConfig } from './utils';

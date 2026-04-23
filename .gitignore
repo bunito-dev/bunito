@@ -1,5 +1,13 @@
-# dependencies (bun install)
+# system / ide
+.idea
+.DS_Store
+
+# dependencies
 node_modules
+
+# dotenv
+.env*
+!.env*.sample
 
 # output
 artifacts
@@ -7,18 +15,10 @@ out
 dist
 *.tgz
 
-
-# dotenv environment variable files
-.env*
-!.env*.sample
-
 # caches
 .eslintcache
 .cache
 *.tsbuildinfo
 
-# IntelliJ based IDEs
-.idea
-
-# Finder (MacOS) folder config
-.DS_Store
+# other
+docs/drafts
