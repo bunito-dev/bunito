@@ -25,5 +25,9 @@ export class InternalException extends Exception {
     return Promise.reject(new this(message));
   }
 
-  override name = 'InternalException';
+  constructor(message?: string, cause?: unknown) {
+    super(message, cause);
+
+    this.name = 'InternalException';
+  }
 }

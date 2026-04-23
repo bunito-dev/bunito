@@ -1,8 +1,14 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
-  "extends": ["./packages/common/biome.json"],
+  "extends": ["./packages/common/biome.base.json"],
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**/*.ts"]
+    "includes": [
+      "example/**/*.json",
+      "example/**/*.ts",
+      "packages/**/*.ts",
+      "packages/**/*.json",
+      "*.json"
+    ]
   }
 }

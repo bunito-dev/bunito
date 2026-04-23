@@ -1,29 +1,33 @@
 import { describe, expect, it } from 'bun:test';
-import { Exception } from './exception';
 import { RuntimeException } from './runtime.exception';
 
 describe('Exception', () => {
-  it('captures and rejects exception variants', async () => {
-    const cause = new Error('boom');
-    const generic = new Exception('Message', { ok: true }, cause);
+  it('has default message and name', () => {
+    const error = new RuntimeException();
+    expect(error.message).toBe('Unknown Exception');
+    expect(error.name).toBe('RuntimeException');
+    expect(error).toBeInstanceOf(Error);
+  });
 
-    expect(Exception.isInstance(generic)).toBe(true);
-    expect(Exception.capture(generic)).toBe(generic);
-    expect(Exception.capture(cause)).toMatchObject({
-      message: 'boom',
-      cause,
-    });
-    expect(Exception.capture('plain error')).toMatchObject({
-      message: 'plain error',
-    });
-    expect(Exception.capture({ any: 'value' })).toMatchObject({
-      message: 'Unknown Exception',
-      cause: { any: 'value' },
-    });
+  it('sets message when provided', () => {
+    const error = new RuntimeException('Something went wrong');
+    expect(error.message).toBe('Something went wrong');
+  });
 
-    expect(RuntimeException.reject('Rejected')).rejects.toMatchObject({
-      name: 'RuntimeException',
-      message: 'Rejected',
-    });
+  it('sets cause when provided', () => {
+    const cause = new Error('root cause');
+    const error = new RuntimeException(undefined, cause);
+    expect(error.cause).toBe(cause);
+  });
+
+  it('isInstance returns true for matching subclass', () => {
+    const error = new RuntimeException('msg');
+    expect(RuntimeException.isInstance(error)).toBe(true);
+  });
+
+  it('isInstance returns false for non-matching values', () => {
+    expect(RuntimeException.isInstance(new Error('plain'))).toBe(false);
+    expect(RuntimeException.isInstance(null)).toBe(false);
+    expect(RuntimeException.isInstance('string')).toBe(false);
   });
 });

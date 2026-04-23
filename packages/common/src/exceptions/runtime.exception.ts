@@ -1,5 +1,9 @@
 import { InternalException } from './internal.exception';
 
 export class RuntimeException extends InternalException {
-  override name = 'RuntimeException';
+  constructor(message?: string, cause?: unknown) {
+    super(message, cause);
+
+    this.name = 'RuntimeException';
+  }
 }

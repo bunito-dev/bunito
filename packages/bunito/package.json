@@ -23,13 +23,7 @@
     ".": "./src/index.ts",
     "./tsconfig.json": "./tsconfig.json"
   },
-  "files": [
-    "src",
-    "!src/**/*.test.ts",
-    "README.md",
-    "LICENSE",
-    "tsconfig.json"
-  ],
+  "files": ["src", "!src/**/*.test.ts", "README.md", "LICENSE", "tsconfig.json"],
   "dependencies": {
     "@bunito/common": "workspace:0.0.5",
     "@bunito/config": "workspace:0.0.5",

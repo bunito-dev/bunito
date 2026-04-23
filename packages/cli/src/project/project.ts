@@ -44,7 +44,7 @@ export class Project {
   }
 
   constructor(
-    private readonly root: string,
+    readonly _root: string,
     private readonly name: string,
     private readonly apps: ProjectApp[],
   ) {}

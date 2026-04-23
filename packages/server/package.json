@@ -23,12 +23,7 @@
     ".": "./src/index.ts",
     "./internals": "./src/internals.ts"
   },
-  "files": [
-    "src",
-    "!src/**/*.test.ts",
-    "README.md",
-    "LICENSE"
-  ],
+  "files": ["src", "!src/**/*.test.ts", "README.md", "LICENSE"],
   "dependencies": {
     "@bunito/common": "workspace:0.0.5",
     "@bunito/container": "workspace:0.0.5",
