@@ -1,38 +1,33 @@
-# bunito
+# `bunito`
 
-`bunito` is a small Bun-first TypeScript framework split into a few focused packages.
+`bunito` is a small Bun-first TypeScript framework for building applications with
+modules, dependency injection, lifecycle hooks, configuration, logging, and HTTP
+controllers.
 
-- `@bunito/common`: shared helpers, metadata primitives, and base exceptions
-- `@bunito/core`: app lifecycle, dependency injection, modules, config, and logger
-- `@bunito/http`: HTTP integration built on top of `@bunito/core`
+The project is intentionally split into focused packages. You can start with
+`@bunito/bunito` for the core application APIs, then add feature packages such as
+`@bunito/http` when you need them.
 
-The repository includes two runnable example apps in [`example/`](./example):
+## Examples
 
-- `example/apps/001-basics`
-- `example/http/002-http`
+The best way to understand the current API is to read and run the examples.
+Start with the example workspace guide: [`example/README.md`](./example/README.md).
 
-## Getting Started
+## Packages
 
-Install dependencies:
-
-```bash
-bun install
-```
-
-Run the examples:
-
-```bash
-cd examples
-bun run core:001-basics
-bun run http:001-basics
-```
-
-The core example shows the container, providers, and app lifecycle.
-The HTTP example shows modules, controllers, routes, and request validation.
+- [`@bunito/bunito`](./packages/bunito/README.md): main application entrypoint
+  - [`@bunito/container`](./packages/container/README.md): dependency injection, modules, providers, and lifecycle
+  - [`@bunito/config`](./packages/config/README.md): configuration and secrets
+  - [`@bunito/logger`](./packages/logger/README.md): logging and logger output extensions
+  - [`@bunito/bun`](./packages/bun/README.md): Bun-specific integrations
+- [`@bunito/cli`](./packages/cli/README.md): local project runner used by the examples
+- [`@bunito/http`](./packages/http/README.md): HTTP controllers, routing, middleware, and exceptions
+- Shared:
+  - [`@bunito/common`](./packages/common/README.md): shared exceptions, predicates, types, and utilities
+  - [`@bunito/server`](./packages/server/README.md): Bun server integration
+  - [`@bunito/biome`](./packages/biome/README.md): shared Biome configuration
 
 ## Development
-
-Validate the repository with:
 
 ```bash
 bun run typecheck
@@ -41,23 +36,7 @@ bun run test
 bun run coverage
 ```
 
-Coverage is enforced at `100%` for functions and lines.
-
-## Packages
-
-- [`packages/common/README.md`](./packages/common/README.md): internal shared helpers and metadata utilities
-- [`packages/core/README.md`](./packages/core/README.md): app lifecycle, DI container, modules, config, logger, and server primitives
-- [`packages/http/README.md`](./packages/http/README.md): HTTP controllers, routing decorators, validation, and exceptions
-
-## Docs
-
-- [`docs/README.md`](./docs/README.md)
-- [`docs/getting-started.md`](./docs/getting-started.md)
-- [`docs/architecture.md`](./docs/architecture.md)
-- [`docs/testing.md`](./docs/testing.md)
-- [`docs/roadmap.md`](./docs/roadmap.md)
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md)
-- [`AGENTS.md`](./AGENTS.md)
+For contribution notes, see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## License
 

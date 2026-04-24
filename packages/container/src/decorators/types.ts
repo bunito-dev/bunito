@@ -35,11 +35,6 @@ export type ProviderMetadata = {
 export type ModuleDecoratorOptions = ModuleOptions &
   Pick<ProviderDecoratorOptions, 'injects'>;
 
-export type ComponentMetadata<TOptions = unknown> = {
-  key: symbol;
-  options: TOptions;
-};
-
 export type ExtensionMetadata<TOptions = unknown> = {
   key: symbol;
   options: TOptions;

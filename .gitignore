@@ -20,5 +20,8 @@ dist
 .cache
 *.tsbuildinfo
 
+# docs
+docs/.vitepress/cache
+
 # other
-docs/drafts
+draft

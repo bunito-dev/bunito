@@ -1,26 +1,35 @@
-import { isObject } from '@bunito/common';
+import { isNumber, isObject } from '@bunito/common';
 import type { ValueNumberFormat, ValueNumberOptions } from '../types';
 
 export function formatValueAsNumber(
-  value: string,
+  value: unknown,
   format: ValueNumberFormat,
   options: ValueNumberOptions | undefined,
 ): number | undefined {
   let result: number | undefined;
 
-  const prepared = value.replace(/_/g, '');
-
-  switch (format) {
-    case 'toDecimal':
-      result = Number.parseFloat(prepared);
+  switch (typeof value) {
+    case 'number':
+      result = value;
       break;
 
-    case 'toInteger':
-      result = Number.parseInt(prepared, 10);
+    case 'string': {
+      const prepared = value.replace(/_/g, '');
+
+      switch (format) {
+        case 'toDecimal':
+          result = Number.parseFloat(prepared);
+          break;
+
+        case 'toInteger':
+          result = Number.parseInt(prepared, 10);
+          break;
+      }
       break;
+    }
   }
 
-  if (Number.isNaN(result)) {
+  if (!isNumber(result)) {
     return;
   }
 

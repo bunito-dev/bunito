@@ -5,4 +5,5 @@ exact = true
 auto = "disable"
 
 [test]
+coverageThreshold = 1.0
 

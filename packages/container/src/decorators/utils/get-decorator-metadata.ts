@@ -2,7 +2,6 @@ import type { Class } from '@bunito/common';
 import type { ClassPropDefinition, ModuleOptions } from '../../types';
 import { DECORATOR_METADATA_KEYS } from '../constants';
 import type {
-  ComponentMetadata,
   DecoratorMetadataKind,
   ExtensionMetadata,
   ProviderMetadata,
@@ -18,8 +17,8 @@ export function getDecoratorMetadata<TFieldOptions = unknown, TMethodOptions = u
 ): Map<symbol, ClassPropDefinition<TFieldOptions, TMethodOptions>[]> | undefined;
 export function getDecoratorMetadata<TOptions = unknown>(
   target: Class,
-  kind: 'component',
-): ComponentMetadata<TOptions> | undefined;
+  kind: 'components',
+): Map<symbol, TOptions | undefined> | undefined;
 export function getDecoratorMetadata<TOptions = unknown>(
   target: Class,
   kind: 'extension',

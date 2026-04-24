@@ -1,26 +1,11 @@
 import { describe, expect, it } from 'bun:test';
 import {
-  DECORATOR_METADATA_KEYS,
   GLOBAL_SCOPE_ID,
   MODULE_ID,
   PARENT_MODULE_IDS,
   REQUEST_ID,
   ROOT_MODULE_ID,
 } from './constants';
-
-describe('DECORATOR_METADATA_KEYS', () => {
-  it('exposes unique metadata symbols', () => {
-    expect(DECORATOR_METADATA_KEYS.MODULE_OPTIONS).toBeSymbol();
-    expect(DECORATOR_METADATA_KEYS.PROVIDER_EVENTS).toBeSymbol();
-    expect(DECORATOR_METADATA_KEYS.PROVIDER_OPTIONS).toBeSymbol();
-    expect(DECORATOR_METADATA_KEYS.EXTENSION_KEY).toBeSymbol();
-    expect(DECORATOR_METADATA_KEYS.EXTENSION_OPTIONS).toBeSymbol();
-    expect(DECORATOR_METADATA_KEYS.COMPONENT_FIELDS).toBeSymbol();
-    expect(DECORATOR_METADATA_KEYS.COMPONENT_KEY).toBeSymbol();
-    expect(DECORATOR_METADATA_KEYS.COMPONENT_METHODS).toBeSymbol();
-    expect(DECORATOR_METADATA_KEYS.COMPONENT_OPTIONS).toBeSymbol();
-  });
-});
 
 describe('GLOBAL_SCOPE_ID', () => {
   it('uses a stable id name', () => {

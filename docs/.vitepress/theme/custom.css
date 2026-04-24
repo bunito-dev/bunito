@@ -1,0 +1,20 @@
+:root {
+  --vp-c-bg: #05040d;
+  --vp-sidebar-bg-color: #05040d;
+  --vp-nav-screen-bg-color: #05040d;
+  --vp-c-bg-elv: #05040d;
+  --vp-nav-logo-height: 2.6em;
+  --vp-c-divider: transparent;
+  --vp-c-gutter: transparent;
+}
+
+body {
+  background:
+      radial-gradient(circle at top, rgba(92, 59, 255, 0.12), transparent 30%),
+      linear-gradient(180deg, #070511 0%, #020107 60%, #05040d 100%);
+}
+
+.title span {
+  color: transparent;
+}
+

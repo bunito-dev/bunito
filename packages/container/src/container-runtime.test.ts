@@ -10,7 +10,6 @@ describe('ContainerRuntime', () => {
     @Provider({
       scope: 'singleton',
       injects: [
-        REQUEST_ID,
         MODULE_ID,
         ROOT_MODULE_ID,
         PARENT_MODULE_IDS,
@@ -28,7 +27,6 @@ describe('ContainerRuntime', () => {
       static initCount = 0;
 
       constructor(
-        readonly requestId: Id | undefined,
         readonly moduleId: Id,
         readonly rootModuleId: Id,
         readonly parentModuleIds: Set<Id>,
@@ -62,12 +60,18 @@ describe('ContainerRuntime', () => {
       static instances = 0;
 
       readonly id = ++RequestScopedProvider.instances;
+
+      constructor(readonly requestId: Id | undefined) {}
     }
 
     @Module({
-      uses: [
+      providers: [
         LifecycleProvider,
-        RequestScopedProvider,
+        {
+          useClass: RequestScopedProvider,
+          scope: 'request',
+          injects: [REQUEST_ID],
+        },
         {
           token: 'value',
           useValue: 42,
@@ -106,16 +110,16 @@ describe('ContainerRuntime', () => {
 
     expect(lifecycle.optionalValue).toBeNull();
     expect(lifecycle.fallbackValue).toBe('fallback-value');
-    expect(lifecycle.requestId).toBe(requestId);
     expect(lifecycle.rootModuleId).toBe(Id.for(RootModule));
     expect(lifecycle.parentModuleIds).toEqual(new Set([Id.for(RootModule)]));
     expect(requestScopedA).toBe(requestScopedB);
     expect(requestScopedA).not.toBe(requestScopedC);
+    expect((requestScopedA as RequestScopedProvider).requestId).toBe(requestId);
     expect(await runtime.resolveProvider(Id.for('value'))).toBe(42);
 
-    await runtime.bootModule();
+    await runtime.triggerProviders('OnBoot');
     await runtime.destroyProviders(requestId);
-    await runtime.destroyScopes();
+    await runtime.destroyProviders();
 
     expect(LifecycleProvider.initCount).toBe(1);
     expect(LifecycleProvider.onResolveCount).toBeGreaterThanOrEqual(1);
@@ -157,10 +161,10 @@ describe('ContainerRuntime', () => {
     expect(await runtime.tryGetProvider(providerId, scopeId)).toEqual({ value: 1 });
 
     await runtime.destroyProviders(scopeId);
-    await runtime.destroyScopes();
+    await runtime.destroyProviders();
 
     expect(calls).toEqual(['resolve', 'destroy']);
-    expect(
+    await expect(
       runtime.resolveProviderArgs(
         providerId,
         [{ providerId: Id.for('missing'), defaultValue: undefined }],
@@ -191,17 +195,22 @@ describe('ContainerRuntime', () => {
       runtime as unknown as {
         createProviderHandler: (
           instance: object,
-          event: 'onBoot',
-          events: { onBoot: 'onBoot' },
+          event: 'OnBoot',
+          events: { OnBoot: { propKey: 'onBoot'; disposable: true } },
         ) => (() => Promise<void>) | undefined;
       }
-    ).createProviderHandler(instance, 'onBoot', {
-      onBoot: 'onBoot',
+    ).createProviderHandler(instance, 'OnBoot', {
+      OnBoot: {
+        propKey: 'onBoot',
+        disposable: true,
+      },
     });
 
     expect(handler).toBeFunction();
 
     await handler?.();
-    expect(handler?.()).rejects.toThrow('Provider handler onBoot cannot be called twice');
+    await expect(handler?.()).rejects.toThrow(
+      'Provider handler onBoot cannot be called twice',
+    );
   });
 });

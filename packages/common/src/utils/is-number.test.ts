@@ -7,12 +7,12 @@ describe('isNumber', () => {
     expect(isNumber(42)).toBeTrue();
     expect(isNumber(-7)).toBeTrue();
     expect(isNumber(3.14)).toBeTrue();
-    expect(isNumber(Infinity)).toBeTrue();
-    expect(isNumber(-Infinity)).toBeTrue();
   });
 
-  it('returns false for NaN', () => {
+  it('returns false for NaN, Infinity and -Infinity', () => {
     expect(isNumber(NaN)).toBeFalse();
+    expect(isNumber(Infinity)).toBeFalse();
+    expect(isNumber(-Infinity)).toBeFalse();
   });
 
   it('returns false for non-numbers', () => {

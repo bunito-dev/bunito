@@ -13,7 +13,7 @@ import {
 } from '@bunito/http';
 import { z } from 'zod';
 
-// foo
+// The first feature module exposes a small text API under /foo.
 
 const FooParams = z.object({
   foo1: z.string().max(2),
@@ -42,10 +42,11 @@ class FooController {
 @Module({
   controllers: [FooController],
 })
+// UsePrefix applies to every controller route declared by this module.
 @UsePrefix('/foo')
 class FooModule {}
 
-// bar
+// The second feature module exposes a JSON API under /bar.
 
 const BarParams = z.object({
   bar1: z.string().max(2),
@@ -73,6 +74,7 @@ class BarController {
     };
   }
 
+  // Multiple route decorators can point to the same handler.
   @Get()
   @Get('/*')
   notFound(): never {
@@ -85,9 +87,11 @@ class BarController {
   controllers: [BarController],
 })
 @UsePrefix('/bar')
+// Middleware applied at module level affects all controller routes below it.
 @UseMiddleware(JSONMiddleware)
 class BarModule {}
 
+// The root app composes shared modules with feature modules.
 @Module({
   imports: [LoggerModule, HttpModule, FooModule, BarModule],
 })

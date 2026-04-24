@@ -1,18 +1,23 @@
 import * as process from 'node:process';
-import { isFn, isObject, isString } from '@bunito/common';
-import { Provider } from '@bunito/container';
+import { ConfigurationException, isFn, isObject, isString } from '@bunito/common';
+import { Container, OnInit, Provider } from '@bunito/container';
+import type { ConfigExtension } from './config.extension';
+import { CONFIG_EXTENSION } from './constants';
 import type {
   EnvKeyLike,
+  SecretKeyLike,
   ValueFormat,
   ValueNumberFormat,
   ValueNumberOptions,
   ValueParser,
   ValueStringFormat,
 } from './types';
-import { formatValueAs } from './utils';
+import { formatValue } from './utils';
 
 @Provider({
   scope: 'singleton',
+  global: true,
+  injects: [Container],
 })
 export class ConfigService {
   readonly isCI: boolean;
@@ -23,15 +28,38 @@ export class ConfigService {
 
   readonly isDev: boolean;
 
-  constructor() {
+  private readonly extensions: ConfigExtension[] = [];
+
+  constructor(private readonly container: Container) {
     this.getEnv = this.getEnv.bind(this);
 
-    const nodeEnv = process.env.NODE_ENV?.toLowerCase();
+    const envName = process.env.NODE_ENV?.toLowerCase();
+    const envCI = process.env.CI?.toLowerCase() === 'true';
 
-    this.isCI = nodeEnv === 'ci' || process.env.CI?.toLowerCase() === 'true';
-    this.isProd = nodeEnv === 'production';
-    this.isTest = nodeEnv === 'test';
+    this.isCI = envName === 'ci' || envCI;
+    this.isProd = envName === 'production';
+    this.isTest = envName === 'test';
     this.isDev = !this.isCI && !this.isProd && !this.isTest;
+  }
+
+  @OnInit()
+  async configure(): Promise<void> {
+    for (const { providerId, moduleId } of this.container.getExtensions(
+      CONFIG_EXTENSION,
+    )) {
+      const extension = await this.container.resolveProvider<ConfigExtension>(
+        providerId,
+        {
+          moduleId,
+        },
+      );
+
+      if (!isObject(extension) || !isFn(extension.getSecret)) {
+        return ConfigurationException.throw`${extension} is not a valid ConfigExtension`;
+      }
+
+      this.extensions.push(extension);
+    }
   }
 
   getEnv(keyLike: EnvKeyLike): string | undefined;
@@ -56,29 +84,32 @@ export class ConfigService {
     formatOrParser?: ValueFormat | ValueParser,
     formatOptions?: unknown,
   ): unknown {
-    const value = this.getRawEnv(keyLike);
+    return formatValue(this.getRawEnv(keyLike), formatOrParser, formatOptions);
+  }
 
-    if (!value) {
-      return;
-    }
-
-    if (!formatOrParser) {
-      return value;
-    }
-
-    if (isFn(formatOrParser)) {
-      return formatOrParser(value);
-    }
-
-    if (isObject(formatOrParser) && 'safeParse' in formatOrParser) {
-      const parsed = formatOrParser.safeParse(value);
-
-      if (parsed.success) {
-        return parsed.data;
-      }
-    }
-
-    return formatValueAs(value, formatOrParser as ValueFormat, formatOptions);
+  getSecret(keyLike: SecretKeyLike): Promise<unknown>;
+  getSecret(keyLike: SecretKeyLike, format: 'boolean'): Promise<boolean | undefined>;
+  getSecret(keyLike: SecretKeyLike, format: 'port'): Promise<number | undefined>;
+  getSecret(
+    keyLike: SecretKeyLike,
+    format: ValueNumberFormat,
+    options?: ValueNumberOptions,
+  ): Promise<number | undefined>;
+  getSecret<TValue extends string>(
+    keyLike: SecretKeyLike,
+    format: ValueStringFormat,
+    options?: ArrayLike<string>,
+  ): Promise<TValue | undefined>;
+  getSecret<TOutput = string>(
+    keyLike: SecretKeyLike,
+    parser: ValueParser<TOutput>,
+  ): Promise<TOutput | undefined>;
+  async getSecret(
+    keyLike: SecretKeyLike,
+    formatOrParser?: ValueFormat | ValueParser,
+    formatOptions?: unknown,
+  ): Promise<unknown> {
+    return formatValue(await this.getRawSecret(keyLike), formatOrParser, formatOptions);
   }
 
   private getRawEnv(keyLike: EnvKeyLike): string | undefined {
@@ -92,6 +123,34 @@ export class ConfigService {
 
         if (value) {
           return value;
+        }
+      }
+    }
+  }
+
+  private async getRawSecret(keyLike: SecretKeyLike): Promise<unknown> {
+    if (!this.extensions.length) {
+      return;
+    }
+
+    if (isString(keyLike)) {
+      for (const extension of this.extensions) {
+        const secret = await extension.getSecret(keyLike);
+
+        if (secret !== undefined) {
+          return secret;
+        }
+      }
+
+      return;
+    }
+
+    if (Array.isArray(keyLike)) {
+      for (const key of keyLike) {
+        const secret = await this.getRawSecret(key);
+
+        if (secret !== undefined) {
+          return secret;
         }
       }
     }

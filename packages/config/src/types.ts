@@ -1,5 +1,8 @@
-import type { Fn, Mandatory } from '@bunito/common';
-import type { ProviderFactoryOptions } from '@bunito/container/internals';
+import type { Fn, Mandatory, MaybePromise } from '@bunito/common';
+import type {
+  ProviderFactoryOptions,
+  ProviderValueOptions,
+} from '@bunito/container/internals';
 import type { ConfigService } from './config.service';
 
 declare global {
@@ -13,29 +16,30 @@ declare global {
 
   namespace Bunito {
     interface ModuleOptionalProviders {
-      configs: ConfigFactoryOptions<unknown>[];
+      configs: ConfigProviderOptions<unknown>[];
     }
   }
 }
 
 export type ConfigFactory<TConfig> = (
   configService: ConfigService,
-) => Promise<TConfig> | TConfig;
+) => MaybePromise<TConfig>;
 
-export type ConfigFactoryOptions<TConfig> = Mandatory<
-  ProviderFactoryOptions<ConfigFactory<TConfig>>,
-  'token'
->;
+export type ConfigProviderOptions<TConfig> =
+  | Mandatory<ProviderFactoryOptions<Fn<MaybePromise<TConfig | undefined>>>, 'token'>
+  | Mandatory<ProviderValueOptions<TConfig | undefined>, 'token'>;
 
 export type ResolveConfig<TValue> =
-  TValue extends ConfigFactoryOptions<infer TConfig> ? Awaited<TConfig> : TValue;
+  TValue extends ConfigProviderOptions<infer TConfig> ? Awaited<TConfig> : TValue;
 
 export type EnvKey = keyof NodeJS.ProcessEnv | (string & {});
 
 export type EnvKeyLike = EnvKey | EnvKey[];
 
+export type SecretKeyLike = string | string[];
+
 export type ValueParser<TOutput = string> =
-  | Fn<TOutput | undefined, [string]>
+  | Fn<TOutput | undefined, [unknown]>
   | {
       safeParse: (data: unknown) => { success: true; data: TOutput } | { success: false };
     };

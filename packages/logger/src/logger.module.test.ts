@@ -1,31 +1,20 @@
 import { describe, expect, it } from 'bun:test';
-import { getDecoratorMetadata } from '@bunito/common';
 import { ConfigModule } from '@bunito/config';
-import { DECORATOR_METADATA_KEYS } from '@bunito/container';
-import { JSONFormatter, PrettyConfig, PrettyFormatter } from './formatters';
+import { getDecoratorMetadata } from '@bunito/container/internals';
+import { JSONExtension } from './json';
 import { Logger } from './logger';
 import { LoggerConfig } from './logger.config';
 import { LoggerModule } from './logger.module';
 import { LoggerService } from './logger.service';
+import { PrettyConfig, PrettyExtension } from './pretty';
 
 describe('LoggerModule', () => {
   it('registers logger providers, configs and formatters', () => {
-    expect(
-      getDecoratorMetadata<{
-        imports?: unknown[];
-        uses?: unknown[];
-        exports?: unknown[];
-      }>(LoggerModule, DECORATOR_METADATA_KEYS.MODULE_OPTIONS),
-    ).toEqual({
+    expect(getDecoratorMetadata(LoggerModule, 'module')).toEqual({
       imports: [ConfigModule],
-      uses: [
-        LoggerConfig,
-        PrettyConfig,
-        JSONFormatter,
-        PrettyFormatter,
-        Logger,
-        LoggerService,
-      ],
+      configs: [LoggerConfig, PrettyConfig],
+      providers: [Logger, LoggerService],
+      extensions: [PrettyExtension, JSONExtension],
       exports: [Logger],
     });
   });

@@ -9,7 +9,7 @@ describe('App', () => {
     }
 
     const app = await App.create({
-      uses: [
+      providers: [
         {
           token: Service,
           useValue: new Service(),
@@ -23,13 +23,13 @@ describe('App', () => {
     await app.shutdown();
   });
 
-  it('supports named create/start and forwards logger context', async () => {
-    const contexts: [unknown, string | undefined][] = [];
+  it('supports create/start and forwards logger context', async () => {
+    const contexts: unknown[] = [];
     const traceLogs: string[] = [];
 
     const logger = {
-      setContext: (target: unknown, name?: string) => {
-        contexts.push([target, name]);
+      setContext: (target: unknown) => {
+        contexts.push(target);
       },
       trace: () => ({
         fatal: () => undefined,
@@ -48,16 +48,16 @@ describe('App', () => {
       fatal: () => undefined,
     };
 
-    const created = await App.create('NamedApp', {
-      uses: [
+    const created = await App.create({
+      providers: [
         {
           token: Logger,
           useValue: logger,
         },
       ],
     });
-    const started = await App.start('StartedApp', {
-      uses: [
+    const started = await App.start({
+      providers: [
         {
           token: Logger,
           useValue: logger,
@@ -67,10 +67,7 @@ describe('App', () => {
 
     expect(created.logger).toBeDefined();
     expect(started.logger).toBeDefined();
-    expect(contexts).toEqual([
-      [App, 'NamedApp'],
-      [App, 'StartedApp'],
-    ]);
+    expect(contexts).toEqual([App, App]);
     expect(traceLogs).toContain('Ready');
   });
 
@@ -85,10 +82,10 @@ describe('App', () => {
 
     const appWithLogger = TestApp.createForTest(
       {
-        boot: async () => {
+        triggerProviders: async () => {
           throw new Error('fail');
         },
-        destroy: async () => undefined,
+        destroyProviders: async () => undefined,
         resolveProvider: async () => undefined,
       } as never,
       {
@@ -108,11 +105,13 @@ describe('App', () => {
 
     await appWithLogger.start();
     expect(failures).toEqual(['Unhandled Error']);
+    await appWithLogger.start();
+    expect(failures).toEqual(['Unhandled Error', 'Unhandled Error']);
 
     const appWithoutLogger = TestApp.createForTest(
       {
-        boot: async () => undefined,
-        destroy: async () => undefined,
+        triggerProviders: async () => undefined,
+        destroyProviders: async () => undefined,
         resolveProvider: async () => undefined,
       } as never,
       undefined,

@@ -1,10 +1,15 @@
+import { isString } from '@bunito/common';
 import type { ValueStringFormat } from '../types';
 
 export function formatValueAsString(
-  value: string,
+  value: unknown,
   format: ValueStringFormat,
   options: ArrayLike<string> | undefined,
 ): string | undefined {
+  if (!isString(value)) {
+    return;
+  }
+
   let result: string;
 
   switch (format) {

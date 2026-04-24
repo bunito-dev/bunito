@@ -1,9 +1,12 @@
 {
   "name": "bunito",
   "private": true,
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "test": "bun test",
     "coverage": "bun test --coverage",
     "lint": "biome check",
@@ -13,13 +16,20 @@
   "workspaces": {
     "packages": ["example", "packages/*"],
     "catalog": {
-      "zod": "^4.3.6"
+      "@biomejs/biome": "2.4.13",
+      "zod": "4.3.6"
+    },
+    "catalogs": {
+      "range": {
+        "zod": "^4.3.0"
+      }
     }
   },
   "dependencies": {},
   "devDependencies": {
-    "@biomejs/biome": "2.4.11",
-    "typescript": "^6.0.2"
+    "@biomejs/biome": "2.4.13",
+    "typescript": "6.0.3",
+    "vitepress": "1.6.4"
   },
   "engines": {
     "bun": ">=1.3.11"

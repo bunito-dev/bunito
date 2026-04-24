@@ -384,29 +384,30 @@ export class ContainerCompiler {
       }
     }
 
-    const component = getDecoratorMetadata(classToken, 'component');
+    const components = getDecoratorMetadata(classToken, 'components');
 
-    if (!component) {
+    if (!components) {
       return result;
     }
 
-    const { key, options = [] } = component;
+    for (const [key, options] of components) {
+      const classOptions =
+        getDecoratorMetadata(classToken, 'classOptions')?.get(key) ?? [];
 
-    const classOptions = getDecoratorMetadata(classToken, 'classOptions')?.get(key) ?? [];
+      const props = getDecoratorMetadata(classToken, 'classProps')?.get(key) ?? [];
 
-    const props = getDecoratorMetadata(classToken, 'classProps')?.get(key) ?? [];
+      const definition: Partial<ComponentDefinition> = providerId
+        ? { useProviderId: providerId }
+        : { useClass: classToken };
 
-    const definition: Partial<ComponentDefinition> = providerId
-      ? { useProviderId: providerId }
-      : { useClass: classToken };
-
-    componentsDefinitions
-      .getOrInsertComputed(key, () => [])
-      .push({
-        ...definition,
-        options: [options, ...classOptions],
-        props,
-      });
+      componentsDefinitions
+        .getOrInsertComputed(key, () => [])
+        .push({
+          ...definition,
+          options: options ? [options, ...classOptions] : classOptions,
+          props,
+        });
+    }
 
     return true;
   }

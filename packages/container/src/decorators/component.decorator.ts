@@ -2,11 +2,7 @@ import type { Class } from '@bunito/common';
 import { ConfigurationException } from '@bunito/common';
 import { DECORATOR_METADATA_KEYS } from './constants';
 import { Provider } from './provider.decorator';
-import type {
-  ClassDecorator,
-  ComponentMetadata,
-  ProviderDecoratorOptions,
-} from './types';
+import type { ClassDecorator, ProviderDecoratorOptions } from './types';
 
 export function Component<TTarget extends Class = Class, TOptions = unknown>(
   implName: string,
@@ -15,16 +11,18 @@ export function Component<TTarget extends Class = Class, TOptions = unknown>(
   providerOptions?: ProviderDecoratorOptions,
 ): ClassDecorator<TTarget> {
   return (target, context) => {
-    const { metadata } = context;
+    context.metadata[DECORATOR_METADATA_KEYS.components] ??= new Map();
 
-    if (metadata[DECORATOR_METADATA_KEYS.component]) {
+    const metadata = context.metadata[DECORATOR_METADATA_KEYS.components] as Map<
+      symbol,
+      TOptions | undefined
+    >;
+
+    if (metadata.has(key)) {
       ConfigurationException.throw`@${implName}() decorator already exists in ${target}`;
     }
 
-    metadata[DECORATOR_METADATA_KEYS.component] = {
-      key,
-      options,
-    } satisfies ComponentMetadata;
+    metadata.set(key, options);
 
     if (providerOptions) {
       Provider(providerOptions)(target, context);

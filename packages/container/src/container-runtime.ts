@@ -196,7 +196,7 @@ export class ContainerRuntime {
     if ('useClass' in description) {
       instance = new description.useClass(...args);
     } else if ('useFactory' in description) {
-      instance = description.useFactory(...args);
+      instance = await description.useFactory(...args);
     }
 
     if (instance === undefined) {

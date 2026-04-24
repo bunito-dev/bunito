@@ -18,7 +18,6 @@ describe('Container', () => {
     @Provider({
       scope: 'singleton',
       injects: [
-        REQUEST_ID,
         MODULE_ID,
         ROOT_MODULE_ID,
         PARENT_MODULE_IDS,
@@ -36,7 +35,6 @@ describe('Container', () => {
       static initCount = 0;
 
       constructor(
-        readonly requestId: Id | undefined,
         readonly moduleId: Id,
         readonly rootModuleId: Id,
         readonly parentModuleIds: Set<Id>,
@@ -70,12 +68,18 @@ describe('Container', () => {
       static instances = 0;
 
       readonly id = ++RequestScopedProvider.instances;
+
+      constructor(readonly requestId: Id | undefined) {}
     }
 
     @Module({
-      uses: [
+      providers: [
         LifecycleProvider,
-        RequestScopedProvider,
+        {
+          useClass: RequestScopedProvider,
+          scope: 'request',
+          injects: [REQUEST_ID],
+        },
         {
           token: 'value',
           useValue: 42,
@@ -111,28 +115,26 @@ describe('Container', () => {
 
     expect(lifecycle.optionalValue).toBeNull();
     expect(lifecycle.fallbackValue).toBe('fallback-value');
-    expect(lifecycle.requestId).toBe(requestId);
     expect(lifecycle.rootModuleId).toBe(Id.for(RootModule));
     expect(lifecycle.parentModuleIds).toEqual(new Set([Id.for(RootModule)]));
     expect(requestScopedA).toBe(requestScopedB);
     expect(requestScopedA).not.toBe(requestScopedC);
+    expect((requestScopedA as RequestScopedProvider).requestId).toBe(requestId);
     expect(await container.resolveProvider<number>('value')).toBe(42);
     expect(await container.tryResolveProvider('missing')).toBeUndefined();
     expect(container.getExtensions(Symbol('missing'))).toEqual([]);
     expect(container.getComponents(Symbol('missing'))).toEqual([]);
 
-    await container.boot();
-    await container.cleanup(requestId);
-    await container.destroy();
+    container.setProvider('manual', 'manual-value');
+    expect(await container.resolveProvider<string>('manual')).toBe('manual-value');
+
+    await container.triggerProviders('OnBoot');
+    await container.destroyRequest(requestId);
+    await container.destroyProviders();
 
     expect(LifecycleProvider.initCount).toBe(1);
     expect(LifecycleProvider.onResolveCount).toBeGreaterThanOrEqual(1);
     expect(LifecycleProvider.onBootCount).toBe(1);
     expect(LifecycleProvider.onDestroyCount).toBe(1);
-
-    expect(container.boot()).rejects.toThrow('Container boot cannot be called twice');
-    expect(container.destroy()).rejects.toThrow(
-      'Container destroy cannot be called twice',
-    );
   });
 });

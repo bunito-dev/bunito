@@ -14,8 +14,8 @@ describe('Id', () => {
     expect(`${Id.unique('Example')}`).toStartWith('Example#');
   });
 
-  it('rejects empty string and anonymous symbol tokens', () => {
+  it('rejects empty strings and supports anonymous symbols', () => {
     expect(() => Id.for('')).toThrow('Token must be a non-empty string');
-    expect(() => Id.for(Symbol())).toThrow('Token must be a non-empty symbol');
+    expect(`${Id.for(Symbol())}`).toStartWith('[symbol]#');
   });
 });

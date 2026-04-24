@@ -17,7 +17,7 @@ export function Controller(
 export function Controller(options: ControllerDecoratorOptions): ClassDecorator;
 export function Controller(
   prefixOrOptions?: HttpPath | ControllerDecoratorOptions,
-  extraOptions?: Omit<ControllerDecoratorOptions, 'prefix'>,
+  optionalOptions?: Omit<ControllerDecoratorOptions, 'prefix'>,
 ): ClassDecorator {
   let prefix: HttpPath | undefined;
   let providerOptions: ProviderDecoratorOptions = {};
@@ -25,8 +25,8 @@ export function Controller(
   if (isString(prefixOrOptions)) {
     prefix = prefixOrOptions;
 
-    if (isObject(extraOptions)) {
-      providerOptions = extraOptions;
+    if (isObject(optionalOptions)) {
+      providerOptions = optionalOptions;
     }
   } else if (isObject(prefixOrOptions)) {
     ({ prefix, ...providerOptions } = prefixOrOptions);

@@ -62,7 +62,6 @@ export class App {
           break;
 
         case 'shutdown':
-          await this.container.triggerProviders('OnShutdown');
           await this.container.destroyProviders();
           trace?.debug('Shutdown');
           break;

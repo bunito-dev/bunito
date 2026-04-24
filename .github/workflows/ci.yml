@@ -15,7 +15,6 @@ jobs:
   quality:
     name: Typecheck And Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -38,7 +37,7 @@ jobs:
   tests:
     name: Test And Coverage
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    needs: quality
 
     steps:
       - name: Checkout repository
@@ -55,15 +54,14 @@ jobs:
       - name: Run tests
         run: |
           mkdir -p artifacts
-          bun test \
+          bun run test \
           --reporter=junit \
           --reporter-outfile=artifacts/test-results.xml
 
       - name: Enforce coverage
         run: |
           mkdir -p artifacts
-          bun test \
-          --coverage \
+          bun run coverage \
           --coverage-reporter=text \
           --coverage-reporter=lcov \
           --coverage-dir=artifacts/coverage-report

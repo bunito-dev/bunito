@@ -1,14 +1,8 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
-  "extends": ["./packages/common/biome.base.json"],
+  "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
+  "extends": ["./packages/biome/biome.base.json"],
   "files": {
     "ignoreUnknown": true,
-    "includes": [
-      "example/**/*.json",
-      "example/**/*.ts",
-      "packages/**/*.ts",
-      "packages/**/*.json",
-      "*.json"
-    ]
+    "includes": ["docs/.vitepress/**/*.ts", "example/**/*.ts", "packages/**/*.ts"]
   }
 }

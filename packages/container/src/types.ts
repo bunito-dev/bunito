@@ -90,11 +90,11 @@ export type ProviderFactoryOptions<
   injects?: TInjection[];
 };
 
-export type ProviderValueOptions = {
+export type ProviderValueOptions<TValue = unknown> = {
   token: Token;
   global?: true;
   scope?: null;
-  useValue: unknown;
+  useValue: TValue;
   injects?: null;
 };
 

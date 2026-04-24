@@ -2,6 +2,7 @@ import { App, Logger, LoggerModule, Module, Provider } from '@bunito/bunito';
 import { Controller, Get, HttpModule, Params, Post, Query } from '@bunito/http';
 import { z } from 'zod';
 
+// Providers can be injected into controllers just like into other providers.
 @Provider({
   injects: [Logger],
 })
@@ -19,6 +20,7 @@ class FooProvider {
   }
 }
 
+// Zod schemas can be attached to route injections for validation and coercion.
 const BarParams = z.object({
   a: z.string().max(2),
   b: z.string(),
@@ -30,6 +32,7 @@ const BarQuery = z.object({
   baz: z.string().default('baz'),
 });
 
+// Controller prefix and provider options live on the controller decorator.
 @Controller('/foo', {
   injects: [Logger, FooProvider],
 })
@@ -41,6 +44,7 @@ class FooController {
     logger.debug('created');
   }
 
+  // GET /foo
   @Get()
   getFoo(): Response {
     this.logger.debug('getFoo() called');
@@ -50,6 +54,7 @@ class FooController {
     });
   }
 
+  // GET /foo/bar/:a/:b with unvalidated params and query object.
   @Get('/bar/:a/:b', {
     injects: [Params, Query],
   })
@@ -69,6 +74,7 @@ class FooController {
     });
   }
 
+  // GET /foo/bar/:a/:b/:c with schema-backed query and params.
   @Get('/bar/:a/:b/:c', {
     injects: [Query(BarQuery), Params(BarParams)],
   })
@@ -85,6 +91,7 @@ class FooController {
     });
   }
 
+  // POST /foo/bar
   @Post('/bar')
   postBar(): Response {
     this.logger.debug('postBar() called');
@@ -95,6 +102,7 @@ class FooController {
   }
 }
 
+// HttpModule registers the HTTP runtime; controllers are provided by the app module.
 @Module({
   imports: [LoggerModule, HttpModule],
   providers: [FooProvider],

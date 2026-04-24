@@ -1,8 +1,14 @@
 {
   "name": "@bunito/http",
-  "version": "0.0.5",
-  "description": "",
-  "keywords": [],
+  "version": "0.0.6",
+  "description": "HTTP controllers, routing, middleware, and exceptions for bunito.",
+  "keywords": [
+    "bunito",
+    "http",
+    "routing",
+    "controllers",
+    "middleware"
+  ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",
   "homepage": "https://bunito.dev",
@@ -23,19 +29,24 @@
     ".": "./src/index.ts",
     "./internals": "./src/internals.ts"
   },
-  "files": ["src", "!src/**/*.test.ts", "README.md", "LICENSE"],
+  "files": [
+    "src",
+    "!src/**/*.test.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.5",
-    "@bunito/config": "workspace:0.0.5",
-    "@bunito/container": "workspace:0.0.5",
-    "@bunito/logger": "workspace:0.0.5",
-    "@bunito/server": "workspace:0.0.5"
+    "@bunito/common": "workspace:0.0.6",
+    "@bunito/config": "workspace:0.0.6",
+    "@bunito/container": "workspace:0.0.6",
+    "@bunito/logger": "workspace:0.0.6",
+    "@bunito/server": "workspace:0.0.6"
   },
   "devDependencies": {
     "zod": "catalog:"
   },
-  "peerDependencies": {
-    "zod": "^4.3.0"
+  "optionalDependencies": {
+    "zod": "catalog:range"
   },
   "engines": {
     "bun": ">=1.3.11"

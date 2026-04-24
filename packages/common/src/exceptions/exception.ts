@@ -13,7 +13,7 @@ export abstract class Exception extends Error {
 
   override name = 'UnknownException';
 
-  constructor(message?: string, cause?: unknown) {
+  protected constructor(message?: string, cause?: unknown) {
     super();
 
     if (message) {

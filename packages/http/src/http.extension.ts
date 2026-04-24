@@ -1,5 +1,5 @@
 import type { CallableInstance } from '@bunito/common';
-import { ConfigurationException, isFn, isObject } from '@bunito/common';
+import { ConfigurationException, isFn, isObject, isString } from '@bunito/common';
 import type { ModuleId, ProviderId } from '@bunito/container';
 import { Container, Id, OnInit, PARENT_MODULE_IDS } from '@bunito/container';
 import type { HttpMethod, HttpPath, ServerRouteOptions } from '@bunito/server/internals';
@@ -12,7 +12,7 @@ import {
   NotImplementedException,
   ValidationFailedException,
 } from './exceptions';
-import { Body, Params, Query } from './injections';
+import { Body, Method, Params, Query } from './injections';
 import type { Middleware } from './middleware';
 import type {
   ControllerOptions,
@@ -219,6 +219,11 @@ export class HttpExtension implements ServerExtension {
         path = 'params';
         break;
 
+      case Method:
+        result = context.method;
+        path = 'method';
+        break;
+
       case Query:
         result = context.query;
         path = 'query';
@@ -238,7 +243,9 @@ export class HttpExtension implements ServerExtension {
         break;
 
       default:
-        if (token) {
+        if (isString(token)) {
+          result = token;
+        } else if (token) {
           result = await this.container.tryResolveProvider(token, {
             moduleId,
             requestId: context.requestId,
