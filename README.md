@@ -1,5 +1,7 @@
 # `bunito`
 
+[![CI](https://github.com/bunito-dev/bunito/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/bunito-dev/bunito/actions/workflows/ci.yml)
+
 `bunito` is a small Bun-first TypeScript framework for building applications with
 modules, dependency injection, lifecycle hooks, configuration, logging, and HTTP
 controllers.
