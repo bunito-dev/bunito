@@ -7,7 +7,7 @@ export default defineConfig({
 
   themeConfig: {
     logo: '/assets/logo.png',
-    logoLink: '/',
+    logoLink: 'https://bunito.dev',
 
     nav: [
       { text: 'Getting Started', link: '/' },
