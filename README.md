@@ -17,17 +17,16 @@ Start with the example workspace guide: [`example/`](./example/README.md).
 
 ## Packages
 
+- [`@bunito/cli`](./packages/cli/README.md): command-line tools for running bunito projects
 - [`@bunito/bunito`](./packages/bunito/README.md): main application entrypoint
   - [`@bunito/container`](./packages/container/README.md): dependency injection, modules, providers, and lifecycle
   - [`@bunito/config`](./packages/config/README.md): configuration and secrets
   - [`@bunito/logger`](./packages/logger/README.md): logging and logger output extensions
   - [`@bunito/bun`](./packages/bun/README.md): Bun-specific integrations
-- [`@bunito/cli`](./packages/cli/README.md): local project runner used by the examples
-- [`@bunito/http`](./packages/http/README.md): HTTP controllers, routing, middleware, and exceptions
-- Shared:
   - [`@bunito/common`](./packages/common/README.md): shared exceptions, predicates, types, and utilities
   - [`@bunito/server`](./packages/server/README.md): Bun server integration
   - [`@bunito/biome`](./packages/biome/README.md): shared Biome configuration
+- [`@bunito/http`](./packages/http/README.md): HTTP controllers, routing, middleware, and exceptions
 
 ## Development
 
