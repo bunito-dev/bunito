@@ -19,9 +19,3 @@ dist
 .eslintcache
 .cache
 *.tsbuildinfo
-
-# docs
-docs/.vitepress/cache
-
-# other
-draft

@@ -1,12 +1,21 @@
+import { cp } from 'node:fs/promises';
+import { join } from 'node:path';
 import { defineConfig } from 'vitepress';
+
+const ASSETS_DIR = 'assets';
 
 export default defineConfig({
   title: 'bunito',
   description: 'A Bun-first TypeScript framework for modular applications.',
   appearance: 'force-dark',
-
+  buildEnd: async (config) => {
+    await cp(join(config.srcDir, ASSETS_DIR), join(config.outDir, ASSETS_DIR), {
+      recursive: true,
+      errorOnExist: false,
+    });
+  },
   themeConfig: {
-    logo: '/assets/logo.png',
+    logo: `/${ASSETS_DIR}/logo.png`,
     logoLink: 'https://bunito.dev',
 
     nav: [
