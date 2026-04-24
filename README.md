@@ -13,7 +13,7 @@ The project is intentionally split into focused packages. You can start with
 ## Examples
 
 The best way to understand the current API is to read and run the examples.
-Start with the example workspace guide: [`example/README.md`](./example/README.md).
+Start with the example workspace guide: [`example/`](./example/README.md).
 
 ## Packages
 

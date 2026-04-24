@@ -35,7 +35,7 @@ Framework packages live in `packages/*`:
 - `@bunito/biome`: shared Biome configuration
 
 Runnable applications live in `example/apps/*` and are documented in
-[`example/README.md`](./example/README.md). Documentation lives in `docs/` and is
+[`example/`](./example/README.md). Documentation lives in `docs/` and is
 built with VitePress. Long-lived specs and ADR scaffolding live in `specs/`.
 
 ## Useful Commands
