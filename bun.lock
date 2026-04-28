@@ -79,6 +79,13 @@
         "@bunito/common": "workspace:0.0.5",
       },
     },
+    "packages/di": {
+      "name": "@bunito/di",
+      "version": "0.0.6",
+      "dependencies": {
+        "@bunito/common": "workspace:0.0.6",
+      },
+    },
     "packages/http": {
       "name": "@bunito/http",
       "version": "0.0.6",
@@ -201,6 +208,8 @@
     "@bunito/config": ["@bunito/config@workspace:packages/config"],
 
     "@bunito/container": ["@bunito/container@workspace:packages/container"],
+
+    "@bunito/di": ["@bunito/di@workspace:packages/di"],
 
     "@bunito/http": ["@bunito/http@workspace:packages/http"],
 

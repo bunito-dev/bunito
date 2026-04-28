@@ -138,11 +138,16 @@ Run tests for a specific package:
 - If an expression is already synchronous, do not wrap it in `await`; this often
   causes IDE diagnostics such as `TS80007: await has no effect on the type of this
   expression`
-- In tests, only use `await` for actual promises, async matchers, or APIs that are
-  intentionally async
-- In async tests, prefer `const result = await somePromise(); expect(result)...`
-  over `await expect(somePromise()).resolves...` when both forms are equivalent;
-  this is usually clearer and tends to avoid noisy IDE diagnostics
+- In tests, only use `await` for actual promises or APIs that are intentionally
+  async
+- In async tests, do not put `await` directly inside matcher calls such as
+  `expect(await somePromise()).toEqual(...)`; assign the awaited value first, then
+  assert it with `expect(result)...`
+- Avoid `await expect(somePromise()).resolves...` and
+  `await expect(somePromise()).rejects...` unless there is no clearer alternative;
+  prefer explicit awaited values for fulfilled promises and `try`/`catch` for
+  expected rejections. This keeps tests readable and avoids noisy IDE diagnostics
+  such as `TS80007: await has no effect on the type of this expression`
 
 ### Import Paths
 
