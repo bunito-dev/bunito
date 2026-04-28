@@ -3,12 +3,13 @@ import type {
   ProviderClassSchema,
   ProviderHandlerSchema,
   ProviderScope,
+  WithInjections,
 } from '../types';
 
 export type ModuleDecoratorOptions = ModuleSchema &
-  Omit<ProviderDecoratorOptions, 'token' | 'scope' | 'global'> & {
+  WithInjections<{
     scope?: Extract<ProviderScope, 'singleton' | 'module'>;
-  };
+  }>;
 
 export type ProviderDecoratorOptions = Omit<ProviderClassSchema, 'useClass'>;
 

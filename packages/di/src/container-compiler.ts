@@ -211,12 +211,19 @@ export class ContainerCompiler {
       }
     }
 
-    if (moduleSchema.imports) {
+    const {
+      token: _,
+      imports: moduleImports,
+      exports: moduleExports,
+      ...moduleProviders
+    } = moduleSchema;
+
+    if (moduleImports) {
       const moduleStack = new Set(parentStack).add(moduleId);
 
       moduleNode.children ??= new Set();
 
-      for (const importLike of moduleSchema.imports) {
+      for (const importLike of moduleImports) {
         const [importId, importNode] = this.compileModule(
           importLike,
           moduleId,
@@ -254,33 +261,33 @@ export class ContainerCompiler {
       }
     }
 
-    if (moduleSchema.providers) {
-      for (const providerLike of moduleSchema.providers) {
-        const [providerId, providerClass] = this.compileProvider(moduleId, providerLike);
+    const moduleProvidersLike = Object.values(moduleProviders).flat(1) as ProviderLike[];
 
-        if (providerId) {
-          moduleNode.providers ??= new Map();
-          moduleNode.providers.set(providerId, moduleId);
-          continue;
-        }
+    for (const providerLike of moduleProvidersLike) {
+      const [providerId, providerClass] = this.compileProvider(moduleId, providerLike);
 
-        if (!providerClass) {
-          return ConfigurationException.throw`Provider options are missing for ${providerLike} in ${moduleId} module`;
-        }
-
-        if (moduleNode.classes?.has(providerClass)) {
-          return ConfigurationException.throw`${providerClass} is already defined in ${moduleId} module`;
-        }
-
-        moduleNode.classes ??= new Set();
-        moduleNode.classes.add(providerClass);
+      if (providerId) {
+        moduleNode.providers ??= new Map();
+        moduleNode.providers.set(providerId, moduleId);
+        continue;
       }
+
+      if (!providerClass) {
+        return ConfigurationException.throw`Provider options are missing for ${providerLike} in ${moduleId} module`;
+      }
+
+      if (moduleNode.classes?.has(providerClass)) {
+        return ConfigurationException.throw`${providerClass} is already defined in ${moduleId} module`;
+      }
+
+      moduleNode.classes ??= new Set();
+      moduleNode.classes.add(providerClass);
     }
 
-    if (moduleSchema.exports) {
+    if (moduleExports) {
       moduleNode.exports ??= new Set();
 
-      for (const exportToken of moduleSchema.exports) {
+      for (const exportToken of moduleExports) {
         const exportId = Id.for(exportToken);
         const providerModuleId = moduleNode.providers?.get(exportId);
 

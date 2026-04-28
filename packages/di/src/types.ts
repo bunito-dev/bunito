@@ -6,6 +6,14 @@ import type {
 } from './decorators';
 import type { Id } from './id';
 
+declare global {
+  namespace Bunito {
+    interface ModuleSchemaProviders {
+      providers: ProviderLike[];
+    }
+  }
+}
+
 export type Token<TValue = unknown> =
   | string
   | symbol
@@ -51,8 +59,9 @@ export type ModuleLike = Class | ModuleSchema;
 export type ModuleSchema = {
   token?: Token;
   imports?: ModuleLike[];
-  providers?: ProviderLike[];
   exports?: TokenLike[];
+} & {
+  [TKey in keyof Bunito.ModuleSchemaProviders]?: Bunito.ModuleSchemaProviders[TKey];
 };
 
 export type ModuleNode = {
