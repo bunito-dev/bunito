@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { getClassDecoratorMetadata } from './metadata';
+import { getClassMetadata } from '../metadata';
 import { OnInit } from './on-init.decorator';
-import { Provider } from './provider.decorator';
 
 describe('OnInit', () => {
   it('registers a disposable provider handler', () => {
@@ -12,9 +11,7 @@ describe('OnInit', () => {
       }
     }
 
-    expect(
-      getClassDecoratorMetadata(ExampleProvider, Provider)?.handlers?.get(OnInit),
-    ).toEqual({
+    expect(getClassMetadata(ExampleProvider)?.handlers?.get(OnInit)).toEqual({
       propKey: 'init',
       options: {
         injects: ['literal'],

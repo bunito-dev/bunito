@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'bun:test';
-import { getClassDecoratorMetadata } from './metadata';
+import { getClassMetadata } from '../metadata';
 import { Module } from './module.decorator';
 import { Provider } from './provider.decorator';
 
 describe('Module', () => {
   it('stores module metadata and optional provider metadata', () => {
     @Module({
-      token: 'module-token',
       scope: 'singleton',
       injects: ['literal'],
       providers: [],
@@ -14,13 +13,11 @@ describe('Module', () => {
     })
     class ExampleModule {}
 
-    expect(getClassDecoratorMetadata(ExampleModule, Module)?.options).toEqual({
-      token: 'module-token',
+    expect(getClassMetadata(ExampleModule)?.options?.get(Module)).toEqual({
       providers: [],
       exports: [],
     });
-    expect(getClassDecoratorMetadata(ExampleModule, Provider)?.options).toEqual({
-      token: 'module-token',
+    expect(getClassMetadata(ExampleModule)?.options?.get(Provider)).toEqual({
       scope: 'singleton',
       injects: ['literal'],
     });
@@ -33,6 +30,6 @@ describe('Module', () => {
       class DuplicateModule {}
 
       return DuplicateModule;
-    }).toThrow('@Module() decorator is already defined');
+    }).toThrow('@Module decorator can only be used once');
   });
 });

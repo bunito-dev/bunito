@@ -1,14 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import { Container } from './container';
-import {
-  Module,
-  OnDestroy,
-  OnInit,
-  OnResolve,
-  Provider,
-  setClassOptionsDecoratorMetadata,
-} from './decorators';
+import { Module, OnDestroy, OnInit, OnResolve, Provider } from './decorators';
 import { Id } from './id';
+import { setClassDecoratorMetadata } from './metadata';
 
 describe('Container', () => {
   it('resolves providers, manual values, components, lifecycle triggers, and teardown', async () => {
@@ -17,7 +11,7 @@ describe('Container', () => {
         target: TTarget,
         context: ClassDecoratorContext,
       ) => {
-        setClassOptionsDecoratorMetadata(marker, context, { marked: true });
+        setClassDecoratorMetadata(marker, 'prop', context, { marked: true });
         return target;
       };
     };
@@ -61,12 +55,15 @@ describe('Container', () => {
     expect(manual).toBe('manual-value');
     expect(missing).toBeUndefined();
     expect(injections).toEqual(['arg']);
-    expect(container.locateComponents(marker)?.classes).toEqual([
+    expect(container.locateComponents(marker)?.components).toEqual([
       {
         useProvider: Id.for(Service),
-        metadata: expect.objectContaining({
-          options: { marked: true },
-        }),
+        props: [
+          {
+            propKind: 'class',
+            options: { marked: true },
+          },
+        ],
       },
     ]);
 

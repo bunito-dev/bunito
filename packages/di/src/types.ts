@@ -1,10 +1,10 @@
 import type { Any, Class, Fn, MaybePromise, RawObject } from '@bunito/common';
-import type {
-  ClassDecoratorMetadata,
-  ClassDecoratorMetadataOptions,
-  ClassHandlersDecoratorMetadata,
-} from './decorators';
 import type { Id } from './id';
+import type {
+  ClassMetadataKey,
+  ClassPropMetadata,
+  ClassPropOptionsSchema,
+} from './metadata';
 
 declare global {
   namespace Bunito {
@@ -68,14 +68,16 @@ export type ModuleNode = {
   parents?: Set<ModuleId>;
   children?: Set<ModuleId>;
   providers?: Map<ProviderId, ModuleId>;
-  classes?: Set<Class>;
+  components?: Set<ComponentId>;
   exports?: Set<ProviderId>;
 };
 
 // providers
 
 export type ProviderId = Id;
+export type ProviderKey = ProviderGroup | ComponentKey;
 export type ProviderGroup = symbol;
+export type ProviderGroupLike = ProviderGroup | ProviderGroup[];
 export type ProviderScope = 'singleton' | 'module' | 'request' | 'transient';
 
 export type ProviderLike = Class | Fn | ProviderSchema;
@@ -85,8 +87,8 @@ export type ProviderClassSchema<
   TArgs extends Any[] = Any[],
 > = WithInjections<{
   scope?: ProviderScope;
-  token?: Token;
-  group?: ProviderGroup;
+  token?: undefined;
+  group?: ProviderGroupLike;
   global?: true;
   useClass: Class<TInstance, TArgs>;
 }>;
@@ -97,7 +99,7 @@ export type ProviderFactorySchema<
 > = WithInjections<{
   scope?: ProviderScope;
   token?: TokenLike;
-  group?: ProviderGroup;
+  group?: ProviderGroupLike;
   global?: true;
   useFactory: Fn<TResult, TArgs>;
 }>;
@@ -105,7 +107,7 @@ export type ProviderFactorySchema<
 export type ProviderValueSchema<TValue = unknown> = {
   scope?: undefined;
   token: TokenLike;
-  group?: ProviderGroup;
+  group?: ProviderGroupLike;
   global?: true;
   useValue: TValue;
 };
@@ -121,13 +123,10 @@ export type ProviderHandlerSchema = WithInjections<{
   disposable?: true;
 }>;
 
-export type ProviderHandlers = ClassHandlersDecoratorMetadata<ProviderHandlerSchema>;
-
-export type ProviderNode = {
+export type ProviderDefinition = {
   moduleId: ModuleId;
   moduleIds?: Set<ModuleId>;
   schema: ProviderSchema;
-  handlers?: ProviderHandlers;
 };
 
 export type ProviderMatch = {
@@ -178,23 +177,33 @@ export type WithInjections<TValue extends RawObject = RawObject> = {
 
 // components
 
-export type ComponentMatch<
-  TOptions extends ClassDecoratorMetadataOptions = ClassDecoratorMetadataOptions,
-> = {
-  moduleId: Id;
-  classes?: ComponentClass<TOptions>[];
-  children?: ComponentChild<TOptions>[];
-};
+export type ComponentId = Id;
+export type ComponentKey = ClassMetadataKey;
 
-export type ComponentChild<TOptions extends ClassDecoratorMetadataOptions> =
-  ComponentMatch<TOptions>;
-
-export type ComponentClass<TOptions extends ClassDecoratorMetadataOptions> =
-  | {
-      useProvider: ProviderId;
-      metadata: ClassDecoratorMetadata<TOptions>;
-    }
+export type ComponentBase<TProps> =
   | {
       useClass: Class;
-      metadata: ClassDecoratorMetadata<TOptions>;
+      props: TProps;
+    }
+  | {
+      useProvider: ProviderId;
+      props: TProps;
     };
+
+export type ComponentGroup = ComponentBase<Map<ComponentKey, ClassPropMetadata[]>>;
+
+export type ComponentNode<
+  TOptionsSchema extends ClassPropOptionsSchema = ClassPropOptionsSchema,
+> = ComponentBase<ClassPropMetadata<TOptionsSchema>[]>;
+
+export type ComponentMatchChild<
+  TOptionsSchema extends ClassPropOptionsSchema = ClassPropOptionsSchema,
+> = ComponentMatch<TOptionsSchema>;
+
+export type ComponentMatch<
+  TOptionsSchema extends ClassPropOptionsSchema = ClassPropOptionsSchema,
+> = {
+  moduleId: Id;
+  components?: ComponentNode<TOptionsSchema>[];
+  children?: ComponentMatchChild<TOptionsSchema>[];
+};

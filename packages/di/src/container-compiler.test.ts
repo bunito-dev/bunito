@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'bun:test';
 import { ConfigurationException } from '@bunito/common';
 import { ContainerCompiler } from './container-compiler';
-import { Module, Provider, setClassOptionsDecoratorMetadata } from './decorators';
+import { Module, Provider } from './decorators';
 import { Id } from './id';
+import { setClassDecoratorMetadata } from './metadata';
 
 describe('ContainerCompiler', () => {
   it('compiles module schemas, decorated providers, exports, groups, and components', () => {
@@ -12,7 +13,7 @@ describe('ContainerCompiler', () => {
         target: TTarget,
         context: ClassDecoratorContext,
       ) => {
-        setClassOptionsDecoratorMetadata(Component, context, { tag: 'component' });
+        setClassDecoratorMetadata(Component, 'prop', context, { tag: 'component' });
         return target;
       };
     };
@@ -43,6 +44,7 @@ describe('ContainerCompiler', () => {
     })
     class ChildModule {}
 
+    @Component()
     class PlainComponent {}
 
     const rootSchema = {
@@ -59,7 +61,9 @@ describe('ContainerCompiler', () => {
     expect(compiler.rootModuleId).toBe(rootModuleId);
     expect(compiler.getModule(rootModuleId).children).toEqual(new Set([childModuleId]));
     expect(compiler.getModule(childModuleId).parents).toEqual(new Set([rootModuleId]));
-    expect(compiler.getModule(rootModuleId).classes).toEqual(new Set([PlainComponent]));
+    expect(compiler.getModule(rootModuleId).components).toEqual(
+      new Set([Id.for(PlainComponent)]),
+    );
     expect(compiler.getProvider(Id.for(ExportedProvider)).moduleIds).toEqual(
       new Set([childModuleId, rootModuleId]),
     );
@@ -84,23 +88,52 @@ describe('ContainerCompiler', () => {
     ]);
     expect(compiler.locateComponents(Component)).toEqual({
       moduleId: rootModuleId,
+      components: [
+        {
+          useClass: PlainComponent,
+          props: [
+            {
+              propKind: 'class',
+              options: { tag: 'component' },
+            },
+          ],
+        },
+      ],
       children: [
         {
           moduleId: childModuleId,
-          classes: [
+          components: [
             {
               useProvider: Id.for(ExportedProvider),
-              metadata: expect.objectContaining({
-                options: { tag: 'component' },
-              }),
+              props: [
+                {
+                  propKind: 'class',
+                  options: { tag: 'component' },
+                },
+              ],
             },
           ],
         },
       ],
     });
-    expect(
+    expect(compiler.locateComponents(Component, childModuleId)).toEqual({
+      moduleId: childModuleId,
+      components: [
+        {
+          useProvider: Id.for(ExportedProvider),
+          props: [
+            {
+              propKind: 'class',
+              options: { tag: 'component' },
+            },
+          ],
+        },
+      ],
+    });
+    expect(compiler.locateComponents(Symbol as never)).toBeUndefined();
+    expect(() =>
       compiler.locateComponents(Symbol as never, Id.unique('Missing')),
-    ).toBeUndefined();
+    ).toThrow('Module Missing');
     expect(compiler.locateProviders(Symbol('missing'))).toEqual([]);
     expect(compiler.getProvider(Id.for('missing'), false)).toBeUndefined();
     expect(compiler.getModule(Id.for('missing'), false)).toBeUndefined();
@@ -172,6 +205,19 @@ describe('ContainerCompiler', () => {
       'Circular module dependency detected',
     );
 
+    const DuplicateComponent = () => {
+      return <TTarget extends new (...args: never[]) => unknown>(
+        target: TTarget,
+        context: ClassDecoratorContext,
+      ) => {
+        setClassDecoratorMetadata(DuplicateComponent, 'prop', context, {
+          duplicate: true,
+        });
+        return target;
+      };
+    };
+
+    @DuplicateComponent()
     class DuplicateClass {}
 
     @Module({

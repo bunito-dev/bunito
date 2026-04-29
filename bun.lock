@@ -68,15 +68,15 @@
       "name": "@bunito/config",
       "version": "0.0.6",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.5",
-        "@bunito/container": "workspace:0.0.5",
+        "@bunito/common": "workspace:0.0.6",
+        "@bunito/container": "workspace:0.0.6",
       },
     },
     "packages/container": {
       "name": "@bunito/container",
       "version": "0.0.6",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.5",
+        "@bunito/common": "workspace:0.0.6",
       },
     },
     "packages/di": {

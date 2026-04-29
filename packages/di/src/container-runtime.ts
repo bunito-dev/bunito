@@ -12,6 +12,7 @@ import {
 import type { ContainerCompiler } from './container-compiler';
 import { OnDestroy, OnInit, OnResolve } from './decorators';
 import { Id } from './id';
+import { getClassMetadata } from './metadata';
 import type {
   GetProviderInstanceParams,
   InjectionLike,
@@ -19,6 +20,7 @@ import type {
   ModuleId,
   ProviderGroup,
   ProviderHandlerFn,
+  ProviderHandlerSchema,
   ProviderId,
   ProviderInstance,
   RequestId,
@@ -229,7 +231,9 @@ export class ContainerRuntime {
 
     const provider = this.compiler.getProvider(providerId, true);
 
-    const handlerMetadata = provider?.handlers?.get(handlerDecorator);
+    const handlerMetadata = getClassMetadata<unknown, ProviderHandlerSchema>(
+      instance,
+    )?.handlers?.get(handlerDecorator);
 
     if (!handlerMetadata) {
       return;

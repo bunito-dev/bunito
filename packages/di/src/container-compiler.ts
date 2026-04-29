@@ -1,21 +1,33 @@
-import type { Class, Fn } from '@bunito/common';
-import { ConfigurationException, isClass, isFn, isObject } from '@bunito/common';
-import type { ProviderDecoratorOptions } from './decorators';
-import { getClassDecoratorMetadata, Module, Provider } from './decorators';
-import { Id } from './id';
+import type { Class } from '@bunito/common';
+import {
+  ConfigurationException,
+  isClass,
+  isFn,
+  isObject,
+  isSymbol,
+} from '@bunito/common';
 import type {
+  ProviderDecoratorOptions,
+  ProviderHandlerDecoratorOptions,
+} from './decorators';
+import { Module, Provider } from './decorators';
+import { Id } from './id';
+import type { ClassMetadata } from './metadata';
+import { getClassMetadata } from './metadata';
+import type {
+  ComponentGroup,
+  ComponentId,
+  ComponentKey,
   ComponentMatch,
   ModuleId,
   ModuleLike,
   ModuleNode,
   ModuleSchema,
-  ProviderGroup,
-  ProviderHandlerSchema,
-  ProviderHandlers,
+  ProviderDefinition,
   ProviderId,
+  ProviderKey,
   ProviderLike,
   ProviderMatch,
-  ProviderNode,
   ProviderSchema,
   TokenLike,
 } from './types';
@@ -25,9 +37,11 @@ export class ContainerCompiler {
 
   private readonly modules = new Map<ModuleId, ModuleNode>();
 
-  private readonly providers = new Map<ProviderId, ProviderNode>();
+  private readonly providers = new Map<ProviderId, ProviderDefinition>();
 
-  private readonly providerIds = new Map<ProviderGroup | Fn, Set<ProviderId>>();
+  private readonly components = new Map<ComponentId, ComponentGroup>();
+
+  private readonly providerIds = new Map<ProviderKey, Set<ProviderId>>();
 
   constructor(moduleLike: ModuleLike) {
     [this.rootModuleId] = this.compileModule(moduleLike);
@@ -45,9 +59,9 @@ export class ContainerCompiler {
     return module;
   }
 
-  getProvider(providerId: ProviderId, orThrow?: true): ProviderNode;
-  getProvider(providerId: ProviderId, orThrow: boolean): ProviderNode | undefined;
-  getProvider(providerId: ProviderId, orThrow = true): ProviderNode | undefined {
+  getProvider(providerId: ProviderId, orThrow?: true): ProviderDefinition;
+  getProvider(providerId: ProviderId, orThrow: boolean): ProviderDefinition | undefined;
+  getProvider(providerId: ProviderId, orThrow = true): ProviderDefinition | undefined {
     const provider = this.providers.get(providerId);
 
     if (!provider && orThrow) {
@@ -58,79 +72,62 @@ export class ContainerCompiler {
   }
 
   locateComponents(
-    decorator: Fn,
+    componentKey: ComponentKey,
     moduleId = this.rootModuleId,
   ): ComponentMatch | undefined {
-    const module = this.modules.get(moduleId);
+    let result: ComponentMatch | undefined;
 
-    const result: ComponentMatch = {
-      moduleId,
-    };
+    const module = this.getModule(moduleId);
 
-    if (module?.providers) {
-      for (const [useProvider, providerModuleId] of module.providers) {
-        if (providerModuleId !== moduleId) {
+    if (module.components) {
+      for (const componentId of module.components) {
+        const component = this.components.get(componentId);
+
+        if (!component) {
           continue;
         }
 
-        const provider = this.providers.get(useProvider);
+        const props = component.props.get(componentKey);
 
-        if (!provider) {
-          continue;
+        if (props) {
+          result ??= { moduleId };
+          result.components ??= [];
+
+          if ('useProvider' in component) {
+            result.components.push({
+              useProvider: component.useProvider,
+              props,
+            });
+          } else if ('useClass' in component) {
+            result.components.push({
+              useClass: component.useClass,
+              props,
+            });
+          }
         }
-
-        if (!('useClass' in provider.schema)) {
-          continue;
-        }
-
-        const metadata = getClassDecoratorMetadata(provider.schema.useClass, decorator);
-
-        if (!metadata) {
-          continue;
-        }
-
-        result.classes ??= [];
-        result.classes.push({
-          useProvider,
-          metadata,
-        });
       }
     }
 
-    if (module?.classes) {
-      for (const useClass of module.classes) {
-        const metadata = getClassDecoratorMetadata(useClass, decorator);
-
-        if (!metadata) {
-          continue;
-        }
-
-        result.classes ??= [];
-        result.classes.push({
-          useClass,
-          metadata,
-        });
-      }
-    }
-
-    if (module?.children) {
+    if (module.children) {
       for (const childId of module.children) {
-        const child = this.locateComponents(decorator, childId);
-
-        if (child) {
-          result.children ??= [];
-          result.children.push(child);
+        const child = this.locateComponents(componentKey, childId);
+        if (!child) {
+          continue;
         }
+
+        result ??= { moduleId };
+        result.children ??= [];
+        result.children.push(child);
       }
     }
 
-    return result.classes || result.children ? result : undefined;
+    return result;
   }
 
-  locateProviders(decoratorOrGroup: ProviderGroup | Fn): ProviderMatch[] {
+  locateProviders(providerKey: ProviderKey): ProviderMatch[] {
     const result: ProviderMatch[] = [];
 
-    const providerIds = this.providerIds.get(decoratorOrGroup);
+    const providerIds = this.providerIds.get(providerKey);
 
     if (providerIds) {
       for (const providerId of providerIds) {
@@ -180,9 +177,7 @@ export class ContainerCompiler {
 
     if (isClass(moduleLike)) {
       moduleClass = moduleLike;
-      moduleSchema = getClassDecoratorMetadata<{
-        class: ModuleSchema;
-      }>(moduleLike, Module)?.options;
+      moduleSchema = getClassMetadata<ModuleSchema>(moduleLike)?.options?.get(Module);
     } else if (isObject<ModuleSchema>(moduleLike)) {
       moduleSchema = moduleLike;
     }
@@ -205,9 +200,13 @@ export class ContainerCompiler {
       if (providerId) {
         moduleNode.providers ??= new Map();
         moduleNode.providers.set(providerId, moduleId);
-      } else {
-        moduleNode.classes ??= new Set();
-        moduleNode.classes.add(moduleClass);
+      }
+
+      const componentId = this.compileComponent(moduleClass, providerId);
+
+      if (componentId) {
+        moduleNode.components ??= new Set();
+        moduleNode.components.add(componentId);
       }
     }
 
@@ -269,19 +268,26 @@ export class ContainerCompiler {
       if (providerId) {
         moduleNode.providers ??= new Map();
         moduleNode.providers.set(providerId, moduleId);
-        continue;
       }
 
-      if (!providerClass) {
+      let componentId: ComponentId | undefined;
+
+      if (providerClass) {
+        componentId = this.compileComponent(providerClass, providerId);
+
+        if (componentId) {
+          if (moduleNode.components?.has(componentId)) {
+            return ConfigurationException.throw`${providerClass} is already defined in ${moduleId} module`;
+          }
+
+          moduleNode.components ??= new Set();
+          moduleNode.components.add(componentId);
+        }
+      }
+
+      if (!providerId && !componentId) {
         return ConfigurationException.throw`Provider options are missing for ${providerLike} in ${moduleId} module`;
       }
-
-      if (moduleNode.classes?.has(providerClass)) {
-        return ConfigurationException.throw`${providerClass} is already defined in ${moduleId} module`;
-      }
-
-      moduleNode.classes ??= new Set();
-      moduleNode.classes.add(providerClass);
     }
 
     if (moduleExports) {
@@ -331,23 +337,24 @@ export class ContainerCompiler {
   ): [providerId?: ProviderId, providerClass?: Class] {
     let providerClass: Class | undefined;
     let providerSchema: ProviderSchema | undefined;
-    let providerHandlers: ProviderHandlers | undefined;
+
+    let classMetadata:
+      | ClassMetadata<ProviderDecoratorOptions, ProviderHandlerDecoratorOptions>
+      | undefined;
 
     if (isClass(providerLike)) {
-      const providerMetadata = getClassDecoratorMetadata<{
-        class: ProviderDecoratorOptions;
-        handler: ProviderHandlerSchema;
-      }>(providerLike, Provider);
+      classMetadata = getClassMetadata(providerLike);
 
       providerClass = providerLike;
 
-      if (providerMetadata?.options) {
+      const decoratorOptions = classMetadata?.options?.get(Provider);
+
+      if (decoratorOptions) {
         providerSchema = {
-          ...providerMetadata.options,
+          ...decoratorOptions,
           useClass: providerLike,
         };
       }
-      providerHandlers = providerMetadata?.handlers;
     } else if (isFn(providerLike)) {
       providerSchema = {
         useFactory: providerLike,
@@ -363,7 +370,9 @@ export class ContainerCompiler {
     let token: TokenLike | undefined;
 
     if ('useClass' in providerSchema) {
-      ({ token = providerSchema.useClass } = providerSchema);
+      const { useClass } = providerSchema;
+      token = useClass;
+      providerClass ??= useClass;
     } else if ('useFactory' in providerSchema) {
       ({ token = providerSchema.useFactory } = providerSchema);
     } else if ('useValue' in providerSchema) {
@@ -375,10 +384,10 @@ export class ContainerCompiler {
     }
 
     const providerId = Id.for(token);
-    const providerNode = this.providers.get(providerId);
+    const providerDefinition = this.providers.get(providerId);
 
-    if (providerNode) {
-      return ConfigurationException.throw`${providerId} is already defined in ${providerNode.moduleId} module`;
+    if (providerDefinition) {
+      return ConfigurationException.throw`${providerId} is already defined in ${providerDefinition.moduleId} module`;
     }
 
     const { global, group } = providerSchema;
@@ -387,19 +396,58 @@ export class ContainerCompiler {
       moduleId: moduleId,
       moduleIds: global ? undefined : new Set([moduleId]),
       schema: providerSchema,
-      handlers: providerHandlers,
     });
 
-    if (group) {
-      this.providerIds.getOrInsertComputed(group, () => new Set()).add(providerId);
+    if (isSymbol(group)) {
+      this.attachProviderId(providerId, group);
+    } else if (Array.isArray(group)) {
+      this.attachProviderId(providerId, ...group);
     }
 
-    if (providerHandlers) {
-      for (const handlerKey of providerHandlers.keys()) {
-        this.providerIds.getOrInsertComputed(handlerKey, () => new Set()).add(providerId);
-      }
+    const handlerKeys = classMetadata?.handlers?.keys().toArray();
+
+    if (handlerKeys) {
+      this.attachProviderId(providerId, ...handlerKeys);
     }
 
-    return [providerId];
+    return [providerId, providerClass];
+  }
+
+  private compileComponent(
+    componentClass: Class,
+    providerId?: ProviderId,
+  ): ComponentId | undefined {
+    const props = getClassMetadata(componentClass)?.props;
+
+    if (!props) {
+      return;
+    }
+
+    const componentId = Id.for(componentClass);
+
+    this.components.set(
+      componentId,
+      providerId
+        ? {
+            useProvider: providerId,
+            props,
+          }
+        : {
+            useClass: componentClass,
+            props,
+          },
+    );
+
+    if (providerId) {
+      this.attachProviderId(providerId, ...props.keys().toArray());
+    }
+
+    return componentId;
+  }
+
+  private attachProviderId(providerId: ProviderId, ...keys: ProviderKey[]): void {
+    for (const key of keys) {
+      this.providerIds.getOrInsertComputed(key, () => new Set()).add(providerId);
+    }
   }
 }

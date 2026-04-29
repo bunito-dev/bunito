@@ -1,28 +1,20 @@
-import type { Class } from '@bunito/common';
-import { ConfigurationException } from '@bunito/common';
+import { setClassDecoratorMetadata } from '../metadata';
 import type { ModuleSchema } from '../types';
-import { setClassOptionsDecoratorMetadata } from './metadata';
 import { Provider } from './provider.decorator';
-import type { ModuleDecoratorOptions, ProviderDecoratorOptions } from './types';
+import type {
+  ClassDecorator,
+  ModuleDecoratorOptions,
+  ProviderDecoratorOptions,
+} from './types';
 
-export function Module(
-  options: ModuleDecoratorOptions = {},
-): <TTarget extends Class>(target: TTarget, context: ClassDecoratorContext) => TTarget {
-  const { token, scope, injects, ...moduleOptions } = options;
+export function Module(options: ModuleDecoratorOptions = {}): ClassDecorator {
+  const { scope, injects, ...moduleOptions } = options;
 
   return (target, context) => {
-    if (
-      !setClassOptionsDecoratorMetadata<ModuleSchema>(Module, context, {
-        token,
-        ...moduleOptions,
-      })
-    ) {
-      return ConfigurationException.throw`@Module() decorator is already defined on ${target}`;
-    }
+    setClassDecoratorMetadata<ModuleSchema>(Module, 'options', context, moduleOptions);
 
     if (scope || injects) {
-      setClassOptionsDecoratorMetadata<ProviderDecoratorOptions>(Provider, context, {
-        token,
+      setClassDecoratorMetadata<ProviderDecoratorOptions>(Provider, 'options', context, {
         scope,
         injects,
       });

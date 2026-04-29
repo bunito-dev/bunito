@@ -1,20 +1,17 @@
 import type { Fn, MaybePromise } from '@bunito/common';
+import { setClassDecoratorMetadata } from '../metadata';
 import type { ProviderHandlerSchema } from '../types';
-import { setClassHandlerDecoratorMetadata } from './metadata';
-import { Provider } from './provider.decorator';
-import type { ProviderHandlerDecoratorOptions } from './types';
+import type { ClassMethodDecorator, ProviderHandlerDecoratorOptions } from './types';
 
 export function OnInit(
   options: ProviderHandlerDecoratorOptions = {},
-): <TTarget extends Fn<MaybePromise<void>>>(
-  target: TTarget,
-  context: ClassMethodDecoratorContext,
-) => TTarget {
+): ClassMethodDecorator<Fn<MaybePromise<void>>> {
   return (target, context) => {
-    setClassHandlerDecoratorMetadata<ProviderHandlerSchema>(Provider, OnInit, context, {
+    setClassDecoratorMetadata<ProviderHandlerSchema>(OnInit, 'handler', context, {
       ...options,
       disposable: true,
     });
+
     return target;
   };
 }

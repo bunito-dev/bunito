@@ -37,6 +37,8 @@ describe('ContainerRuntime', () => {
       readonly id = ++ModuleScopedProvider.instances;
     }
 
+    class RootModuleScopedProvider {}
+
     class RequestScopedProvider {
       static instances = 0;
 
@@ -155,7 +157,7 @@ describe('ContainerRuntime', () => {
       providers: [
         {
           token: 'root-module-scoped',
-          useClass: ModuleScopedProvider,
+          useFactory: () => new RootModuleScopedProvider(),
           scope: 'module',
         },
       ],

@@ -1,9 +1,10 @@
 import type { Fn } from '@bunito/common';
 import { ContainerCompiler } from './container-compiler';
 import { ContainerRuntime } from './container-runtime';
-import type { ClassDecoratorMetadataOptions } from './decorators';
 import { Id } from './id';
+import type { ClassPropOptionsSchema } from './metadata';
 import type {
+  ComponentKey,
   ComponentMatch,
   InjectionsLike,
   ModuleId,
@@ -31,10 +32,13 @@ export class Container {
   }
 
   locateComponents<
-    TOptions extends ClassDecoratorMetadataOptions = ClassDecoratorMetadataOptions,
-  >(component: Fn, moduleId?: ModuleId): ComponentMatch<TOptions> | undefined {
-    return this.compiler.locateComponents(component, moduleId) as
-      | ComponentMatch<TOptions>
+    TOptionsSchema extends ClassPropOptionsSchema = ClassPropOptionsSchema,
+  >(
+    componentKey: ComponentKey,
+    moduleId?: ModuleId,
+  ): ComponentMatch<TOptionsSchema> | undefined {
+    return this.compiler.locateComponents(componentKey, moduleId) as
+      | ComponentMatch<TOptionsSchema>
       | undefined;
   }
 

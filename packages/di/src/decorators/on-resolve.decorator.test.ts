@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { getClassDecoratorMetadata } from './metadata';
+import { getClassMetadata } from '../metadata';
 import { OnResolve } from './on-resolve.decorator';
-import { Provider } from './provider.decorator';
 
 describe('OnResolve', () => {
   it('registers a reusable provider handler', () => {
@@ -12,9 +11,7 @@ describe('OnResolve', () => {
       }
     }
 
-    expect(
-      getClassDecoratorMetadata(ExampleProvider, Provider)?.handlers?.get(OnResolve),
-    ).toEqual({
+    expect(getClassMetadata(ExampleProvider)?.handlers?.get(OnResolve)).toEqual({
       propKey: 'resolved',
       options: {
         injects: ['literal'],

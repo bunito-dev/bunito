@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { getClassDecoratorMetadata } from './metadata';
+import { getClassMetadata } from '../metadata';
 import { OnDestroy } from './on-destroy.decorator';
-import { Provider } from './provider.decorator';
 
 describe('OnDestroy', () => {
   it('registers a disposable provider handler', () => {
@@ -12,9 +11,7 @@ describe('OnDestroy', () => {
       }
     }
 
-    expect(
-      getClassDecoratorMetadata(ExampleProvider, Provider)?.handlers?.get(OnDestroy),
-    ).toEqual({
+    expect(getClassMetadata(ExampleProvider)?.handlers?.get(OnDestroy)).toEqual({
       propKey: 'destroy',
       options: {
         injects: ['literal'],

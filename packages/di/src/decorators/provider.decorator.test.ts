@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'bun:test';
-import { getClassDecoratorMetadata } from './metadata';
+import { getClassMetadata } from '../metadata';
 import { Provider } from './provider.decorator';
 
 describe('Provider', () => {
   it('stores provider options on a class', () => {
-    @Provider({ scope: 'module', token: 'provider-token' })
+    @Provider({ scope: 'module', group: Symbol.for('provider-group') })
     class ExampleProvider {}
 
-    expect(getClassDecoratorMetadata(ExampleProvider, Provider)?.options).toEqual({
+    expect(getClassMetadata(ExampleProvider)?.options?.get(Provider)).toEqual({
       scope: 'module',
-      token: 'provider-token',
+      group: Symbol.for('provider-group'),
     });
   });
 
@@ -20,6 +20,6 @@ describe('Provider', () => {
       class DuplicateProvider {}
 
       return DuplicateProvider;
-    }).toThrow('@Provider() decorator is already defined');
+    }).toThrow('@Provider decorator can only be used once');
   });
 });
