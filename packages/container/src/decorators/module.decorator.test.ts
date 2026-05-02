@@ -1,47 +1,43 @@
 import { describe, expect, it } from 'bun:test';
-import { ConfigurationException } from '@bunito/common';
 import { Module } from './module.decorator';
-import { getDecoratorMetadata } from './utils';
+import { Provider } from './provider.decorator';
+import { getModuleMetadata, getProviderMetadata } from './utils';
 
 describe('Module', () => {
-  it('stores module metadata and optional provider injects', () => {
+  it('stores module metadata and optional provider metadata', () => {
     @Module({
-      imports: [],
-      providers: [
-        {
-          token: 'token',
-          useValue: 1,
-        },
-      ],
-      exports: ['token'],
-      injects: ['dependency'],
+      scope: 'singleton',
+      injects: ['literal'],
+      providers: [],
+      exports: [],
     })
-    class TestModule {}
+    class ExampleModule {}
 
-    expect(getDecoratorMetadata(TestModule, 'module')).toEqual({
-      imports: [],
-      providers: [
-        {
-          token: 'token',
-          useValue: 1,
-        },
-      ],
-      exports: ['token'],
+    expect(getModuleMetadata(ExampleModule)).toEqual({
+      providers: [],
+      exports: [],
     });
-    expect(getDecoratorMetadata(TestModule, 'provider')).toEqual({
-      options: {
-        injects: ['dependency'],
-      },
+    expect(getProviderMetadata(ExampleModule)?.options).toEqual({
+      scope: 'singleton',
+      injects: ['literal'],
     });
   });
 
-  it('rejects duplicate module decorators', () => {
+  it('rejects duplicate module decorators and provider conflicts', () => {
     expect(() => {
       @Module()
       @Module()
-      class TestModule {}
+      class DuplicateModule {}
 
-      return TestModule;
-    }).toThrow(ConfigurationException);
+      return DuplicateModule;
+    }).toThrow('@Module() decorator can only be applied once');
+
+    expect(() => {
+      @Module()
+      @Provider()
+      class ConflictingModule {}
+
+      return ConflictingModule;
+    }).toThrow('@Module() decorator conflicts with @Provider() decorator');
   });
 });

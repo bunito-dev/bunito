@@ -2,7 +2,8 @@ import {
   App,
   Logger,
   LoggerModule,
-  OnBoot,
+  OnAppShutdown,
+  OnAppStart,
   OnDestroy,
   OnInit,
   Provider,
@@ -25,14 +26,19 @@ class BarService {
     this.logger.debug('onInit() called');
   }
 
-  @OnBoot()
-  onBoot(): void {
-    this.logger.debug('onBoot() called');
-  }
-
   @OnDestroy()
   onDestroy(): void {
     this.logger.debug('onDestroy() called');
+  }
+
+  @OnAppStart()
+  onAppStart(): void {
+    this.logger.debug('onAppStart() called');
+  }
+
+  @OnAppShutdown()
+  onAppShutdown(): void {
+    this.logger.debug('onAppShutdown() called');
   }
 
   bar(): string {
@@ -60,14 +66,19 @@ class FooService {
     this.logger.debug('onInit() called');
   }
 
-  @OnBoot()
-  onBoot(): void {
-    this.logger.debug('onBoot() called');
-  }
-
   @OnDestroy()
   onDestroy(): void {
     this.logger.debug('onDestroy() called');
+  }
+
+  @OnAppStart()
+  onAppStart(): void {
+    this.logger.debug('onAppStart() called');
+  }
+
+  @OnAppShutdown()
+  onAppShutdown(): void {
+    this.logger.debug('onAppShutdown() called');
   }
 
   foo(): string {

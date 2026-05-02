@@ -1,5 +1,5 @@
+import type { Class } from '../types';
 import { isFn } from './is-fn';
-import type { Class } from './types';
 
 export function isClass<
   TInstance extends object = object,

@@ -2,7 +2,7 @@ import { isFn, isString } from '@bunito/common';
 import type { RequestId } from '@bunito/container';
 import { Provider, REQUEST_ID } from '@bunito/container';
 import { LoggerService } from './logger.service';
-import type { LogArgs, LogLevel, TraceLogger, WriteLogOptions } from './types';
+import type { LogArgs, LogLevelName, TraceLogger, WriteLogOptions } from './types';
 
 @Provider({
   scope: 'request',
@@ -95,7 +95,7 @@ export class Logger {
   trace(): TraceLogger {
     const now = Date.now();
 
-    const writeLogWithDuration = (level: LogLevel, args: LogArgs) => {
+    const writeLogWithDuration = (level: LogLevelName, args: LogArgs) => {
       this.writeLog({
         level,
         args,

@@ -29,6 +29,9 @@
     ".": "./src/index.ts",
     "./internals": "./src/internals.ts"
   },
+  "imports": {
+    "#internals": "./src/internals.ts"
+  },
   "files": [
     "src",
     "!src/**/*.test.ts",
@@ -39,7 +42,12 @@
     "@bunito/common": "workspace:0.0.6",
     "@bunito/container": "workspace:0.0.6"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "zod": "catalog:"
+  },
+  "optionalDependencies": {
+    "zod": "catalog:range"
+  },
   "engines": {
     "bun": ">=1.3.11"
   }

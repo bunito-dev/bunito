@@ -1,2 +1,2 @@
-export * from './resolve-injections';
-export * from './resolve-token';
+export * from './id';
+export * from './types';

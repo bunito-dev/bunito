@@ -4,3 +4,7 @@ export type SecretOptions = {
   name: string;
   service: string;
 };
+
+export type SetSecretOptions = {
+  allowUnrestrictedAccess?: boolean;
+};

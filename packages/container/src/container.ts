@@ -1,62 +1,32 @@
-import { ContainerCompiler } from './container-compiler';
-import { ContainerRuntime } from './container-runtime';
-import { Id } from './id';
-import type {
-  ComponentDefinition,
-  ComponentKey,
-  ExtensionDefinition,
-  ModuleId,
-  ModuleOptionsLike,
-  ProviderEventName,
-  RequestId,
-  ResolveProviderOptions,
-  ResolveToken,
-  Token,
-} from './types';
+import type { Fn } from '@bunito/common';
+import type { Injections, ModuleLike } from './compiler';
+import { ContainerCompiler } from './compiler';
+import type { RequestId, ResolveProviderOptions } from './runtime';
+import { ContainerRuntime } from './runtime';
+import type { ResolveToken, Token } from './utils';
+import { Id } from './utils';
 
 export class Container {
   private readonly compiler: ContainerCompiler;
-
   private readonly runtime: ContainerRuntime;
 
-  constructor(moduleOptionsLike: ModuleOptionsLike) {
-    this.compiler = new ContainerCompiler(moduleOptionsLike);
+  constructor(moduleLike: ModuleLike) {
+    this.compiler = new ContainerCompiler(moduleLike);
     this.runtime = new ContainerRuntime(this.compiler);
 
-    this.runtime.setProvider(Id.for(Container), this);
+    this.setInstance(Container, this);
   }
 
-  async destroyProviders(): Promise<void> {
-    await this.runtime.destroyProviders();
+  setInstance<TInstance = unknown>(token: Token, instance: TInstance): void {
+    this.runtime.setInstance(Id.for(token), instance);
   }
 
-  async destroyRequest(requestId: RequestId): Promise<void> {
-    await this.runtime.destroyProviders(requestId);
-  }
-
-  setProvider(token: Token, instance: unknown): void {
-    this.runtime.setProvider(Id.for(token), instance);
-  }
-
-  triggerProviders(eventName: ProviderEventName): Promise<void> {
-    return this.runtime.triggerProviders(eventName);
-  }
-
-  getExtensions<TOptions = unknown>(
-    extensionKey: ComponentKey,
-  ): ExtensionDefinition<TOptions>[] {
-    return this.compiler.getExtensions(extensionKey) as ExtensionDefinition<TOptions>[];
-  }
-
-  getComponents<TOptions = unknown, TFieldOptions = unknown, TMethodOptions = unknown>(
-    componentKey: ComponentKey,
-    moduleId?: ModuleId,
-  ): ComponentDefinition<TOptions, TFieldOptions, TMethodOptions>[] {
-    return this.compiler.getComponents(componentKey, moduleId) as ComponentDefinition<
-      TOptions,
-      TFieldOptions,
-      TMethodOptions
-    >[];
+  getInstance<TInstance>(token: Token<TInstance>): Promise<TInstance | undefined>;
+  getInstance<TToken extends Token>(
+    token: TToken,
+  ): Promise<ResolveToken<TToken> | undefined>;
+  getInstance(token: Token): Promise<unknown> {
+    return this.runtime.getInstance(Id.for(token));
   }
 
   resolveProvider<TInstance>(
@@ -67,11 +37,8 @@ export class Container {
     token: TToken,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<ResolveToken<TToken>>;
-  async resolveProvider(
-    token: Token,
-    options: ResolveProviderOptions = {},
-  ): Promise<unknown> {
-    return this.runtime.resolveProvider(Id.for(token), options);
+  resolveProvider(token: Token, options: ResolveProviderOptions = {}): Promise<unknown> {
+    return this.runtime.resolveProvider(Id.for(token), options, true);
   }
 
   tryResolveProvider<TInstance>(
@@ -82,10 +49,51 @@ export class Container {
     token: TToken,
     options?: Partial<ResolveProviderOptions>,
   ): Promise<ResolveToken<TToken> | undefined>;
-  async tryResolveProvider(
+  tryResolveProvider(
     token: Token,
     options: ResolveProviderOptions = {},
   ): Promise<unknown> {
-    return this.runtime.tryResolveProvider(Id.for(token), options);
+    return this.runtime.resolveProvider(Id.for(token), options, false);
+  }
+
+  resolveInjections(
+    injections: Injections,
+    options?: Partial<ResolveProviderOptions>,
+  ): Promise<unknown[]> {
+    return this.runtime.resolveInjections(injections, options);
+  }
+
+  async destroyInstances(): Promise<void> {
+    await this.runtime.destroyInstances();
+  }
+
+  async destroyRequest(requestId: RequestId): Promise<void> {
+    await this.runtime.destroyInstances(requestId);
+  }
+
+  async triggerProviders(handlerDecorator: Fn): Promise<void> {
+    const providers = this.compiler.getProviders(handlerDecorator);
+
+    if (!providers) {
+      return;
+    }
+
+    for (const { providerId, moduleId } of providers) {
+      const instance = await this.runtime.resolveProvider(providerId, {
+        moduleId,
+      });
+
+      const handler = this.runtime.createProviderHandler(
+        providerId,
+        instance,
+        handlerDecorator,
+      );
+
+      if (!handler) {
+        continue;
+      }
+
+      await handler();
+    }
   }
 }

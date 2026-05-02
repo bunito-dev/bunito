@@ -1,142 +1,86 @@
-import { describe, expect, it } from 'bun:test';
+import { afterEach, describe, expect, it } from 'bun:test';
+import type { LogFormatter } from './formatters';
 import { LoggerService } from './logger.service';
 
+const originalWrite = process.stdout.write.bind(process.stdout);
+
+afterEach(() => {
+  process.stdout.write = originalWrite;
+});
+
 describe('LoggerService', () => {
-  describe('configure', () => {
-    it('configures a logger extension from registered extensions', async () => {
-      const extension = {
-        formatLog: (options: { message?: string }) =>
-          `formatted:${options.message ?? ''}`,
-      };
-      const container = {
-        getExtensions: () => [
-          {
-            providerId: Symbol.for('formatter'),
-            moduleId: Symbol.for('module'),
-            options: 'json',
-          },
-        ],
-        resolveProvider: async () => extension,
-      };
+  it('writes formatted logs when level is enabled', () => {
+    const writes: string[] = [];
+    process.stdout.write = ((chunk: string) => {
+      writes.push(chunk);
+      return true;
+    }) as typeof process.stdout.write;
 
-      const service = new LoggerService(
-        {
-          level: 'DEBUG',
-          format: 'json',
-        },
-        container as never,
-      );
+    const formatter: LogFormatter = {
+      logFormat: 'test',
+      formatLog: (options) => JSON.stringify(options),
+    };
+    const loggerService = new LoggerService(
+      {
+        level: 'DEBUG',
+        format: 'test',
+      },
+      [formatter],
+    );
 
-      await service.configure();
-
-      expect(service).toBeDefined();
+    loggerService.writeLog({
+      level: 'ERROR',
+      args: [new Error('Boom'), 'ignored message', { extra: true }],
+      context: 'Context',
+      traceId: 1,
     });
 
-    it('rejects missing and invalid logger extensions', async () => {
-      const missing = new LoggerService({ level: 'DEBUG', format: 'pretty' }, {
-        getExtensions: () => [],
-      } as never);
-
-      await expect(missing.configure()).rejects.toThrow(
-        'Logger format pretty not supported',
-      );
-
-      const invalid = new LoggerService({ level: 'DEBUG', format: 'pretty' }, {
-        getExtensions: () => [
-          {
-            providerId: Symbol.for('formatter'),
-            moduleId: Symbol.for('module'),
-            options: 'pretty',
-          },
-        ],
-        resolveProvider: async () => 'not-a-formatter',
-      } as never);
-
-      await expect(invalid.configure()).rejects.toThrow(
-        'not-a-formatter is not a valid LoggerExtension',
-      );
-    });
+    expect(writes).toHaveLength(1);
+    expect(writes[0]).toContain('"message":"Boom"');
+    expect(writes[0]).toContain('"context":"Context"');
+    expect(writes[0]).toContain('"data":["ignored message",{"extra":true}]');
   });
 
-  describe('writeLog', () => {
-    it('writes a formatted log to stdout when level is enabled', async () => {
-      const output: string[] = [];
-      const seen: unknown[] = [];
-      const extension = {
-        formatLog: (options: { message?: string; data?: unknown[] }) => {
-          seen.push(options);
-          return `formatted:${options.message ?? ''}`;
-        },
-      };
-      const container = {
-        getExtensions: () => [
-          {
-            providerId: Symbol.for('formatter'),
-            moduleId: Symbol.for('module'),
-            options: 'json',
-          },
-        ],
-        resolveProvider: async () => extension,
-      };
+  it('skips disabled levels and empty formatter output', () => {
+    const writes: string[] = [];
+    process.stdout.write = ((chunk: string) => {
+      writes.push(chunk);
+      return true;
+    }) as typeof process.stdout.write;
 
-      const service = new LoggerService(
-        {
-          level: 'DEBUG',
-          format: 'json',
-        },
-        container as never,
-      );
-
-      (service as unknown as { stdout: { write: (value: string) => void } }).stdout = {
-        write: (value: string) => {
-          output.push(value);
-        },
-      };
-
-      await service.configure();
-      service.writeLog({
-        level: 'INFO',
-        args: ['hello', new Error('boom'), { extra: true }],
-      });
-
-      expect(output).toEqual(['formatted:hello\n']);
-      expect(seen).toEqual([
-        expect.objectContaining({
-          message: 'hello',
-          error: expect.any(Error),
-          data: [{ extra: true }],
-        }),
-      ]);
-    });
-
-    it('skips logs below the configured level and missing formatted output', async () => {
-      const output: string[] = [];
-      const service = new LoggerService(
-        {
-          level: 'ERROR',
-          format: 'json',
-        },
-        {
-          getExtensions: () => [],
-        } as never,
-      );
-
-      (service as unknown as { stdout: { write: (value: string) => void } }).stdout = {
-        write: (value: string) => {
-          output.push(value);
-        },
-      };
-
-      service.writeLog({
-        level: 'INFO',
-        args: ['hidden'],
-      });
-      service.writeLog({
+    const formatter: LogFormatter = {
+      logFormat: 'test',
+      formatLog: () => '',
+    };
+    const loggerService = new LoggerService(
+      {
         level: 'ERROR',
-        args: ['visible-but-unformatted'],
-      });
+        format: 'test',
+      },
+      [formatter],
+    );
 
-      expect(output).toEqual([]);
+    loggerService.writeLog({
+      level: 'DEBUG',
+      args: ['debug'],
     });
+    loggerService.writeLog({
+      level: 'ERROR',
+      args: ['error'],
+    });
+
+    expect(writes).toEqual([]);
+  });
+
+  it('rejects unsupported formats', () => {
+    expect(() => {
+      new LoggerService(
+        {
+          level: 'INFO',
+          format: 'missing',
+        },
+        [],
+      );
+    }).toThrow('Logger format missing is not supported');
   });
 });

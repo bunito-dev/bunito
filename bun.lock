@@ -15,7 +15,6 @@
       "name": "example",
       "dependencies": {
         "@bunito/bunito": "workspace:*",
-        "@bunito/http": "workspace:*",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -30,19 +29,19 @@
       "name": "@bunito/bun",
       "version": "0.0.6",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.5",
-        "@bunito/config": "workspace:0.0.5",
-        "@bunito/container": "workspace:0.0.5",
+        "@bunito/common": "workspace:0.0.6",
+        "@bunito/config": "workspace:0.0.6",
+        "@bunito/container": "workspace:0.0.6",
       },
     },
     "packages/bunito": {
       "name": "@bunito/bunito",
       "version": "0.0.6",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.5",
-        "@bunito/config": "workspace:0.0.5",
-        "@bunito/container": "workspace:0.0.5",
-        "@bunito/logger": "workspace:0.0.5",
+        "@bunito/common": "workspace:0.0.6",
+        "@bunito/config": "workspace:0.0.6",
+        "@bunito/container": "workspace:0.0.6",
+        "@bunito/logger": "workspace:0.0.6",
       },
     },
     "packages/cli": {
@@ -52,7 +51,7 @@
         "bunito": "./src/cli.ts",
       },
       "dependencies": {
-        "@bunito/common": "workspace:0.0.5",
+        "@bunito/common": "workspace:0.0.6",
         "yargs": "18.0.0",
         "zod": "catalog:",
       },
@@ -71,6 +70,12 @@
         "@bunito/common": "workspace:0.0.6",
         "@bunito/container": "workspace:0.0.6",
       },
+      "devDependencies": {
+        "zod": "catalog:",
+      },
+      "optionalDependencies": {
+        "zod": "catalog:range",
+      },
     },
     "packages/container": {
       "name": "@bunito/container",
@@ -79,47 +84,13 @@
         "@bunito/common": "workspace:0.0.6",
       },
     },
-    "packages/di": {
-      "name": "@bunito/di",
-      "version": "0.0.6",
-      "dependencies": {
-        "@bunito/common": "workspace:0.0.6",
-      },
-    },
-    "packages/http": {
-      "name": "@bunito/http",
-      "version": "0.0.6",
-      "dependencies": {
-        "@bunito/common": "workspace:0.0.5",
-        "@bunito/config": "workspace:0.0.5",
-        "@bunito/container": "workspace:0.0.5",
-        "@bunito/logger": "workspace:0.0.5",
-        "@bunito/server": "workspace:0.0.5",
-      },
-      "devDependencies": {
-        "zod": "catalog:",
-      },
-      "optionalDependencies": {
-        "zod": "catalog:range",
-      },
-    },
     "packages/logger": {
       "name": "@bunito/logger",
       "version": "0.0.6",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.5",
-        "@bunito/config": "workspace:0.0.5",
-        "@bunito/container": "workspace:0.0.5",
-      },
-    },
-    "packages/server": {
-      "name": "@bunito/server",
-      "version": "0.0.6",
-      "dependencies": {
-        "@bunito/common": "workspace:0.0.5",
-        "@bunito/config": "workspace:0.0.5",
-        "@bunito/container": "workspace:0.0.5",
-        "@bunito/logger": "workspace:0.0.5",
+        "@bunito/common": "workspace:0.0.6",
+        "@bunito/config": "workspace:0.0.6",
+        "@bunito/container": "workspace:0.0.6",
       },
     },
   },
@@ -209,13 +180,7 @@
 
     "@bunito/container": ["@bunito/container@workspace:packages/container"],
 
-    "@bunito/di": ["@bunito/di@workspace:packages/di"],
-
-    "@bunito/http": ["@bunito/http@workspace:packages/http"],
-
     "@bunito/logger": ["@bunito/logger@workspace:packages/logger"],
-
-    "@bunito/server": ["@bunito/server@workspace:packages/server"],
 
     "@docsearch/css": ["@docsearch/css@3.8.2", "", {}, "sha512-y05ayQFyUmCXze79+56v/4HpycYF3uFqB78pLPrSV5ZKAlDuIAAJNhaRi8tTdRNXh05yxX/TyNnzD6LwSM89vQ=="],
 

@@ -1,157 +1,75 @@
 import * as process from 'node:process';
-import { ConfigurationException, isFn, isObject, isString } from '@bunito/common';
-import { Container, OnInit, Provider } from '@bunito/container';
-import type { ConfigExtension } from './config.extension';
-import { CONFIG_EXTENSION } from './constants';
-import type {
-  EnvKeyLike,
-  SecretKeyLike,
-  ValueFormat,
-  ValueNumberFormat,
-  ValueNumberOptions,
-  ValueParser,
-  ValueStringFormat,
-} from './types';
-import { formatValue } from './utils';
+import { isFn } from '@bunito/common';
+import { Provider } from '@bunito/container';
+import { ConfigHelper } from './helper';
+import { ConfigReader } from './reader';
+import type { ConfigEnvKey, ConfigFlag } from './types';
 
 @Provider({
   scope: 'singleton',
   global: true,
-  injects: [Container],
+  injects: [
+    {
+      useToken: ConfigReader,
+      optional: true,
+    },
+  ],
 })
 export class ConfigService {
-  readonly isCI: boolean;
+  private readonly flags: Record<ConfigFlag, boolean>;
 
-  readonly isProd: boolean;
+  constructor(private readonly readers: ConfigReader[] | null = null) {
+    const { NODE_ENV, CI } = process.env;
 
-  readonly isTest: boolean;
+    const nodeEnv = NODE_ENV?.toLowerCase() as typeof NODE_ENV;
 
-  readonly isDev: boolean;
+    const ci = CI?.toLowerCase() === 'true' || nodeEnv === 'ci';
+    const prod = nodeEnv === 'production' && !ci;
+    const test = nodeEnv === 'test' && !ci;
 
-  private readonly extensions: ConfigExtension[] = [];
-
-  constructor(private readonly container: Container) {
-    this.getEnv = this.getEnv.bind(this);
-
-    const envName = process.env.NODE_ENV?.toLowerCase();
-    const envCI = process.env.CI?.toLowerCase() === 'true';
-
-    this.isCI = envName === 'ci' || envCI;
-    this.isProd = envName === 'production';
-    this.isTest = envName === 'test';
-    this.isDev = !this.isCI && !this.isProd && !this.isTest;
+    this.flags = {
+      ci,
+      prod,
+      test,
+      dev: !ci && !prod && !test,
+    };
   }
 
-  @OnInit()
-  async configure(): Promise<void> {
-    for (const { providerId, moduleId } of this.container.getExtensions(
-      CONFIG_EXTENSION,
-    )) {
-      const extension = await this.container.resolveProvider<ConfigExtension>(
-        providerId,
-        {
-          moduleId,
-        },
-      );
-
-      if (!isObject(extension) || !isFn(extension.getSecret)) {
-        return ConfigurationException.throw`${extension} is not a valid ConfigExtension`;
-      }
-
-      this.extensions.push(extension);
-    }
+  createHelper(configName: string): ConfigHelper {
+    return new ConfigHelper(configName, this);
   }
 
-  getEnv(keyLike: EnvKeyLike): string | undefined;
-  getEnv(keyLike: EnvKeyLike, format: 'boolean'): boolean | undefined;
-  getEnv(keyLike: EnvKeyLike, format: 'port'): number | undefined;
-  getEnv(
-    keyLike: EnvKeyLike,
-    format: ValueNumberFormat,
-    options?: ValueNumberOptions,
-  ): number | undefined;
-  getEnv<TValue extends string>(
-    keyLike: EnvKeyLike,
-    format: ValueStringFormat,
-    options?: ArrayLike<string>,
-  ): TValue | undefined;
-  getEnv<TOutput = string>(
-    keyLike: EnvKeyLike,
-    parser: ValueParser<TOutput>,
-  ): TOutput | undefined;
-  getEnv(
-    keyLike: EnvKeyLike,
-    formatOrParser?: ValueFormat | ValueParser,
-    formatOptions?: unknown,
-  ): unknown {
-    return formatValue(this.getRawEnv(keyLike), formatOrParser, formatOptions);
+  getFlag(flag: ConfigFlag): boolean {
+    return this.flags[flag];
   }
 
-  getSecret(keyLike: SecretKeyLike): Promise<unknown>;
-  getSecret(keyLike: SecretKeyLike, format: 'boolean'): Promise<boolean | undefined>;
-  getSecret(keyLike: SecretKeyLike, format: 'port'): Promise<number | undefined>;
-  getSecret(
-    keyLike: SecretKeyLike,
-    format: ValueNumberFormat,
-    options?: ValueNumberOptions,
-  ): Promise<number | undefined>;
-  getSecret<TValue extends string>(
-    keyLike: SecretKeyLike,
-    format: ValueStringFormat,
-    options?: ArrayLike<string>,
-  ): Promise<TValue | undefined>;
-  getSecret<TOutput = string>(
-    keyLike: SecretKeyLike,
-    parser: ValueParser<TOutput>,
-  ): Promise<TOutput | undefined>;
-  async getSecret(
-    keyLike: SecretKeyLike,
-    formatOrParser?: ValueFormat | ValueParser,
-    formatOptions?: unknown,
-  ): Promise<unknown> {
-    return formatValue(await this.getRawSecret(keyLike), formatOrParser, formatOptions);
+  getEnv(key: ConfigEnvKey): string | undefined {
+    const value = process.env[key]?.trim();
+    return value ? value : undefined;
   }
 
-  private getRawEnv(keyLike: EnvKeyLike): string | undefined {
-    if (isString(keyLike)) {
-      return process.env[keyLike]?.trim();
-    }
-
-    if (Array.isArray(keyLike)) {
-      for (const key of keyLike) {
-        const value = this.getRawEnv(key);
-
-        if (value) {
-          return value;
-        }
-      }
-    }
+  getValue(key: string): Promise<unknown> {
+    return this.callReader('getValue', key);
   }
 
-  private async getRawSecret(keyLike: SecretKeyLike): Promise<unknown> {
-    if (!this.extensions.length) {
+  getSecret(key: string): Promise<unknown> {
+    return this.callReader('getSecret', key);
+  }
+
+  private async callReader(propKey: keyof ConfigReader, key: string): Promise<unknown> {
+    if (!this.readers) {
       return;
     }
 
-    if (isString(keyLike)) {
-      for (const extension of this.extensions) {
-        const secret = await extension.getSecret(keyLike);
-
-        if (secret !== undefined) {
-          return secret;
-        }
+    for (const reader of this.readers) {
+      if (!isFn(reader[propKey])) {
+        continue;
       }
 
-      return;
-    }
+      const value = await reader[propKey](key);
 
-    if (Array.isArray(keyLike)) {
-      for (const key of keyLike) {
-        const secret = await this.getRawSecret(key);
-
-        if (secret !== undefined) {
-          return secret;
-        }
+      if (value !== undefined) {
+        return value;
       }
     }
   }

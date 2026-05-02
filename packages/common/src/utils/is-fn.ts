@@ -1,4 +1,4 @@
-import type { Fn } from './types';
+import type { Fn } from '../types';
 
 export function isFn<TValue = unknown, TArgs extends unknown[] = unknown[]>(
   value: unknown,

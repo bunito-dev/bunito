@@ -1,4 +1,4 @@
-import { RuntimeException } from '@bunito/common';
+import { SecretsException } from '../secrets.exception';
 import type { SecretKey, SecretOptions } from '../types';
 
 export function parseSecretKey(
@@ -14,7 +14,7 @@ export function parseSecretKey(
 
   if (!service || !name) {
     if (throwOnUndefined) {
-      return RuntimeException.throw`Invalid bun secret key: ${key}. Expected format: <service>.<name>`;
+      return SecretsException.throw`Invalid Bun secret key: ${key}. Expected format: <service>.<name>`;
     }
 
     return;

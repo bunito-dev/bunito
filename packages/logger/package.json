@@ -29,6 +29,9 @@
     ".": "./src/index.ts",
     "./internals": "./src/internals.ts"
   },
+  "imports": {
+    "#internals": "./src/internals.ts"
+  },
   "files": [
     "src",
     "!src/**/*.test.ts",
@@ -37,8 +40,8 @@
   ],
   "dependencies": {
     "@bunito/common": "workspace:0.0.6",
-    "@bunito/container": "workspace:0.0.6",
-    "@bunito/config": "workspace:0.0.6"
+    "@bunito/config": "workspace:0.0.6",
+    "@bunito/container": "workspace:0.0.6"
   },
   "devDependencies": {},
   "engines": {

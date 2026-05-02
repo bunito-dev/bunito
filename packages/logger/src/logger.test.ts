@@ -1,158 +1,84 @@
 import { describe, expect, it } from 'bun:test';
+import { Id } from '@bunito/container/internals';
 import { Logger } from './logger';
+import type { LoggerService } from './logger.service';
+import type { WriteLogOptions } from './types';
+
+class Recorder implements Pick<LoggerService, 'writeLog'> {
+  readonly logs: WriteLogOptions[] = [];
+
+  writeLog(options: WriteLogOptions): void {
+    this.logs.push(options);
+  }
+}
 
 describe('Logger', () => {
-  describe('setContext', () => {
-    it('stores a resolved context for class and string values', () => {
-      const writes: unknown[] = [];
-      const logger = new Logger(
-        {
-          writeLog: (options: unknown) => {
-            writes.push(options);
-          },
-        } as never,
-        { index: 7 } as never,
-      );
+  it('sets context from class and string values', () => {
+    class ExampleContext {}
 
-      logger.setContext(Logger, 'Request');
-      logger.info('message');
-      logger.setContext('', 'ignored');
-      logger.info('message-2');
+    const recorder = new Recorder();
+    const logger = new Logger(recorder as unknown as LoggerService, Id.unique('Request'));
 
-      expect(writes).toEqual([
-        expect.objectContaining({
-          context: 'Logger(Request)',
-          traceId: 7,
-          level: 'INFO',
-          args: ['message'],
-        }),
-        expect.objectContaining({
-          context: 'Logger(Request)',
-          level: 'INFO',
-          args: ['message-2'],
-        }),
-      ]);
-    });
+    logger.setContext(ExampleContext, 'worker');
+    logger.info('message');
+    logger.setContext('Manual');
+    logger.ok('done');
+    logger.setContext('');
+    logger.warn('warn');
+
+    expect(recorder.logs[0]?.context).toBe('ExampleContext(worker)');
+    expect(recorder.logs[0]?.traceId).toBe(1);
+    expect(recorder.logs[1]?.context).toBe('Manual');
+    expect(recorder.logs[2]?.context).toBe('Manual');
   });
 
-  describe('debug', () => {
-    it('writes a debug log and returns the first argument', () => {
-      const writes: unknown[] = [];
-      const logger = new Logger(
-        {
-          writeLog: (options: unknown) => {
-            writes.push(options);
-          },
-        } as never,
-        { index: 7 } as never,
-      );
+  it('writes each direct log level and returns debug values', () => {
+    const recorder = new Recorder();
+    const logger = new Logger(recorder as unknown as LoggerService);
+    const debugValue = logger.debug({ value: true });
 
-      expect(logger.debug('debug-message')).toBe('debug-message');
-      expect(writes).toEqual([
-        expect.objectContaining({
-          level: 'DEBUG',
-          args: ['debug-message'],
-        }),
-      ]);
-    });
+    logger.fatal('fatal');
+    logger.error('error');
+    logger.warn('warn');
+    logger.info('info');
+    logger.ok('ok');
+    logger.verbose('verbose');
+
+    expect(debugValue).toEqual({ value: true });
+    expect(recorder.logs.map((log) => log.level)).toEqual([
+      'DEBUG',
+      'FATAL',
+      'ERROR',
+      'WARN',
+      'INFO',
+      'OK',
+      'VERBOSE',
+    ]);
   });
 
-  describe('trace', () => {
-    it('writes all trace levels with duration and returns the first debug argument', () => {
-      const writes: unknown[] = [];
-      const logger = new Logger(
-        {
-          writeLog: (options: unknown) => {
-            writes.push(options);
-          },
-        } as never,
-        { index: 7 } as never,
-      );
+  it('writes trace logs with duration and returns debug values', () => {
+    const recorder = new Recorder();
+    const logger = new Logger(recorder as unknown as LoggerService);
+    const trace = logger.trace();
 
-      const trace = logger.trace();
+    trace.fatal('fatal');
+    trace.error('error');
+    trace.warn('warn');
+    trace.info('info');
+    trace.ok('ok');
+    trace.verbose('verbose');
+    const debugValue = trace.debug('debug-value');
 
-      expect(trace.debug('trace-message')).toBe('trace-message');
-      trace.fatal('trace-fatal');
-      trace.error('trace-error');
-      trace.warn('trace-warn');
-      trace.info('trace-info');
-      trace.ok('trace-ok');
-      trace.verbose('trace-verbose');
-
-      expect(writes).toEqual([
-        expect.objectContaining({
-          level: 'DEBUG',
-          args: ['trace-message'],
-          duration: expect.any(Number),
-        }),
-        expect.objectContaining({
-          level: 'FATAL',
-          args: ['trace-fatal'],
-        }),
-        expect.objectContaining({
-          level: 'ERROR',
-          args: ['trace-error'],
-        }),
-        expect.objectContaining({
-          level: 'WARN',
-          args: ['trace-warn'],
-        }),
-        expect.objectContaining({
-          level: 'INFO',
-          args: ['trace-info'],
-        }),
-        expect.objectContaining({
-          level: 'OK',
-          args: ['trace-ok'],
-        }),
-        expect.objectContaining({
-          level: 'VERBOSE',
-          args: ['trace-verbose'],
-        }),
-      ]);
-    });
-  });
-
-  describe('log methods', () => {
-    it('writes each direct log level', () => {
-      const writes: unknown[] = [];
-      const logger = new Logger(
-        {
-          writeLog: (options: unknown) => {
-            writes.push(options);
-          },
-        } as never,
-        { index: 7 } as never,
-      );
-
-      logger.fatal('fatal');
-      logger.error('error');
-      logger.warn('warn');
-      logger.ok('ok');
-      logger.verbose('verbose');
-
-      expect(writes).toEqual([
-        expect.objectContaining({
-          level: 'FATAL',
-          args: ['fatal'],
-        }),
-        expect.objectContaining({
-          level: 'ERROR',
-          args: ['error'],
-        }),
-        expect.objectContaining({
-          level: 'WARN',
-          args: ['warn'],
-        }),
-        expect.objectContaining({
-          level: 'OK',
-          args: ['ok'],
-        }),
-        expect.objectContaining({
-          level: 'VERBOSE',
-          args: ['verbose'],
-        }),
-      ]);
-    });
+    expect(debugValue).toBe('debug-value');
+    expect(recorder.logs.map((log) => log.level)).toEqual([
+      'FATAL',
+      'ERROR',
+      'WARN',
+      'INFO',
+      'OK',
+      'VERBOSE',
+      'DEBUG',
+    ]);
+    expect(recorder.logs.every((log) => log.duration !== undefined)).toBeTrue();
   });
 });

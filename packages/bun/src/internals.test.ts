@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test';
-import { BunSecretsExtension, BunSecretsModule, parseSecretKey } from './internals';
+import { parseSecretKey, SecretsConfigReader, SecretsModule } from './internals';
 
-describe('bun internals', () => {
-  it('re-exports bun secret building blocks', () => {
-    expect(BunSecretsExtension).toBeFunction();
-    expect(BunSecretsModule).toBeFunction();
+describe('Bun internals', () => {
+  it('re-exports Bun secret building blocks', () => {
+    expect(SecretsConfigReader).toBeFunction();
+    expect(SecretsModule).toBeFunction();
     expect(parseSecretKey).toBeFunction();
   });
 });

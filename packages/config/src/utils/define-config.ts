@@ -34,7 +34,7 @@ export function defineConfig<TConfig extends RawObject>(
   if (!factory) {
     return {
       token,
-      useValue: config,
+      useValue: config as TConfig,
     };
   }
 
@@ -42,10 +42,10 @@ export function defineConfig<TConfig extends RawObject>(
     token,
     useFactory: async (configService: ConfigService | undefined) => {
       if (!configService) {
-        return config;
+        return config as TConfig;
       }
 
-      const result = (await factory(configService)) as RawObject;
+      const result = (await factory(configService.createHelper(name))) as RawObject;
 
       if (config) {
         for (const [key, value] of Object.entries(result)) {
@@ -55,12 +55,12 @@ export function defineConfig<TConfig extends RawObject>(
         }
       }
 
-      return result as TConfig | undefined;
+      return result as TConfig;
     },
     scope: 'singleton',
     injects: [
       {
-        token: ConfigService,
+        useToken: ConfigService,
         optional: true,
       },
     ],

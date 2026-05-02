@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { LOG_LEVELS, LOGGER_EXTENSION } from './constants';
-
-describe('LOGGER_EXTENSION', () => {
-  it('uses a symbol extension key', () => {
-    expect(LOGGER_EXTENSION).toBeSymbol();
-  });
-});
+import { LOG_LEVELS } from './constants';
 
 describe('LOG_LEVELS', () => {
   it('maps logger levels to numeric priorities', () => {

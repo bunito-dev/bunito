@@ -29,6 +29,9 @@
     ".": "./src/index.ts",
     "./tsconfig.json": "./tsconfig.json"
   },
+  "imports": {
+    "#index": "./src/index.ts"
+  },
   "files": [
     "src",
     "!src/**/*.test.ts",

@@ -1,36 +1,46 @@
 import { describe, expect, it } from 'bun:test';
+import { Module } from './module.decorator';
 import { Provider } from './provider.decorator';
-import { getDecoratorMetadata } from './utils';
+import { createExtensionDecorator, getProviderMetadata } from './utils';
+
+function Extension(options?: Parameters<typeof createExtensionDecorator>[1]) {
+  return createExtensionDecorator(Extension, options);
+}
 
 describe('Provider', () => {
   it('stores provider options on a class', () => {
-    @Provider({
-      scope: 'request',
-      injects: ['dependency'],
-    })
-    class TestProvider {}
+    @Provider({ scope: 'module', injects: ['dependency'] })
+    class ExampleProvider {}
 
-    expect(getDecoratorMetadata(TestProvider, 'provider')).toEqual({
-      options: {
-        scope: 'request',
-        injects: ['dependency'],
-      },
+    expect(getProviderMetadata(ExampleProvider)?.options).toEqual({
+      scope: 'module',
+      injects: ['dependency'],
     });
   });
 
-  it('keeps the latest provider options when applied more than once', () => {
-    @Provider({
-      injects: ['first'],
-    })
-    @Provider({
-      scope: 'request',
-    })
-    class TestProvider {}
+  it('rejects duplicate provider decorators and module conflicts', () => {
+    expect(() => {
+      @Provider()
+      @Provider()
+      class DuplicateProvider {}
 
-    expect(getDecoratorMetadata(TestProvider, 'provider')).toEqual({
-      options: {
-        injects: ['first'],
-      },
-    });
+      return DuplicateProvider;
+    }).toThrow('@Provider() decorator can only be applied once');
+
+    expect(() => {
+      @Provider()
+      @Module()
+      class ConflictingProvider {}
+
+      return ConflictingProvider;
+    }).toThrow('@Provider() decorator conflicts with @Module() decorator');
+
+    expect(() => {
+      @Provider()
+      @Extension()
+      class ExtensionConflict {}
+
+      return ExtensionConflict;
+    }).toThrow('@Provider() decorator conflicts with @Extension() decorator');
   });
 });

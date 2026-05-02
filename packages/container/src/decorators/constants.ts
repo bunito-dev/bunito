@@ -1,8 +1,5 @@
-export const DECORATOR_METADATA_KEYS = {
-  classOptions: Symbol('CLASS_OPTIONS'),
-  classProps: Symbol('CLASS_PROPS'),
-  components: Symbol('COMPONENTS'),
-  extension: Symbol('EXTENSION'),
-  module: Symbol('MODULE'),
-  provider: Symbol('PROVIDER'),
-} as const;
+export const PROVIDER_METADATA_KEY = Symbol('di(provider)');
+
+export const MODULE_METADATA_KEY = Symbol('di(module)');
+
+export const COMPONENT_METADATA_KEY = Symbol('di(component)');

@@ -5,14 +5,10 @@
   "scripts": {
     "cli": "bunito",
     "start:all": "bunito start",
-    "start:101-basics": "bunito start 101-basics",
-    "start:201-simple-controller": "bunito start 201-simple-controller",
-    "start:202-json-middleware": "bunito start 202-json-middleware",
-    "start:203-multiple-apis": "bunito start 203-multiple-apis"
+    "start:101-basics": "bunito start 101-basics"
   },
   "dependencies": {
     "@bunito/bunito": "workspace:*",
-    "@bunito/http": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

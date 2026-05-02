@@ -1,15 +1,24 @@
 import { defineConfig } from '@bunito/config';
 import { LOG_LEVELS } from './constants';
-import type { LogFormat, LogLevel } from './types';
+import type { LogLevelName } from './types';
 
 export const LoggerConfig = defineConfig<{
-  level: LogLevel;
-  format: LogFormat;
-}>('Logger', ({ isDev, getEnv }) => ({
-  level:
-    getEnv('LOG_LEVEL', 'toUpperCase', Object.keys(LOG_LEVELS)) ??
-    (isDev ? 'DEBUG' : 'INFO'),
-  format:
-    getEnv('LOG_FORMAT', 'toLowerCase') ?? //
-    (isDev ? 'pretty' : 'json'),
-}));
+  level: LogLevelName;
+  format: string;
+}>('Logger', ({ getFlag, getEnv }) => {
+  let format = getEnv('LOG_FORMAT', 'lowercase');
+  let level = getEnv('LOG_LEVEL', 'uppercase') as LogLevelName | undefined;
+
+  if (!format) {
+    format = getFlag('dev') ? 'pretty' : 'json';
+  }
+
+  if (!level || LOG_LEVELS[level] === undefined) {
+    level = getFlag('dev') ? 'DEBUG' : 'INFO';
+  }
+
+  return {
+    level,
+    format,
+  };
+});

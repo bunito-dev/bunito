@@ -1,41 +1,56 @@
-import type { Class, Fn } from '@bunito/common';
-import type { ModuleOptions, ProviderClassOptions, ProviderEvents } from '../types';
-import type { DECORATOR_METADATA_KEYS } from './constants';
+import type { Any, Class, Fn, MaybePromise } from '@bunito/common';
+import type {
+  ComponentOptions,
+  ModuleOptions,
+  ProviderClassOptions,
+  ProviderHandlerOptions,
+  ProviderScope,
+  WithInjections,
+} from '../compiler';
 
-export type ClassDecorator<TPattern extends Class = Class> = <TTarget extends TPattern>(
+export type ClassPropDecoratorContext =
+  | ClassMethodDecoratorContext
+  | ClassFieldDecoratorContext
+  | ClassDecoratorContext;
+
+export type ClassDecorator<TInstance = Any> = <TTarget extends Class<TInstance>>(
   target: TTarget,
   context: ClassDecoratorContext,
 ) => TTarget;
 
-export type ClassFieldDecorator<TPattern = unknown> = <TTarget extends TPattern>(
+export type ClassPropDecorator = <TTarget>(
   target: TTarget,
-  context: ClassFieldDecoratorContext,
-) => TTarget;
-
-export type ClassPropDecorator<TPattern = unknown> = <TTarget extends TPattern>(
-  target: TTarget,
-  context: ClassFieldDecoratorContext | ClassMethodDecoratorContext,
+  context: ClassPropDecoratorContext,
 ) => TTarget;
 
 export type ClassMethodDecorator<TPattern extends Fn = Fn> = <TTarget extends TPattern>(
   target: TTarget,
-  context: ClassFieldDecoratorContext | ClassMethodDecoratorContext,
+  context: ClassMethodDecoratorContext,
 ) => TTarget;
 
-export type DecoratorMetadataKind = keyof typeof DECORATOR_METADATA_KEYS;
+export type ClassFieldDecorator = <TTarget>(
+  target: TTarget,
+  context: ClassFieldDecoratorContext,
+) => TTarget;
 
-export type ProviderDecoratorOptions<TOmit extends keyof ProviderClassOptions = never> =
-  Omit<ProviderClassOptions, 'useClass' | TOmit>;
+export type ModuleDecoratorOptions = ModuleMetadata &
+  WithInjections<{
+    scope?: Extract<ProviderScope, 'singleton' | 'module'>;
+  }>;
+
+export type ModuleMetadata = Omit<ModuleOptions, 'token'>;
+
+export type ProviderDecoratorOptions = Omit<ProviderClassOptions, 'useClass' | 'token'>;
+
+export type ProviderHandlerDecorator = ClassMethodDecorator<Fn<MaybePromise<void>>>;
+export type ProviderHandlerDecoratorOptions = WithInjections;
 
 export type ProviderMetadata = {
+  decorator?: Fn;
   options?: ProviderDecoratorOptions;
-  events?: ProviderEvents;
+  handlers?: Map<Fn, ProviderHandlerOptions>;
 };
 
-export type ModuleDecoratorOptions = ModuleOptions &
-  Pick<ProviderDecoratorOptions, 'injects'>;
+export type ComponentMetadata = Map<Fn, ComponentOptions>;
 
-export type ExtensionMetadata<TOptions = unknown> = {
-  key: symbol;
-  options: TOptions;
-};
+export type ExtensionDecorator<TExtension> = ClassDecorator<TExtension>;

@@ -19,3 +19,6 @@ dist
 .eslintcache
 .cache
 *.tsbuildinfo
+
+# other
+draft

@@ -6,14 +6,11 @@ export type {
   RawObject,
 } from '@bunito/common';
 export {
-  ConfigurationException,
   Exception,
-  InternalException,
   isClass,
   isFn,
   isNumber,
   isObject,
   isString,
   isSymbol,
-  RuntimeException,
 } from '@bunito/common';

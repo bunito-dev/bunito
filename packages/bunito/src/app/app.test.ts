@@ -23,7 +23,7 @@ describe('App', () => {
     await app.shutdown();
   });
 
-  it('supports create/start and forwards logger context', async () => {
+  it('creates and starts apps while forwarding logger context', async () => {
     const contexts: unknown[] = [];
     const traceLogs: string[] = [];
 
@@ -118,6 +118,16 @@ describe('App', () => {
     );
 
     await appWithoutLogger.start();
-    expect(appWithoutLogger.start()).rejects.toThrow('App start cannot be called twice');
+    let repeatedStartError: unknown;
+    try {
+      await appWithoutLogger.start();
+    } catch (error) {
+      repeatedStartError = error;
+    }
+
+    expect(repeatedStartError).toBeInstanceOf(Error);
+    expect((repeatedStartError as Error).message).toBe(
+      'App start can only be called once',
+    );
   });
 });

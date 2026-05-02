@@ -17,14 +17,12 @@ describe('defineConfig', () => {
       scope: 'singleton',
       injects: [
         {
-          token: ConfigService,
+          useToken: ConfigService,
           optional: true,
         },
       ],
     });
-    const result = await config.useFactory({
-      getEnv: () => undefined,
-    } as never);
+    const result = await config.useFactory(new ConfigService());
 
     expect(result).toEqual({
       enabled: true,
@@ -75,9 +73,7 @@ describe('defineConfig', () => {
       throw new Error('Expected config factory provider');
     }
 
-    const result = await config.useFactory({
-      getEnv: () => undefined,
-    } as never);
+    const result = await config.useFactory(new ConfigService());
 
     expect(result).toEqual({
       enabled: true,

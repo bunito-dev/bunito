@@ -1,1 +1,1 @@
-export { BunSecretsExtension, BunSecretsModule } from './secrets';
+export { SecretsModule, SecretsService } from './secrets';
