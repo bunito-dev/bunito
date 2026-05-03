@@ -8,7 +8,7 @@ import type { FormatLogOptions } from './types';
 export interface LogFormatter {
   readonly logFormat: string;
 
-  formatLog(params: FormatLogOptions): string;
+  formatLog: (params: FormatLogOptions) => string;
 }
 
 export function LogFormatter(

@@ -29,9 +29,6 @@
     ".": "./src/index.ts",
     "./tsconfig.json": "./tsconfig.json"
   },
-  "imports": {
-    "#index": "./src/index.ts"
-  },
   "files": [
     "src",
     "!src/**/*.test.ts",
@@ -40,6 +37,7 @@
     "tsconfig.json"
   ],
   "dependencies": {
+    "@bunito/app": "workspace:0.0.6",
     "@bunito/common": "workspace:0.0.6",
     "@bunito/config": "workspace:0.0.6",
     "@bunito/container": "workspace:0.0.6",

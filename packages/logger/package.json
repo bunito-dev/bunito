@@ -29,9 +29,6 @@
     ".": "./src/index.ts",
     "./internals": "./src/internals.ts"
   },
-  "imports": {
-    "#internals": "./src/internals.ts"
-  },
   "files": [
     "src",
     "!src/**/*.test.ts",
