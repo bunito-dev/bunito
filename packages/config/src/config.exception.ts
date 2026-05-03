@@ -6,4 +6,9 @@ export class ConfigException extends Exception {
 
     this.name = 'ConfigException';
   }
+
+  setContext(context: string): this {
+    this.message = `${context}: ${this.message}`;
+    return this;
+  }
 }

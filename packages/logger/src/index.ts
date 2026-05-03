@@ -1,3 +1,5 @@
+import './globals';
+
 export { Logger } from './logger';
 export { LoggerException } from './logger.exception';
 export { LoggerModule } from './logger.module';

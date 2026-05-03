@@ -5,11 +5,22 @@ import { LoggerConfig } from './logger.config';
 const originalEnv = { ...process.env };
 
 afterEach(() => {
-  process.env.NODE_ENV = originalEnv.NODE_ENV;
-  process.env.CI = originalEnv.CI;
-  process.env.LOG_FORMAT = originalEnv.LOG_FORMAT;
-  process.env.LOG_LEVEL = originalEnv.LOG_LEVEL;
+  restoreEnv('NODE_ENV');
+  restoreEnv('CI');
+  restoreEnv('LOG_FORMAT');
+  restoreEnv('LOG_LEVEL');
 });
+
+function restoreEnv(key: string): void {
+  const value = originalEnv[key];
+
+  if (value === undefined) {
+    delete process.env[key];
+    return;
+  }
+
+  process.env[key] = value;
+}
 
 describe('LoggerConfig', () => {
   it('resolves explicit environment values', async () => {
@@ -35,8 +46,8 @@ describe('LoggerConfig', () => {
     }
 
     process.env.NODE_ENV = 'development';
-    process.env.LOG_FORMAT = undefined;
-    process.env.LOG_LEVEL = 'unknown';
+    delete process.env.LOG_FORMAT;
+    delete process.env.LOG_LEVEL;
     const devConfig = await LoggerConfig.useFactory(new ConfigService());
 
     process.env.NODE_ENV = 'production';
@@ -50,5 +61,27 @@ describe('LoggerConfig', () => {
       format: 'json',
       level: 'INFO',
     });
+  });
+
+  it('rejects invalid log levels from the environment', async () => {
+    if (!('useFactory' in LoggerConfig)) {
+      throw new Error('Expected LoggerConfig factory provider');
+    }
+
+    process.env.LOG_LEVEL = 'unknown';
+
+    let error: unknown;
+    try {
+      await LoggerConfig.useFactory(new ConfigService());
+    } catch (err) {
+      error = err;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe(
+      'Logger: Failed to process config LOG_LEVEL env',
+    );
+    expect((error as Error).cause).toBeInstanceOf(Error);
+    expect(((error as Error).cause as Error).message).toBe('Invalid log level: UNKNOWN');
   });
 });

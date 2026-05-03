@@ -1,15 +1,6 @@
 import type { LOG_LEVELS } from './constants';
 import type { Logger } from './logger';
 
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      LOG_LEVEL?: string;
-      LOG_FORMAT?: string;
-    }
-  }
-}
-
 export type TraceLogger = Omit<Logger, 'trace' | 'setContext'>;
 
 export type LogLevelName = keyof typeof LOG_LEVELS;

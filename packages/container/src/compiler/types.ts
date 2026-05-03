@@ -1,15 +1,6 @@
 import type { Any, Class, Fn, WithBase } from '@bunito/common';
 import type { Id, Token, TokenLike } from '../utils';
 
-declare global {
-  namespace Bunito {
-    interface ModuleProviders {
-      providers: ProviderLike[];
-      extensions: ProviderLike[];
-    }
-  }
-}
-
 // modules
 
 export type ModuleId = Id;

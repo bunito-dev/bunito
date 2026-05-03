@@ -1,3 +1,5 @@
+import './globals';
+
 export type {
   Injections,
   ModuleId,

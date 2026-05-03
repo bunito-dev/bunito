@@ -1,3 +1,5 @@
+import './globals';
+
 export * from './compiler';
 export * from './container';
 export * from './container.exception';

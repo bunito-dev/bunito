@@ -5,9 +5,20 @@ import { PrettyConfig } from './pretty.config';
 const originalEnv = { ...process.env };
 
 afterEach(() => {
-  process.env.DISABLE_LOG_COLORS = originalEnv.DISABLE_LOG_COLORS;
-  process.env.LOG_INSPECT_DEPTH = originalEnv.LOG_INSPECT_DEPTH;
+  restoreEnv('DISABLE_LOG_COLORS');
+  restoreEnv('LOG_INSPECT_DEPTH');
 });
+
+function restoreEnv(key: string): void {
+  const value = originalEnv[key];
+
+  if (value === undefined) {
+    delete process.env[key];
+    return;
+  }
+
+  process.env[key] = value;
+}
 
 describe('PrettyConfig', () => {
   it('resolves pretty logger configuration from environment', async () => {
@@ -30,8 +41,8 @@ describe('PrettyConfig', () => {
       throw new Error('Expected PrettyConfig factory provider');
     }
 
-    process.env.DISABLE_LOG_COLORS = undefined;
-    process.env.LOG_INSPECT_DEPTH = undefined;
+    delete process.env.DISABLE_LOG_COLORS;
+    delete process.env.LOG_INSPECT_DEPTH;
     const config = await PrettyConfig.useFactory(new ConfigService());
 
     expect(config).toEqual({

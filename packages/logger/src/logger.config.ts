@@ -1,24 +1,22 @@
-import { defineConfig } from '@bunito/config';
+import { ConfigException, defineConfig } from '@bunito/config';
 import { LOG_LEVELS } from './constants';
 import type { LogLevelName } from './types';
 
-export const LoggerConfig = defineConfig<{
+export const LoggerConfig = defineConfig(function Logger({ whenDev, getEnv }): {
   level: LogLevelName;
   format: string;
-}>('Logger', ({ getFlag, getEnv }) => {
-  let format = getEnv('LOG_FORMAT', 'lowercase');
-  let level = getEnv('LOG_LEVEL', 'uppercase') as LogLevelName | undefined;
-
-  if (!format) {
-    format = getFlag('dev') ? 'pretty' : 'json';
-  }
-
-  if (!level || LOG_LEVELS[level] === undefined) {
-    level = getFlag('dev') ? 'DEBUG' : 'INFO';
-  }
-
+} {
   return {
-    level,
-    format,
+    level:
+      getEnv('LOG_LEVEL', 'uppercase', (value: string): LogLevelName => {
+        const level = value as LogLevelName;
+
+        if (!LOG_LEVELS[level]) {
+          throw new ConfigException(`Invalid log level: ${level}`);
+        }
+
+        return level;
+      }) ?? whenDev('DEBUG', 'INFO'),
+    format: getEnv('LOG_FORMAT', 'lowercase') ?? whenDev('pretty', 'json'),
   };
 });

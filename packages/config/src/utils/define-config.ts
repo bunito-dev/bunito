@@ -1,37 +1,58 @@
 import type { RawObject } from '@bunito/common';
-import { isFn, isObject } from '@bunito/common';
+import { assignNonNullish, isFn, isObject, isString } from '@bunito/common';
+import { ConfigException } from '../config.exception';
 import { ConfigService } from '../config.service';
-import type { ConfigFactory, ConfigProviderOptions } from '../types';
+import type { ConfigBuilder, ConfigProvider } from '../types';
 
 export function defineConfig<TConfig extends RawObject>(
-  name: string,
+  builder: ConfigBuilder<Partial<TConfig>>,
   config: TConfig,
-  factory?: ConfigFactory<Partial<TConfig>>,
-): ConfigProviderOptions<TConfig>;
+): ConfigProvider<TConfig>;
+export function defineConfig<TConfig extends RawObject>(
+  builder: ConfigBuilder<TConfig>,
+): ConfigProvider<TConfig>;
 export function defineConfig<TConfig extends RawObject>(
   name: string,
-  factory: ConfigFactory<TConfig>,
-): ConfigProviderOptions<TConfig>;
+  builder: ConfigBuilder<Partial<TConfig>>,
+  config: TConfig,
+): ConfigProvider<TConfig>;
 export function defineConfig<TConfig extends RawObject>(
   name: string,
-  configOrFactory: ConfigFactory<TConfig> | TConfig,
-  optionalFactory?: ConfigFactory<Partial<TConfig>>,
-): ConfigProviderOptions<TConfig> {
-  const token = Symbol(`config(${name})`);
-
+  configOrBuilder: TConfig | ConfigBuilder<TConfig>,
+): ConfigProvider<TConfig>;
+export function defineConfig<TConfig extends RawObject>(
+  ...args: unknown[]
+): ConfigProvider<TConfig> {
+  let name: string | undefined;
   let config: TConfig | undefined;
-  let factory: ConfigFactory<Partial<TConfig>> | undefined;
+  let builder: ConfigBuilder<TConfig> | undefined;
 
-  if (isObject(configOrFactory)) {
-    config = configOrFactory as TConfig;
-    if (isFn(optionalFactory)) {
-      factory = optionalFactory;
+  for (const arg of args) {
+    if (isString(arg, false)) {
+      name = arg;
+      continue;
     }
-  } else if (isFn(configOrFactory)) {
-    factory = configOrFactory;
+
+    if (isObject(arg)) {
+      config = arg as TConfig;
+      continue;
+    }
+
+    if (isFn(arg)) {
+      if (!name) {
+        name = arg.name;
+      }
+      builder = arg as ConfigBuilder<TConfig>;
+    }
   }
 
-  if (!factory) {
+  if (!name) {
+    return ConfigException.throw`Unnamed config detected`;
+  }
+
+  const token = Symbol(`config(${name})`);
+
+  if (!builder) {
     return {
       token,
       useValue: config as TConfig,
@@ -45,17 +66,20 @@ export function defineConfig<TConfig extends RawObject>(
         return config as TConfig;
       }
 
-      const result = (await factory(configService.createHelper(name))) as RawObject;
-
-      if (config) {
-        for (const [key, value] of Object.entries(result)) {
-          if (value === undefined) {
-            result[key] = config[key];
-          }
+      try {
+        return assignNonNullish(
+          {
+            ...(config ?? {}),
+          } as TConfig,
+          await builder.call(configService, configService),
+        );
+      } catch (err) {
+        if (ConfigException.isInstance(err)) {
+          throw err.setContext(name);
         }
-      }
 
-      return result as TConfig;
+        throw new ConfigException(`Failed to build config`, err).setContext(name);
+      }
     },
     scope: 'singleton',
     injects: [
