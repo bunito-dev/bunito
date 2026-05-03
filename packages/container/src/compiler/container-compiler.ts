@@ -15,6 +15,8 @@ import { Id } from '../utils';
 import type {
   ComponentDefinition,
   ComponentId,
+  ComponentKey,
+  MatchedComponents,
   ModuleId,
   ModuleLike,
   ModuleNode,
@@ -79,6 +81,54 @@ export class ContainerCompiler {
 
     if (!result && orThrow) {
       return ContainerException.throw`Component ${componentId} was not found`;
+    }
+
+    return result;
+  }
+
+  locateComponents(
+    componentKey: ComponentKey,
+    moduleId = this.rootModuleId,
+  ): MatchedComponents | undefined {
+    let result: MatchedComponents | undefined;
+
+    const { children, components } = this.getModule(moduleId);
+
+    if (components) {
+      for (const componentId of components) {
+        const component = this.getComponent(componentId);
+        const options = component.options.get(componentKey);
+        if (!options) {
+          continue;
+        }
+
+        result ??= { moduleId };
+        result.components ??= [];
+        result.components.push(
+          'useProvider' in component
+            ? {
+                useProvider: component.useProvider,
+                options,
+              }
+            : {
+                useClass: component.useClass,
+                options,
+              },
+        );
+      }
+    }
+
+    if (children) {
+      for (const childId of children) {
+        const child = this.locateComponents(componentKey, childId);
+        if (!child) {
+          continue;
+        }
+
+        result ??= { moduleId };
+        result.children ??= [];
+        result.children.push(child);
+      }
     }
 
     return result;

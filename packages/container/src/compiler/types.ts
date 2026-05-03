@@ -146,3 +146,23 @@ export type ComponentDefinition = WithBase<
   { useClass: Class },
   { useProvider: ProviderId }
 >;
+
+export type ComponentEntity<
+  TOptions = unknown,
+  TPropOptions extends ComponentPropSchema = ComponentPropSchema,
+> = WithBase<
+  {
+    options: ComponentOptions<TOptions, TPropOptions>;
+  },
+  { useClass: Class },
+  { useProvider: ProviderId }
+>;
+
+export type MatchedComponents<
+  TOptions = unknown,
+  TPropOptions extends ComponentPropSchema = ComponentPropSchema,
+> = {
+  moduleId: ModuleId;
+  components?: ComponentEntity<TOptions, TPropOptions>[];
+  children?: MatchedComponents<TOptions, TPropOptions>[];
+};

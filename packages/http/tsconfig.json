@@ -1,0 +1,3 @@
+{
+  "extends": "@bunito/common/tsconfig.json"
+}

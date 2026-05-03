@@ -5,10 +5,12 @@
   "scripts": {
     "cli": "bunito",
     "start:all": "bunito start",
-    "start:101-basics": "bunito start 101-basics"
+    "start:101-basics": "bunito start 101-basics",
+    "start:201-routing": "bunito start 201-routing"
   },
   "dependencies": {
     "@bunito/bunito": "workspace:*",
+    "@bunito/http": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

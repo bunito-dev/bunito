@@ -1,5 +1,12 @@
 import type { Fn } from '@bunito/common';
-import type { Injections, ModuleLike } from './compiler';
+import type {
+  ComponentKey,
+  ComponentPropSchema,
+  Injections,
+  MatchedComponents,
+  ModuleId,
+  ModuleLike,
+} from './compiler';
 import { ContainerCompiler } from './compiler';
 import type { RequestId, ResolveProviderOptions } from './runtime';
 import { ContainerRuntime } from './runtime';
@@ -95,5 +102,18 @@ export class Container {
 
       await handler();
     }
+  }
+
+  locateComponents<
+    TOptions = unknown,
+    TPropOptions extends ComponentPropSchema = ComponentPropSchema,
+  >(
+    componentKey: ComponentKey,
+    moduleId?: ModuleId,
+  ): MatchedComponents<TOptions, TPropOptions> | undefined {
+    return this.compiler.locateComponents(componentKey, moduleId) as MatchedComponents<
+      TOptions,
+      TPropOptions
+    >;
   }
 }

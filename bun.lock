@@ -15,6 +15,7 @@
       "name": "example",
       "dependencies": {
         "@bunito/bunito": "workspace:*",
+        "@bunito/http": "workspace:*",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -95,6 +96,17 @@
       "version": "0.0.6",
       "dependencies": {
         "@bunito/common": "workspace:0.0.6",
+      },
+    },
+    "packages/http": {
+      "name": "@bunito/http",
+      "version": "0.0.6",
+      "dependencies": {
+        "@bunito/bun": "workspace:0.0.6",
+        "@bunito/common": "workspace:0.0.6",
+        "@bunito/config": "workspace:0.0.6",
+        "@bunito/container": "workspace:0.0.6",
+        "@bunito/logger": "workspace:0.0.6",
       },
     },
     "packages/logger": {
@@ -194,6 +206,8 @@
     "@bunito/config": ["@bunito/config@workspace:packages/config"],
 
     "@bunito/container": ["@bunito/container@workspace:packages/container"],
+
+    "@bunito/http": ["@bunito/http@workspace:packages/http"],
 
     "@bunito/logger": ["@bunito/logger@workspace:packages/logger"],
 

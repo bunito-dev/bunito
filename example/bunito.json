@@ -2,6 +2,9 @@
   "apps": {
     "101-basics": {
       "entry": "apps/101-basics/main.ts"
+    },
+    "201-routing": {
+      "entry": "apps/201-routing/main.ts"
     }
   }
 }
