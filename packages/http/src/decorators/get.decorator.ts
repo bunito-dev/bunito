@@ -8,8 +8,8 @@ export function Get(
 ): RouteDecorator;
 export function Get(options?: RouteDecoratorOptions<'method'>): RouteDecorator;
 export function Get(
-  pathOrOptions?: HTTPPath | RouteDecoratorOptions,
-  extraOptions?: RouteDecoratorOptions<'path'>,
+  pathOrOptions?: HTTPPath | RouteDecoratorOptions<'method'>,
+  extraOptions?: RouteDecoratorOptions<'path' | 'method'>,
 ): RouteDecorator {
   return createRouteDecorator(Get, 'GET', pathOrOptions, extraOptions);
 }

@@ -1,1 +1,1 @@
-export * from './json.log-formatter';
+export * from './json-formatter';

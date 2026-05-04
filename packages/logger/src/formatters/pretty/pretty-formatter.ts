@@ -5,16 +5,16 @@ import type { ResolveConfig } from '@bunito/config';
 import { LogFormatter } from '../log-formatter';
 import type { FormatLogOptions } from '../types';
 import { PRETTY_LEVEL_THEMES } from './constants';
-import { PrettyConfig } from './pretty.config';
+import { PrettyFormatterConfig } from './pretty-formatter.config';
 import { formatDuration, formatTimestamp } from './utils';
 
 @LogFormatter({
-  injects: [PrettyConfig],
+  injects: [PrettyFormatterConfig],
 })
-export class PrettyLogFormatter implements LogFormatter {
+export class PrettyFormatter implements LogFormatter {
   readonly logFormat = 'pretty';
 
-  constructor(private readonly config: ResolveConfig<typeof PrettyConfig>) {}
+  constructor(private readonly config: ResolveConfig<typeof PrettyFormatterConfig>) {}
 
   formatLog(options: FormatLogOptions): string {
     const { timestamp, context, level, message, data, error, traceId, duration } =

@@ -8,8 +8,8 @@ export function Post(
 ): RouteDecorator;
 export function Post(options?: RouteDecoratorOptions<'method'>): RouteDecorator;
 export function Post(
-  pathOrOptions?: HTTPPath | RouteDecoratorOptions,
-  extraOptions?: RouteDecoratorOptions<'path'>,
+  pathOrOptions?: HTTPPath | RouteDecoratorOptions<'method'>,
+  extraOptions?: RouteDecoratorOptions<'path' | 'method'>,
 ): RouteDecorator {
   return createRouteDecorator(Post, 'POST', pathOrOptions, extraOptions);
 }

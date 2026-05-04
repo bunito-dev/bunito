@@ -11,11 +11,11 @@ export function Controller(): ClassDecorator;
 export function Controller(options: ControllerDecoratorOptions): ClassDecorator;
 export function Controller(
   prefix: HTTPPath,
-  providerOptions?: ProviderDecoratorOptions,
+  providerOptions?: Omit<ProviderDecoratorOptions, 'global'>,
 ): ClassDecorator;
 export function Controller(
   prefixOrOptions?: HTTPPath | ControllerDecoratorOptions,
-  extraOptions?: ProviderDecoratorOptions,
+  extraOptions?: Omit<ProviderDecoratorOptions, 'global'>,
 ): ClassDecorator {
   let prefix: HTTPPath;
   let providerOptions: ProviderDecoratorOptions;

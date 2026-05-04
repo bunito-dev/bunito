@@ -1,4 +1,4 @@
-import { isFn, isString } from '@bunito/common';
+import { isFn, isObject, isString } from '@bunito/common';
 import type { RequestId } from '@bunito/container';
 import { Provider, REQUEST_ID } from '@bunito/container';
 import { LoggerService } from './logger.service';
@@ -27,13 +27,15 @@ export class Logger {
     this.traceId = requestId?.index;
   }
 
-  setContext(contextLike: string | { name: string }, description?: string): void {
+  setContext(contextLike: unknown, description?: string): void {
     let context: string | undefined;
 
     if (isFn(contextLike)) {
       context = contextLike.name;
     } else if (isString(contextLike, true)) {
       context = contextLike;
+    } else if (isObject(contextLike)) {
+      context = `${contextLike}`;
     }
 
     if (context) {

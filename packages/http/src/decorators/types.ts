@@ -7,9 +7,10 @@ import type { ControllerOptions, RouteOptions } from '../types';
 
 export type RouteDecorator = ClassMethodDecorator<Fn<MaybePromise>>;
 
-export type RouteDecoratorOptions<TOmit extends keyof RouteOptions = never> = Optional<
-  RouteOptions,
+export type RouteDecoratorOptions<TOmit extends keyof RouteOptions = never> = Omit<
+  Optional<RouteOptions, 'method'>,
   TOmit
 >;
 
-export type ControllerDecoratorOptions = ControllerOptions & ProviderDecoratorOptions;
+export type ControllerDecoratorOptions = ControllerOptions &
+  Omit<ProviderDecoratorOptions, 'global'>;

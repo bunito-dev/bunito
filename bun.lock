@@ -108,6 +108,12 @@
         "@bunito/container": "workspace:0.0.6",
         "@bunito/logger": "workspace:0.0.6",
       },
+      "devDependencies": {
+        "zod": "catalog:",
+      },
+      "optionalDependencies": {
+        "zod": "catalog:range",
+      },
     },
     "packages/logger": {
       "name": "@bunito/logger",

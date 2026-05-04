@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'bun:test';
 import { ConfigService } from '@bunito/config/internals';
-import { PrettyConfig } from './pretty.config';
+import { PrettyFormatterConfig } from './pretty-formatter.config';
 
 const originalEnv = { ...process.env };
 
@@ -20,15 +20,15 @@ function restoreEnv(key: string): void {
   process.env[key] = value;
 }
 
-describe('PrettyConfig', () => {
+describe('PrettyFormatterConfig', () => {
   it('resolves pretty logger configuration from environment', async () => {
-    if (!('useFactory' in PrettyConfig)) {
-      throw new Error('Expected PrettyConfig factory provider');
+    if (!('useFactory' in PrettyFormatterConfig)) {
+      throw new Error('Expected PrettyFormatterConfig factory provider');
     }
 
     process.env.DISABLE_LOG_COLORS = 'true';
     process.env.LOG_INSPECT_DEPTH = '3';
-    const config = await PrettyConfig.useFactory(new ConfigService());
+    const config = await PrettyFormatterConfig.useFactory(new ConfigService());
 
     expect(config).toEqual({
       disableColor: true,
@@ -37,13 +37,13 @@ describe('PrettyConfig', () => {
   });
 
   it('falls back to defaults', async () => {
-    if (!('useFactory' in PrettyConfig)) {
-      throw new Error('Expected PrettyConfig factory provider');
+    if (!('useFactory' in PrettyFormatterConfig)) {
+      throw new Error('Expected PrettyFormatterConfig factory provider');
     }
 
     delete process.env.DISABLE_LOG_COLORS;
     delete process.env.LOG_INSPECT_DEPTH;
-    const config = await PrettyConfig.useFactory(new ConfigService());
+    const config = await PrettyFormatterConfig.useFactory(new ConfigService());
 
     expect(config).toEqual({
       disableColor: false,

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test';
-import { JSONLogFormatter } from './json.log-formatter';
+import { JSONFormatter } from './json-formatter';
 
-describe('JSONLogFormatter', () => {
+describe('JSONFormatter', () => {
   it('formats log options as structured JSON records', () => {
     const error = new Error('Boom');
-    const formatter = new JSONLogFormatter();
+    const formatter = new JSONFormatter();
     const output = formatter.formatLog({
       level: {
         name: 'ERROR',

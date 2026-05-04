@@ -11,7 +11,7 @@ export function UseMiddleware<TMiddleware extends Class<Middleware>>(
 ): ClassDecorator {
   return createComponentDecorator<ClassDecorator, ControllerClassOptions>(
     Controller,
-    { kind: 'middleware', middleware, options },
+    { kind: 'middleware', middleware, options: options ?? {} },
     UseMiddleware,
   );
 }

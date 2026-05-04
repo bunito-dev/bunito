@@ -8,8 +8,8 @@ export function Delete(
 ): RouteDecorator;
 export function Delete(options?: RouteDecoratorOptions<'method'>): RouteDecorator;
 export function Delete(
-  pathOrOptions?: HTTPPath | RouteDecoratorOptions,
-  extraOptions?: RouteDecoratorOptions<'path'>,
+  pathOrOptions?: HTTPPath | RouteDecoratorOptions<'method'>,
+  extraOptions?: RouteDecoratorOptions<'path' | 'method'>,
 ): RouteDecorator {
   return createRouteDecorator(Delete, 'DELETE', pathOrOptions, extraOptions);
 }

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import { ConfigReader } from '@bunito/config/internals';
 import { getProviderMetadata } from '@bunito/container/internals';
-import { SecretsConfigReader } from './secrets.config-reader';
 import { SecretsService } from './secrets.service';
+import { SecretsConfigReader } from './secrets-config-reader';
 
 describe('SecretsConfigReader', () => {
   it('registers as a config reader and delegates secret lookup', async () => {

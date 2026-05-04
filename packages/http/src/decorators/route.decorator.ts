@@ -11,5 +11,5 @@ export function Route(
   pathOrOptions?: HTTPPath | RouteDecoratorOptions,
   extraOptions?: RouteDecoratorOptions<'path'>,
 ): RouteDecorator {
-  return createRouteDecorator(Route, undefined, pathOrOptions, extraOptions);
+  return createRouteDecorator(Route, 'ALL', pathOrOptions, extraOptions);
 }

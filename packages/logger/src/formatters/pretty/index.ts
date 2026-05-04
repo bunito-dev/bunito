@@ -1,3 +1,3 @@
 export * from './constants';
-export * from './pretty.config';
-export * from './pretty.log-formatter';
+export * from './pretty-formatter';
+export * from './pretty-formatter.config';

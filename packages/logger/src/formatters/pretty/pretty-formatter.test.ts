@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test';
-import { PrettyLogFormatter } from './pretty.log-formatter';
+import { PrettyFormatter } from './pretty-formatter';
 
-describe('PrettyLogFormatter', () => {
+describe('PrettyFormatter', () => {
   it('formats readable log output without colors', () => {
-    const formatter = new PrettyLogFormatter({
+    const formatter = new PrettyFormatter({
       disableColor: true,
       inspectDepth: 3,
     });
@@ -31,7 +31,7 @@ describe('PrettyLogFormatter', () => {
   });
 
   it('includes inspected errors and supports colored output path', () => {
-    const formatter = new PrettyLogFormatter({
+    const formatter = new PrettyFormatter({
       disableColor: false,
       inspectDepth: 1,
     });

@@ -21,6 +21,8 @@ export type MaybePromise<TValue = unknown> = Promise<TValue> | TValue;
 
 export type RawObject<TValue = unknown> = Record<string, TValue>;
 
+export type EmptyObject = Record<never, never>;
+
 export type WithBase<
   TBase extends RawObject,
   T1 extends RawObject,

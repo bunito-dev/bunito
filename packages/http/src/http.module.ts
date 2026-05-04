@@ -1,9 +1,11 @@
 import { ServerModule } from '@bunito/bun';
 import { Module } from '@bunito/container';
-import { HttpRouter } from './http.router';
+import { HTTPRouter } from './http-router';
+import { HTTPRouterConfig } from './http-router.config';
 
 @Module({
   imports: [ServerModule],
-  extensions: [HttpRouter],
+  configs: [HTTPRouterConfig],
+  extensions: [HTTPRouter],
 })
-export class HttpModule {}
+export class HTTPModule {}

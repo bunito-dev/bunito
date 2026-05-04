@@ -8,8 +8,8 @@ export function Put(
 ): RouteDecorator;
 export function Put(options?: RouteDecoratorOptions<'method'>): RouteDecorator;
 export function Put(
-  pathOrOptions?: HTTPPath | RouteDecoratorOptions,
-  extraOptions?: RouteDecoratorOptions<'path'>,
+  pathOrOptions?: HTTPPath | RouteDecoratorOptions<'method'>,
+  extraOptions?: RouteDecoratorOptions<'path' | 'method'>,
 ): RouteDecorator {
   return createRouteDecorator(Put, 'PUT', pathOrOptions, extraOptions);
 }

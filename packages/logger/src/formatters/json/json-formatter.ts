@@ -2,7 +2,7 @@ import { LogFormatter } from '../log-formatter';
 import type { FormatLogOptions } from '../types';
 
 @LogFormatter()
-export class JSONLogFormatter implements LogFormatter {
+export class JSONFormatter implements LogFormatter {
   private static nextId = 1;
 
   readonly logFormat = 'json';
@@ -20,7 +20,7 @@ export class JSONLogFormatter implements LogFormatter {
     } = options;
 
     const record: Record<string, unknown> = {
-      id: JSONLogFormatter.nextId++,
+      id: JSONFormatter.nextId++,
       level: level.value,
       context,
       traceId,

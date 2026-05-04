@@ -3,8 +3,8 @@ import { isObject, isString } from '@bunito/common';
 import { createComponentDecorator } from '@bunito/container/internals';
 import type {
   ControllerMethodOptions,
-  HTTPMethod,
   HTTPPath,
+  RouteMethod,
   RouteOptions,
 } from '../../types';
 import { Controller } from '../controller.decorator';
@@ -12,7 +12,7 @@ import type { RouteDecorator, RouteDecoratorOptions } from '../types';
 
 export function createRouteDecorator<TOmit extends keyof RouteOptions = never>(
   decorator: Fn,
-  method?: HTTPMethod,
+  method: RouteMethod,
   pathOrOptions?: HTTPPath | RouteDecoratorOptions<TOmit>,
   extraOptions?: RouteDecoratorOptions<'path' | TOmit>,
 ): RouteDecorator {

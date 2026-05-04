@@ -1,15 +1,15 @@
-# `@bunito/app`
+# `@bunito/http`
 
 ## Installation
 
 ```bash
-bun add @bunito/app
+bun add @bunito/http
 ```
 
 ## Usage
 
 ```ts
-import { App } from '@bunito/app';
+import { HTTPModule } from '@bunito/http';
 ```
 
 ## License

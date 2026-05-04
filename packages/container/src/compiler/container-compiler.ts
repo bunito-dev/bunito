@@ -229,15 +229,11 @@ export class ContainerCompiler {
         moduleNode.providers.set(providerId, moduleId);
       }
 
-      const componentId = this.compileComponent(moduleClass, providerId);
+      const componentId = this.compileComponent(moduleClass);
 
       if (componentId) {
         components.add(componentId);
-        if (providerId) {
-          componentsWithProvider.push(componentId);
-        } else {
-          componentsWithClass.push(componentId);
-        }
+        componentsWithClass.push(componentId);
       }
     }
 

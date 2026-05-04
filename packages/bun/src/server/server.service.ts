@@ -104,6 +104,8 @@ export class ServerService {
         });
       },
     });
+
+    this.logger?.debug(`Server started: ${this.server.url.toString()}`);
   }
 
   @OnAppShutdown()
@@ -114,6 +116,7 @@ export class ServerService {
     }
 
     await this.server.stop(true);
+    this.logger?.debug('Server stopped');
 
     this.server = undefined;
     this.routerRoles.route = undefined;
