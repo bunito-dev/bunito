@@ -6,7 +6,9 @@
     "cli": "bunito",
     "start:all": "bunito start",
     "start:101-basics": "bunito start 101-basics",
-    "start:201-routing": "bunito start 201-routing"
+    "start:201-simple-controller": "bunito start 201-simple-controller",
+    "start:202-json-middleware": "bunito start 202-json-middleware",
+    "start:203-multiple-apis": "bunito start 203-multiple-apis"
   },
   "dependencies": {
     "@bunito/bunito": "workspace:*",

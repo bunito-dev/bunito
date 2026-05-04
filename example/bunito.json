@@ -3,8 +3,23 @@
     "101-basics": {
       "entry": "apps/101-basics/main.ts"
     },
-    "201-routing": {
-      "entry": "apps/201-routing/main.ts"
+    "201-simple-controller": {
+      "entry": "apps/201-simple-controller/main.ts",
+      "envs": {
+        "PORT": "4201"
+      }
+    },
+    "202-json-middleware": {
+      "entry": "apps/202-json-middleware/main.ts",
+      "envs": {
+        "PORT": "4202"
+      }
+    },
+    "203-multiple-apis": {
+      "entry": "apps/203-multiple-apis/main.ts",
+      "envs": {
+        "PORT": "4203"
+      }
     }
   }
 }

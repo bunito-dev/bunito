@@ -4,8 +4,8 @@ import type { MiddlewareHandlers } from '../types';
 import { cloneMiddlewareHandlers } from './clone-middleware-handlers';
 import { pushMiddlewareHandlers } from './push-middleware-handlers';
 
-describe('middleware utils', () => {
-  it('clones middleware handlers and pushes implemented handlers', () => {
+describe('pushMiddlewareHandlers', () => {
+  it('pushes implemented middleware handlers with options', () => {
     const handlers = cloneMiddlewareHandlers(undefined);
     const middleware: Middleware = {
       beforeRequest: () => undefined,
@@ -15,13 +15,12 @@ describe('middleware utils', () => {
 
     pushMiddlewareHandlers(handlers, middleware, { enabled: true });
 
-    const clone = cloneMiddlewareHandlers(handlers);
-
     expect(handlers.beforeRequest).toHaveLength(1);
     expect(handlers.serializeResponseData).toHaveLength(1);
     expect(handlers.serializeException).toHaveLength(1);
-    expect(clone).toEqual(handlers);
-    expect(clone.beforeRequest).not.toBe(handlers.beforeRequest);
+    expect(handlers.beforeRequest.at(0)?.options).toEqual({
+      enabled: true,
+    });
   });
 
   it('ignores middleware methods that are not implemented', () => {

@@ -8,7 +8,7 @@ export {
   Put,
   Route,
   UseMiddleware,
-  UsePath,
+  UsePrefix,
 } from './decorators';
 export {
   BadRequestException,

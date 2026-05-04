@@ -6,5 +6,5 @@ export * from './put.decorator';
 export * from './route.decorator';
 export * from './types';
 export * from './use-middleware.decorator';
-export * from './use-path.decorator';
+export * from './use-prefix.decorator';
 export * from './utils';

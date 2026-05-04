@@ -1,0 +1,15 @@
+### GET
+GET http://0.0.0.0:4202/foo/a
+
+### GET with validation failure
+GET http://0.0.0.0:4202/foo/aaaa
+
+### POST
+POST http://0.0.0.0:4202/foo/x
+Content-Type: application/json
+
+{
+  "foo": "bar"
+}
+
+###

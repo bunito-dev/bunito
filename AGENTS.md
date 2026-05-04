@@ -347,8 +347,14 @@ Keep tests aligned with the source tree at the file level:
 - every exported implementation file should have its own sibling test file
 - example: `packages/container/src/id.ts` should be covered by
   `packages/container/src/id.test.ts`
+- do not group several implementation files into one broad test file just because
+  they belong to one folder; for example, decorators such as
+  `controller.decorator.ts`, `get.decorator.ts`, and `use-prefix.decorator.ts`
+  each need their own sibling test file
 - do not create tests for `index.ts` barrel files
 - type-only and interface-only files do not need dedicated test files
+- files that only re-export other modules or only declare types/global interfaces do
+  not need dedicated test files
 - prefer putting assertions for a file's behavior into that file's dedicated test
   instead of grouping many source files into one broad test file
 
