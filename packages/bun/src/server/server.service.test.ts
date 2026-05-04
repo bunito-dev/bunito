@@ -23,6 +23,7 @@ function createServeCapture(): CapturedServe & {
   };
 
   capture.server = {
+    url: new URL('http://127.0.0.1:3000'),
     stop: async (immediately?: boolean) => {
       capture.stopped = true;
       capture.stopImmediately = immediately;
@@ -48,6 +49,7 @@ function createLogger() {
     logger: {
       setContext: (context: unknown) => logs.push(`context:${String(context)}`),
       warn: (message: string) => logs.push(`warn:${message}`),
+      debug: (message: string) => logs.push(`debug:${message}`),
       fatal: (message: string, error?: unknown) => {
         logs.push(`fatal:${message}`);
         errors.push(error);

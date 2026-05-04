@@ -244,7 +244,7 @@ export class HTTPRouter implements ServerRouter {
         responseData = undefined;
       }
 
-      if (responseData && middleware?.serializeResponseData) {
+      if (responseData !== undefined && middleware?.serializeResponseData) {
         for (const { handler, options } of middleware.serializeResponseData) {
           response = await handler(responseData, {
             ...context,
@@ -270,6 +270,10 @@ export class HTTPRouter implements ServerRouter {
     }
 
     if (exception) {
+      if (exception.cause) {
+        trace?.warn(exception.cause);
+      }
+
       try {
         if (middleware?.serializeException) {
           for (const { handler, options } of middleware.serializeException) {
@@ -288,14 +292,14 @@ export class HTTPRouter implements ServerRouter {
         exception = InternalServerErrorException.capture(
           ValidationFailedException.capture(err),
         );
+
+        if (exception.cause) {
+          trace?.warn(exception.cause);
+        }
       }
     }
 
     if (exception) {
-      if (exception.cause) {
-        trace?.warn(exception.cause);
-      }
-
       response = exception.toResponse(responseContentType);
     }
 
@@ -356,7 +360,7 @@ export class HTTPRouter implements ServerRouter {
                   const { options } = value;
 
                   if (!instance) {
-                    return HTTPRouterException.throw`Middleware ${instance} doesn't exist in the container`;
+                    return HTTPRouterException.throw`Middleware ${value.middleware} is not available in the container`;
                   }
 
                   pushMiddlewareHandlers(rootMiddleware, instance, options);
@@ -395,7 +399,7 @@ export class HTTPRouter implements ServerRouter {
                   const { options } = value;
 
                   if (!instance) {
-                    return HTTPRouterException.throw`Middleware ${instance} doesn't exist in the container`;
+                    return HTTPRouterException.throw`Middleware ${value.middleware} is not available in the container`;
                   }
 
                   pushMiddlewareHandlers(controller.middleware, instance, options);
@@ -434,7 +438,7 @@ export class HTTPRouter implements ServerRouter {
           }
 
           if (!hasRoutes) {
-            return HTTPRouterException.throw`Empty controller ${providerId} detected`;
+            return HTTPRouterException.throw`Controller ${providerId} does not declare any routes`;
           }
         }
       }
@@ -442,7 +446,7 @@ export class HTTPRouter implements ServerRouter {
 
     if (children) {
       for (const child of children) {
-        this.buildRoutes(child, rootPrefix);
+        this.buildRoutes(child, rootPrefix, rootMiddleware);
       }
     }
   }

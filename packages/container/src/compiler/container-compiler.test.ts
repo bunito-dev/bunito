@@ -110,6 +110,63 @@ describe('ContainerCompiler', () => {
     ).toBe(true);
   });
 
+  it('locates class and provider components across child modules', () => {
+    @Component({ tag: 'root' })
+    @Module({
+      imports: [],
+    })
+    class RootComponent {}
+
+    @Component({ tag: 'child' })
+    @Provider()
+    class ChildComponent {}
+
+    @Module({
+      providers: [ChildComponent],
+    })
+    class ChildModule {}
+
+    const rootOptions = {
+      imports: [RootComponent, ChildModule],
+    };
+    const compiler = new ContainerCompiler(rootOptions);
+
+    expect(compiler.locateComponents(Component)).toEqual({
+      moduleId: Id.for(rootOptions),
+      children: [
+        {
+          moduleId: Id.for(RootComponent),
+          components: [
+            {
+              useClass: RootComponent,
+              options: {
+                value: {
+                  tag: 'root',
+                },
+              },
+            },
+          ],
+        },
+        {
+          moduleId: Id.for(ChildModule),
+          components: [
+            {
+              useProvider: Id.for(ChildComponent),
+              options: {
+                value: {
+                  tag: 'child',
+                },
+              },
+            },
+          ],
+        },
+      ],
+    });
+    function MissingComponent() {}
+
+    expect(compiler.locateComponents(MissingComponent)).toBeUndefined();
+  });
+
   it('rejects invalid module and provider declarations', () => {
     expect(() => new ContainerCompiler(class MissingModule {})).toThrow(
       'Missing @Module() metadata',

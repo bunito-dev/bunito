@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@bunito/config';
 import { getModuleMetadata } from '@bunito/container/internals';
-import { JsonFormatter, PrettyFormatter, PrettyFormatterConfig } from './formatters';
+import { JSONFormatter, PrettyFormatter, PrettyFormatterConfig } from './formatters';
 import { Logger } from './logger';
 import { LoggerConfig } from './logger.config';
 import { LoggerModule } from './logger.module';
@@ -13,7 +13,7 @@ describe('LoggerModule', () => {
       imports: [ConfigModule],
       configs: [LoggerConfig, PrettyFormatterConfig],
       providers: [Logger, LoggerService],
-      extensions: [PrettyFormatter, JsonFormatter],
+      extensions: [PrettyFormatter, JSONFormatter],
       exports: [Logger],
     });
   });
