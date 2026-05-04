@@ -21,15 +21,14 @@ and VitePress.
 Framework packages live in `packages/*`:
 
 - `@bunito/bunito`: application bootstrap and public convenience entrypoint
+- `@bunito/app`: application bootstrap and lifecycle coordination
 - `@bunito/container`: dependency injection, modules, providers, scopes, lifecycle,
   components, and extensions
 - `@bunito/config`: configuration module, config factories, env parsing, and secrets
 - `@bunito/logger`: logger module, logger service, and JSON/pretty extensions
-- `@bunito/server`: Bun server integration, contexts, server extensions, and base
-  transport exceptions
 - `@bunito/http`: HTTP module, controllers, routes, injections, middleware, JSON
   support, and HTTP exceptions
-- `@bunito/bun`: Bun-specific integrations
+- `@bunito/bun`: Bun-specific server and secret integrations
 - `@bunito/common`: framework-agnostic exceptions, predicates, types, and utilities
 - `@bunito/cli`: `bunito` command-line entrypoint
 - `@bunito/biome`: shared Biome configuration
@@ -61,7 +60,7 @@ bun test packages/common/src
 bun test packages/container/src
 bun test packages/config/src
 bun test packages/logger/src
-bun test packages/server/src
+bun test packages/app/src
 bun test packages/http/src
 bun test packages/bun/src
 ```
@@ -95,7 +94,7 @@ For imports:
 
 - inside the same package, prefer relative imports
 - across packages, use package names such as `@bunito/common`, `@bunito/container`,
-  `@bunito/config`, `@bunito/logger`, `@bunito/server`, `@bunito/http`, and
+  `@bunito/config`, `@bunito/logger`, `@bunito/app`, `@bunito/http`, and
   `@bunito/bunito`
 - examples should usually import from `@bunito/bunito` plus feature packages such as
   `@bunito/http`
@@ -159,8 +158,8 @@ useful draft content or remove it from the navigation.
   fallback behavior.
 - `@bunito/logger`: check both JSON and pretty extensions when output behavior
   changes.
-- `@bunito/server`: changes can affect HTTP runtime behavior through server
-  extensions.
+- `@bunito/bun`: changes can affect HTTP runtime behavior through Bun server
+  integrations.
 - `@bunito/http`: check both decorator declaration and runtime consumption when
   changing routing, injections, middleware, or validation.
 - `@bunito/cli`: validate at least one `example` start command when CLI project

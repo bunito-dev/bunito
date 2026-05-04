@@ -28,7 +28,14 @@ Configure TypeScript:
 ## Create A Provider
 
 ```ts
-import { Logger, OnBoot, OnDestroy, OnInit, Provider } from '@bunito/bunito';
+import {
+  Logger,
+  OnAppShutdown,
+  OnAppStart,
+  OnDestroy,
+  OnInit,
+  Provider,
+} from '@bunito/bunito';
 
 @Provider({
   injects: [Logger],
@@ -43,9 +50,14 @@ class BarService {
     this.logger.debug('onInit() called');
   }
 
-  @OnBoot()
-  onBoot(): void {
-    this.logger.debug('onBoot() called');
+  @OnAppStart()
+  onAppStart(): void {
+    this.logger.debug('onAppStart() called');
+  }
+
+  @OnAppShutdown()
+  onAppShutdown(): void {
+    this.logger.debug('onAppShutdown() called');
   }
 
   @OnDestroy()

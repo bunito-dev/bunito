@@ -11,10 +11,10 @@ import { Controller, Get, Params, UsePrefix } from '@bunito/http';
 import { z } from 'zod';
 
 const FooParams = z.object({
-  foo1: z.string().max(2),
+  foo: z.string().max(2),
 });
 
-@Controller({
+@Controller('/', {
   injects: [Logger],
   scope: 'singleton',
 })
@@ -23,11 +23,11 @@ class FooController {
     logger.setContext(FooController);
   }
 
-  @Get('/:foo1', {
+  @Get('/:foo', {
     injects: [Params(FooParams)],
   })
   getFoo(params: Params<typeof FooParams>): Response {
-    return new Response(`foo1: ${params.foo1}`);
+    return new Response(`foo: ${params.foo}`);
   }
 }
 
@@ -52,10 +52,10 @@ import {
 } from '@bunito/http';
 
 const BarParams = z.object({
-  bar1: z.string().max(2),
+  bar: z.string().max(2),
 });
 
-@Controller({
+@Controller('/', {
   injects: [Logger],
   scope: 'singleton',
 })
@@ -64,7 +64,7 @@ class BarController {
     logger.setContext(BarController);
   }
 
-  @Get('/:bar1', {
+  @Get('/:bar', {
     injects: [Params(BarParams)],
   })
   getBar(params: Params<typeof BarParams>): RawObject {
@@ -96,10 +96,10 @@ class BarModule {}
 
 ```ts
 import { App, LoggerModule, Module } from '@bunito/bunito';
-import { HttpModule } from '@bunito/http';
+import { HTTPModule } from '@bunito/http';
 
 @Module({
-  imports: [LoggerModule, HttpModule, FooModule, BarModule],
+  imports: [LoggerModule, HTTPModule, FooModule, BarModule],
 })
 class AppModule {}
 
@@ -114,7 +114,7 @@ Add the app to `bunito.json`:
     "203-multiple-apis": {
       "entry": "apps/203-multiple-apis/main.ts",
       "envs": {
-        "PORT": 4203
+        "PORT": "4203"
       }
     }
   }

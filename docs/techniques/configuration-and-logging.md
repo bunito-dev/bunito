@@ -62,11 +62,11 @@ Secret lookup goes through config extensions. The Bun integration package provid
 Bun secrets support:
 
 ```ts
-import { BunSecretsModule } from '@bunito/bun';
+import { SecretsModule } from '@bunito/bun';
 import { ConfigModule, Module } from '@bunito/bunito';
 
 @Module({
-  imports: [ConfigModule, BunSecretsModule],
+  imports: [ConfigModule, SecretsModule],
 })
 class AppModule {}
 ```

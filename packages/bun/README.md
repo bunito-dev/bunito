@@ -2,7 +2,8 @@
 
 Bun-specific integrations for bunito applications.
 
-It provides Bun platform modules, including server and secret integrations.
+It provides Bun platform modules, including server and secret integrations used by
+higher-level packages such as `@bunito/http`.
 
 ## Installation
 

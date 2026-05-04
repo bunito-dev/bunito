@@ -76,15 +76,15 @@ when a provider depends on request-specific data.
 Providers can react to container and application events:
 
 ```ts
-import { OnBoot, OnDestroy, OnInit, Provider } from '@bunito/bunito';
+import { OnAppStart, OnDestroy, OnInit, Provider } from '@bunito/bunito';
 
 @Provider()
 class Worker {
   @OnInit()
   onInit(): void {}
 
-  @OnBoot()
-  onBoot(): void {}
+  @OnAppStart()
+  onAppStart(): void {}
 
   @OnDestroy()
   onDestroy(): void {}
@@ -99,6 +99,7 @@ handling and business behavior in normal methods.
 The framework is split into packages so applications can stay small:
 
 - `@bunito/bunito`: app, modules, providers, config and logger re-exports
+- `@bunito/app`: app bootstrap and app lifecycle primitives
 - `@bunito/http`: controllers, routes, middleware, injections, and HTTP exceptions
 - `@bunito/config`: config factories, environment values, and secrets
 - `@bunito/logger`: injectable logger and output extensions

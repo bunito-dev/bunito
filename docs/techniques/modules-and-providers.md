@@ -35,7 +35,7 @@ class AppModule {}
 ```
 
 Modules are also how feature packages plug into an app. For example, HTTP apps add
-`HttpModule`; JSON body handling adds `JSONModule`.
+`HTTPModule`; JSON body handling adds `JSONModule`.
 
 ## Resolving Providers Manually
 
@@ -63,23 +63,23 @@ This pattern is useful for workers, scripts, and tests.
 Providers can define lifecycle hooks:
 
 ```ts
-import { OnBoot, OnDestroy, OnInit, Provider } from '@bunito/bunito';
+import { OnAppStart, OnDestroy, OnInit, Provider } from '@bunito/bunito';
 
 @Provider()
 class Worker {
   @OnInit()
   onInit(): void {}
 
-  @OnBoot()
-  onBoot(): void {}
+  @OnAppStart()
+  onAppStart(): void {}
 
   @OnDestroy()
   onDestroy(): void {}
 }
 ```
 
-Use them for setup, boot-time actions, and teardown. Keep normal application logic in
-regular methods.
+Use them for setup, app-start actions, and teardown. Keep normal application logic
+in regular methods.
 
 ## Where To Go Next
 

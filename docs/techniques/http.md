@@ -19,20 +19,20 @@ bun add zod
 
 ## Enable HTTP
 
-Import `HttpModule` in the application module:
+Import `HTTPModule` in the application module:
 
 ```ts
 import { LoggerModule, Module } from '@bunito/bunito';
-import { HttpModule } from '@bunito/http';
+import { HTTPModule } from '@bunito/http';
 
 @Module({
-  imports: [LoggerModule, HttpModule],
+  imports: [LoggerModule, HTTPModule],
 })
 class AppModule {}
 ```
 
-The HTTP package builds on the server package and registers routes from controller
-metadata.
+The HTTP package uses Bun server integration from `@bunito/bun` and registers
+routes from controller metadata.
 
 ## Controllers
 
@@ -73,7 +73,7 @@ Register the controller in a module:
 
 ```ts
 @Module({
-  imports: [LoggerModule, HttpModule],
+  imports: [LoggerModule, HTTPModule],
   providers: [UsersService],
   controllers: [UsersController],
 })
@@ -85,11 +85,11 @@ class AppModule {}
 Use route decorators for HTTP methods:
 
 ```ts
-import { Delete, Get, Patch, Post, Put } from '@bunito/http';
+import { Delete, Get, Post, Put, Route } from '@bunito/http';
 ```
 
-Available decorators include `Get`, `Post`, `Put`, `Patch`, `Delete`, `All`, and
-`Route`.
+Available decorators include `Get`, `Post`, `Put`, `Delete`, and `Route`.
+Use `Route` when a handler should target a method dynamically or match all methods.
 
 ## Request Injections
 
@@ -163,7 +163,7 @@ class UsersController {
 }
 
 @Module({
-  imports: [LoggerModule, HttpModule, JSONModule],
+  imports: [LoggerModule, HTTPModule, JSONModule],
   controllers: [UsersController],
 })
 class AppModule {}

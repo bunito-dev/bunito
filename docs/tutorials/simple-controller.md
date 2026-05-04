@@ -61,7 +61,7 @@ These schemas will be attached to route injections.
 
 ```ts
 import { Logger } from '@bunito/bunito';
-import { Controller, Get, Params, Query } from '@bunito/http';
+import { Controller, Get, Params, Post, Query } from '@bunito/http';
 
 @Controller('/foo', {
   injects: [Logger, FooProvider],
@@ -79,10 +79,21 @@ class FooController {
     });
   }
 
+  @Get('/bar/:a/:b', {
+    injects: [Params(), Query()],
+  })
+  getBarWithParams(params: Params<{ a: string; b: string }>, query: Query): Response {
+    return Response.json({
+      foo: this.fooProvider.foo(),
+      query,
+      params,
+    });
+  }
+
   @Get('/bar/:a/:b/:c', {
     injects: [Query(BarQuery), Params(BarParams)],
   })
-  getBar(
+  getBarWithValidation(
     query: Query<typeof BarQuery>,
     params: Params<typeof BarParams>,
   ): Response {
@@ -90,6 +101,13 @@ class FooController {
       foo: this.fooProvider.foo(),
       query,
       params,
+    });
+  }
+
+  @Post('/bar')
+  postBar(): Response {
+    return Response.json({
+      foo: this.fooProvider.foo(),
     });
   }
 }
@@ -101,10 +119,10 @@ The controller prefix is `/foo`. The route path is appended to it.
 
 ```ts
 import { App, LoggerModule, Module } from '@bunito/bunito';
-import { HttpModule } from '@bunito/http';
+import { HTTPModule } from '@bunito/http';
 
 @Module({
-  imports: [LoggerModule, HttpModule],
+  imports: [LoggerModule, HTTPModule],
   providers: [FooProvider],
   controllers: [FooController],
 })
@@ -121,7 +139,7 @@ Add an app entry to `bunito.json`:
     "201-simple-controller": {
       "entry": "apps/201-simple-controller/main.ts",
       "envs": {
-        "PORT": 4201
+        "PORT": "4201"
       }
     }
   }

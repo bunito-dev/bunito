@@ -10,7 +10,7 @@ import {
   Body,
   Controller,
   Get,
-  HttpModule,
+  HTTPModule,
   JSONMiddleware,
   JSONModule,
   Params,
@@ -61,33 +61,33 @@ class FooController {
   }
 
   @Post('/:bar', {
-    injects: [Params(FooParams), Body, Body(FooBody)],
+    injects: [Params(FooParams), Body(), Body(FooBody)],
   })
   postFoo(
     params: Params<typeof FooParams>,
-    bodyRaw: unknown,
+    rawBody: unknown,
     body: Body<typeof FooBody>,
   ): RawObject {
     return {
       params,
+      rawBody,
       body,
-      bodyRaw,
     };
   }
 }
 ```
 
-`Body` injects the parsed body. `Body(FooBody)` injects the parsed and validated
+`Body()` injects the parsed body. `Body(FooBody)` injects the parsed and validated
 body.
 
 ## Register JSONModule
 
 ```ts
 import { App, LoggerModule, Module } from '@bunito/bunito';
-import { HttpModule, JSONModule } from '@bunito/http';
+import { HTTPModule, JSONModule } from '@bunito/http';
 
 @Module({
-  imports: [LoggerModule, HttpModule, JSONModule],
+  imports: [LoggerModule, HTTPModule, JSONModule],
   controllers: [FooController],
 })
 class AppModule {}
@@ -103,7 +103,7 @@ Add the app to `bunito.json`:
     "202-json-middleware": {
       "entry": "apps/202-json-middleware/main.ts",
       "envs": {
-        "PORT": 4202
+        "PORT": "4202"
       }
     }
   }

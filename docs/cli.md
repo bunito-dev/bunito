@@ -24,7 +24,7 @@ A bunito project declares runnable apps in `bunito.json`:
     "api": {
       "entry": "src/main.ts",
       "envs": {
-        "PORT": 4201
+        "PORT": "4201"
       }
     }
   }
@@ -74,7 +74,19 @@ The repository example workspace uses this setup:
     "201-simple-controller": {
       "entry": "apps/201-simple-controller/main.ts",
       "envs": {
-        "PORT": 4201
+        "PORT": "4201"
+      }
+    },
+    "202-json-middleware": {
+      "entry": "apps/202-json-middleware/main.ts",
+      "envs": {
+        "PORT": "4202"
+      }
+    },
+    "203-multiple-apis": {
+      "entry": "apps/203-multiple-apis/main.ts",
+      "envs": {
+        "PORT": "4203"
       }
     }
   }

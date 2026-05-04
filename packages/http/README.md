@@ -14,7 +14,15 @@ bun add @bunito/http
 ## Usage
 
 ```ts
-import { HTTPModule, Middleware, JSONModule, JSONMiddleware, Get, Post } from '@bunito/http';
+import {
+  Controller,
+  Get,
+  HTTPModule,
+  JSONMiddleware,
+  JSONModule,
+  Post,
+  UseMiddleware,
+} from '@bunito/http';
 ```
 
 ## License

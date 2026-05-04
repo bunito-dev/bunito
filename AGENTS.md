@@ -8,18 +8,18 @@ workspace:
 
 - `packages/bunito`: public convenience entrypoint for application bootstrap and the
   core framework APIs most users import first
+- `packages/app`: application bootstrap, lifecycle coordination, and app-level
+  lifecycle decorators
 - `packages/container`: dependency injection container, modules, providers,
   components, extensions, scopes, and provider lifecycle hooks
 - `packages/config`: configuration module, config factories, environment parsing,
   and pluggable secret providers
 - `packages/logger`: logger module, logger service, trace logger API, and JSON/pretty
   logger extensions
-- `packages/server`: Bun server integration, server config, request/websocket
-  contexts, and base transport exceptions
 - `packages/http`: HTTP module, controllers, routing decorators, injections,
   middleware, JSON support, and HTTP exceptions
-- `packages/bun`: Bun-specific integrations, currently including config secrets
-  backed by Bun secrets
+- `packages/bun`: Bun-specific integrations, currently including server integration
+  and config secrets backed by Bun secrets
 - `packages/common`: shared exceptions, predicates, type helpers, and small utilities
 - `packages/cli`: `bunito` command-line entrypoint used by the example workspace
 - `packages/biome`: shared Biome configuration published as `@bunito/biome`
@@ -48,13 +48,17 @@ Current examples and run commands are listed in `example/README.md`.
 
 - `@bunito/bunito`
   - Exports `App`, selected common types/utilities, and re-exports public APIs from
-    `@bunito/config`, `@bunito/container`, and `@bunito/logger`
+    `@bunito/app`, `@bunito/config`, `@bunito/container`, and `@bunito/logger`
   - Intended as the primary import for simple applications
+- `@bunito/app`
+  - Depends on `@bunito/common`, `@bunito/config`, `@bunito/container`, and
+    `@bunito/logger`
+  - Owns `App`, app lifecycle decorators, and app-specific exceptions
 - `@bunito/container`
   - Depends on `@bunito/common`
   - Owns `Container`, `Id`, `Module`, `Provider`, component/extension metadata,
     injection resolution, provider scopes, and lifecycle decorators such as
-    `OnInit`, `OnBoot`, `OnResolve`, and `OnDestroy`
+    `OnInit`, `OnResolve`, and `OnDestroy`
 - `@bunito/config`
   - Depends on `@bunito/common` and `@bunito/container`
   - Owns `ConfigModule`, `ConfigService`, `defineConfig`, config extensions,
@@ -63,21 +67,16 @@ Current examples and run commands are listed in `example/README.md`.
   - Depends on `@bunito/common`, `@bunito/container`, and `@bunito/config`
   - Owns `LoggerModule`, `Logger`, `LoggerService`, logger config, and JSON/pretty
     output extensions
-- `@bunito/server`
-  - Depends on `@bunito/common`, `@bunito/container`, `@bunito/config`, and
-    `@bunito/logger`
-  - Owns `ServerModule`, `ServerService`, `ServerConfig`, request/websocket
-    contexts, server extensions, and transport-level exceptions
 - `@bunito/http`
   - Depends on `@bunito/common`, `@bunito/config`, `@bunito/container`,
-    `@bunito/logger`, and `@bunito/server`
+    `@bunito/logger`, and `@bunito/bun`
   - Uses `zod` as an optional dependency for route input validation
-  - Owns `HttpModule`, controller and route decorators, parameter/body/query/method
+  - Owns `HTTPModule`, controller and route decorators, parameter/body/query/method
     injections, middleware, JSON middleware/module, and HTTP exceptions
 - `@bunito/bun`
-  - Depends on `@bunito/common`, `@bunito/config`, and `@bunito/container`
-  - Owns Bun-specific extensions, currently `BunSecretsModule` and
-    `BunSecretsExtension`
+  - Depends on `@bunito/app`, `@bunito/common`, `@bunito/config`,
+    `@bunito/container`, and `@bunito/logger`
+  - Owns Bun-specific server and secrets integrations
 - `@bunito/common`
   - Has no workspace dependencies
   - Owns base exception classes, type helpers, predicates, and utility functions
@@ -119,7 +118,7 @@ Run tests for a specific package:
 - `bun test packages/container/src`
 - `bun test packages/config/src`
 - `bun test packages/logger/src`
-- `bun test packages/server/src`
+- `bun test packages/app/src`
 - `bun test packages/http/src`
 - `bun test packages/bun/src`
 
@@ -155,7 +154,7 @@ Use this convention consistently:
 
 - inside the same package: prefer relative imports
 - across packages: use package names such as `@bunito/common`,
-  `@bunito/container`, `@bunito/config`, `@bunito/logger`, `@bunito/server`,
+  `@bunito/container`, `@bunito/config`, `@bunito/logger`, `@bunito/app`,
   `@bunito/http`, and `@bunito/bunito`
 - application examples should normally import from `@bunito/bunito` plus feature
   packages such as `@bunito/http`
@@ -241,32 +240,27 @@ Notes:
   and inject it directly
 - when changing formats, check both JSON and pretty extensions
 
-### `@bunito/server`
+### `@bunito/app`
 
 Important areas:
 
-- `packages/server/src/server.module.ts`
-- `packages/server/src/server.service.ts`
-- `packages/server/src/server.config.ts`
-- `packages/server/src/server.extension.ts`
-- `packages/server/src/contexts/*`
-- `packages/server/src/exceptions/*`
+- `packages/app/src/app.ts`
+- `packages/app/src/app.exception.ts`
+- `packages/app/src/decorators/*`
 
 Notes:
 
-- `ServerModule` is the lower-level Bun server integration used by HTTP
-- server extensions are how higher-level transports contribute routes/handlers
-- changes here can affect HTTP runtime behavior even when HTTP code is untouched
+- `App.create` builds a container and optionally resolves `Logger`
+- `App.start` creates and boots the app in one step
+- app lifecycle decorators are separate from provider lifecycle hooks
 
 ### `@bunito/http`
 
 Important areas:
 
 - `packages/http/src/http.module.ts`
-- `packages/http/src/http.extension.ts`
 - `packages/http/src/decorators/*`
 - `packages/http/src/injections/*`
-- `packages/http/src/json/*`
 - `packages/http/src/middleware/*`
 - `packages/http/src/exceptions/*`
 - `packages/http/src/utils/*`
@@ -274,7 +268,7 @@ Important areas:
 Notes:
 
 - if you change routing behavior, inspect both decorator declaration and runtime
-  consumption in `HttpExtension`
+  consumption in `HTTPRouter`
 - route injections such as `Params`, `Query`, `Body`, and `Method` may validate
   through Zod when schemas are supplied
 - validate routing-related changes against the relevant HTTP example documented in
@@ -284,20 +278,20 @@ Notes:
 
 Important areas:
 
-- `packages/bunito/src/app/app.ts`
 - `packages/bunito/src/common.ts`
 - `packages/bunito/src/index.ts`
 
 Notes:
 
-- `App.create` builds a container and optionally resolves `Logger`
-- `App.start` creates and boots the app in one step
 - keep exports friendly for examples and documentation
+- this package is a public convenience entrypoint over app, common, config,
+  container, and logger APIs
 
 ### `@bunito/bun`
 
 Important areas:
 
+- `packages/bun/src/server/*`
 - `packages/bun/src/secrets/*`
 - `packages/bun/src/index.ts`
 
@@ -305,6 +299,7 @@ Notes:
 
 - this package should contain Bun-specific integrations only
 - keep platform-specific assumptions out of generic packages such as `config`
+- server changes here can affect HTTP runtime behavior
 
 ### `@bunito/cli`
 
