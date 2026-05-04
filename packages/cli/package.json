@@ -1,6 +1,6 @@
 {
   "name": "@bunito/cli",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Command-line tools for running bunito projects.",
   "keywords": [
     "bunito",
@@ -34,7 +34,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.6",
+    "@bunito/common": "workspace:0.0.7",
     "yargs": "18.0.0",
     "zod": "catalog:"
   },
