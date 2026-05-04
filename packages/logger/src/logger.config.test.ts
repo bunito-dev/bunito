@@ -46,6 +46,7 @@ describe('LoggerConfig', () => {
     }
 
     process.env.NODE_ENV = 'development';
+    delete process.env.CI;
     delete process.env.LOG_FORMAT;
     delete process.env.LOG_LEVEL;
     const devConfig = await LoggerConfig.useFactory(new ConfigService());
