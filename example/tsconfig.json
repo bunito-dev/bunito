@@ -1,3 +1,9 @@
 {
-  "extends": "@bunito/bunito/tsconfig.json"
+  "extends": "@bunito/bunito/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@apps/*": ["./apps/*"],
+      "@libs/*": ["./libs/*"]
+    }
+  }
 }

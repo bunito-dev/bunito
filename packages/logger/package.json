@@ -1,6 +1,6 @@
 {
   "name": "@bunito/logger",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Logger module and JSON/pretty logging extensions for bunito.",
   "keywords": [
     "bunito",
@@ -36,9 +36,9 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.7",
-    "@bunito/config": "workspace:0.0.7",
-    "@bunito/container": "workspace:0.0.7"
+    "@bunito/common": "workspace:0.0.8",
+    "@bunito/config": "workspace:0.0.8",
+    "@bunito/container": "workspace:0.0.8"
   },
   "devDependencies": {},
   "engines": {
