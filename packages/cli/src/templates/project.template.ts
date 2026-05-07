@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import type { RawObject } from '@bunito/common';
-import { toPascalCase } from '../common';
-import { PROJECT_DIRS } from '../project';
+import { PROJECT_APPS_DIR } from '#services';
 import { AppTemplate } from './app.template';
 import type { TemplateResult } from './types';
 
@@ -9,41 +8,45 @@ export function ProjectTemplate(options: {
   name: string;
   pkgVersion: string;
   bunVersion?: string;
-  apps?: string[];
+  apps: string[];
 }): TemplateResult {
   const { name, pkgVersion, bunVersion, apps } = options;
 
-  let src: TemplateResult = !apps ? AppTemplate() : {};
+  let src: TemplateResult;
 
-  const files = !apps
-    ? ['src', '!src/**/*.test.ts']
-    : ['apps', '!apps/**/*.test.ts', 'libs', '!libs/**/*.test.ts'];
+  let pkgFiles: string[];
 
-  const startScripts: RawObject<string> = {
-    start: 'bunx bunito build',
-  };
+  let tsCompilerOptions: RawObject | undefined;
 
-  const buildScripts: RawObject<string> = {
-    build: 'bunx bunito build',
-  };
+  if (!apps.length) {
+    src = AppTemplate();
 
-  if (apps) {
+    pkgFiles = ['src', '!src/**/*.test.ts'];
+  } else {
+    src = {};
+
+    pkgFiles = ['apps', 'libs', '!apps/**/*.test.ts', '!libs/**/*.test.ts'];
+
     for (const app of apps) {
-      const appSrc = AppTemplate({ name: app, classPrefix: toPascalCase(app) });
+      const appSrc = AppTemplate({ name: app });
 
       src = {
         ...src,
         ...Object.fromEntries(
           Object.entries(appSrc).map(([key, value]) => [
-            join(PROJECT_DIRS.apps, app, key),
+            join(PROJECT_APPS_DIR, app, key),
             value,
           ]),
         ),
       };
-
-      startScripts[`start:${app}`] = `bunx bunito start ${app}`;
-      buildScripts[`build:${app}`] = `bunx bunito build ${app}`;
     }
+
+    tsCompilerOptions = {
+      paths: {
+        '@apps/*': ['./apps/*'],
+        '@libs/*': ['./libs/*'],
+      },
+    };
   }
 
   return {
@@ -72,24 +75,15 @@ export function ProjectTemplate(options: {
       *.tsbuildinfo
     `,
 
-    'README.md': `
-      # ${name}
-      
-      ## Installation
-      ${'```bash'}
-      bun install
-      ${'```'}
-    `,
-
     'package.json': {
       name,
       private: true,
       type: 'module',
-      files: [...files, 'README.md'],
+      files: [...pkgFiles, 'README.md'],
       scripts: {
         cli: 'bunx bunito',
-        ...startScripts,
-        ...buildScripts,
+        build: 'bunx bunito build',
+        start: 'bunx bunito start',
       },
       dependencies: {
         '@bunito/bunito': pkgVersion,
@@ -104,16 +98,18 @@ export function ProjectTemplate(options: {
         : undefined,
     },
 
+    'README.md': `
+      # ${name}
+      
+      ## Installation
+      ${'```bash'}
+      bun install
+      ${'```'}
+    `,
+
     'tsconfig.json': {
       extends: '@bunito/common/tsconfig.json',
-      compilerOptions: apps
-        ? {
-            paths: {
-              '@apps/*': ['./apps/*'],
-              '@libs/*': ['./libs/*'],
-            },
-          }
-        : undefined,
+      compilerOptions: tsCompilerOptions,
     },
   };
 }

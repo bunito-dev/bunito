@@ -27,6 +27,16 @@
   "bin": {
     "bunito": "./src/main.ts"
   },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "imports": {
+    "#commands": "./src/commands/index.ts",
+    "#common": "./src/common/index.ts",
+    "#context": "./src/context/index.ts",
+    "#services": "./src/services/index.ts",
+    "#templates": "./src/templates/index.ts"
+  },
   "files": [
     "src",
     "!src/**/*.test.ts",

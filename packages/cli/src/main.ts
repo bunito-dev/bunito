@@ -2,12 +2,29 @@
 
 import * as process from 'node:process';
 import { hideBin } from 'yargs/helpers';
-import { CLI } from './cli';
-import { FS, Logger } from './common';
-import './commands';
+import { Context } from '#context';
+import {
+  CLIService,
+  FSService,
+  LoggerService,
+  ProjectService,
+  SpawnService,
+} from '#services';
+import '#commands';
 
-const argv = hideBin([...process.argv, 'aaaa']);
+const context = new Context()
+  .createService('cli', CLIService)
+  .createService('fs', FSService)
+  .createService('logger', LoggerService)
+  .createService('project', ProjectService)
+  .createService('spawn', SpawnService);
 
-const cli = new CLI(argv, new Logger(), new FS());
-await cli.load();
-await cli.runCommand();
+const { project, cli } = context;
+
+const cwd = process.cwd();
+const argv = hideBin([...process.argv]);
+
+await context.loadSettings(cwd, argv);
+await project.loadSettings();
+
+await cli.runCommand(argv);

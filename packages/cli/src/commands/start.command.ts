@@ -1,17 +1,64 @@
-import { CLI, CLICommand } from '../cli';
-import { Exception, notEmptySet } from '../common';
+import process from 'node:process';
+import type { RawObject } from '@bunito/common';
+import { Exception, notEmptySet } from '#common';
+import { CLIService } from '#services';
+import { Command } from './command';
 
-export class StartCommand extends CLICommand<{
+export class StartCommand extends Command<{
   apps?: Set<string>;
   watch?: boolean;
   prod?: boolean;
+  pad?: boolean;
 }> {
   public async run(): Promise<void> {
-    throw new Exception('Command not implemented yet ;(');
+    const { project, spawn } = this.context;
+    const { settings } = project;
+
+    if (settings.mode === 'unknown') {
+      throw new Exception('Project not initialized');
+    }
+
+    const { apps: appNames, prod, pad, watch } = this.options;
+    const { path } = settings;
+
+    const bunArgs = ['bun', `--cwd=${path}`];
+    const runArgs = ['run'];
+
+    const envs: RawObject<string> = {};
+
+    if (watch) {
+      runArgs.push('--watch');
+    }
+
+    if (prod) {
+      envs.NODE_ENV = 'production';
+    }
+
+    const apps = project.getApps(appNames);
+
+    for (const app of apps) {
+      const args = [...bunArgs];
+
+      if (app.envs) {
+        args.push(`--env-file=${app.envs}`);
+      }
+
+      args.push(...runArgs, app.entry);
+
+      spawn.addProcess({
+        name: app.name,
+        args,
+        envs,
+      });
+    }
+
+    const code = await spawn.startProcesses(pad);
+
+    process.exit(code);
   }
 }
 
-CLI.registerCommand(StartCommand, {
+CLIService.registerCommand(StartCommand, {
   command: 'start [apps...]',
   aliases: ['s'],
   describe: 'Start the app(s)',
@@ -38,5 +85,10 @@ CLI.registerCommand(StartCommand, {
         default: false,
         type: 'boolean',
         alias: 'p',
+      })
+      .option('pad', {
+        describe: 'Pad prefix with app name',
+        default: false,
+        type: 'boolean',
       }),
 });

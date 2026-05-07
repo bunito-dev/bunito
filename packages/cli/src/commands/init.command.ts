@@ -1,13 +1,15 @@
 import { input } from '@inquirer/prompts';
-import { CLI, CLICommand } from '../cli';
-import { Exception, isKebabCase, notEmptySet } from '../common';
+import { Exception, isKebabCase, notEmptySet } from '#common';
+import { CLIService } from '#services';
+import { Command } from './command';
 
-export class InitCommand extends CLICommand<{
+export class InitCommand extends Command<{
   project?: string;
   app?: Set<string> | null;
 }> {
   public async run(): Promise<void> {
-    const { settings } = this.project;
+    const { project, logger } = this.context;
+    const { settings } = project;
 
     if (settings.mode !== 'unknown') {
       throw new Exception(`Project ${settings.name} already initialized`);
@@ -58,13 +60,13 @@ export class InitCommand extends CLICommand<{
       }
     }
 
-    const fileNames = await this.project.create(name, apps);
+    const fileNames = await project.create(name, apps);
 
-    this.logger.info('Project initialized', ...fileNames);
+    logger.info(`Project ${name} initialized with files:`, ...fileNames);
   }
 }
 
-CLI.registerCommand(InitCommand, {
+CLIService.registerCommand(InitCommand, {
   priority: 1000,
   command: 'init [project]',
   describe: 'Initialize a new project',

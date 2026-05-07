@@ -1,4 +1,6 @@
-export const PKG_FILE_NAME = 'package.json';
+import { resolve } from 'node:path';
+
+export const ROOT_PATH = resolve(import.meta.dirname, '..', '..');
 
 export const RESERVED_NAMES = new Set([
   'class',

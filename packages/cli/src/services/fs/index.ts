@@ -1,4 +1,3 @@
-export * from './cli';
-export * from './cli-command';
 export * from './constants';
+export * from './fs.service';
 export * from './types';

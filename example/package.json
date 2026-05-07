@@ -3,13 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "cli": "bunito",
-    "cli:init": "bunito init -C ../demo",
-    "start:all": "bunito start",
-    "start:101-basics": "bunito start 101-basics",
-    "start:201-simple-controller": "bunito start 201-simple-controller",
-    "start:202-json-middleware": "bunito start 202-json-middleware",
-    "start:203-multiple-apis": "bunito start 203-multiple-apis"
+    "cli": "bunx bunito",
+    "build": "bunx bunito build",
+    "start": "bunx bunito start"
   },
   "dependencies": {
     "@bunito/bunito": "workspace:*",

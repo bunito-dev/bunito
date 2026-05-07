@@ -1,11 +1,9 @@
 import process from 'node:process';
 import type { InspectColor } from 'node:util';
 import { styleText } from 'node:util';
-import { Exception } from './exception';
+import { Exception } from '#common';
 
-export class Logger {
-  constructor(private readonly stdout = process.stdout) {}
-
+export class LoggerService {
   info(...args: unknown[]): this {
     return this.print('info', ...args);
   }
@@ -19,7 +17,7 @@ export class Logger {
   }
 
   br(): void {
-    this.stdout.write('\n');
+    process.stdout.write('\n');
   }
 
   private print(level: 'info' | 'warn' | 'error', ...args: unknown[]): this {
@@ -33,11 +31,13 @@ export class Logger {
         primary = 'cyanBright';
         secondary = ['cyan', 'italic'];
         break;
+
       case 'warn':
         icon = '⚠';
         primary = 'yellowBright';
         secondary = ['yellow', 'italic'];
         break;
+
       case 'error':
         icon = '✘';
         primary = 'redBright';
@@ -66,7 +66,7 @@ export class Logger {
       buffer.push('\n');
     }
 
-    this.stdout.write(buffer.join(''));
+    process.stdout.write(buffer.join(''));
 
     return this;
   }

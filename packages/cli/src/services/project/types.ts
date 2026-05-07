@@ -7,18 +7,20 @@ export type ProjectSettings = WithBase<
   },
   {
     mode: 'monorepo';
-    apps: Record<string, ProjectApp>;
+    apps: Map<string, ProjectApp>;
+    libs?: Set<string>;
   },
   {
     mode: 'standard';
-    entry: string;
-  },
+  } & Omit<ProjectApp, 'name' | 'path'>,
   {
     mode: 'unknown';
   }
 >;
 
 export type ProjectApp = {
+  name: string;
   path: string;
   entry: string;
+  envs?: string;
 };

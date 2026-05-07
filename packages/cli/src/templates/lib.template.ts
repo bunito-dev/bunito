@@ -1,14 +1,14 @@
 import { join } from 'node:path';
-import { PROJECT_DIRS } from '../project';
+import { toPascalCase } from '#common';
+import { PROJECT_LIBS_DIR } from '#services';
 import type { TemplateResult } from './types';
 
-export function LibTemplate(options: {
-  name: string;
-  classPrefix: string;
-}): TemplateResult {
-  const { name, classPrefix } = options;
+export function LibTemplate(options: { name: string }): TemplateResult {
+  const { name } = options;
 
-  const rootPath = join(PROJECT_DIRS.libs, name);
+  const classPrefix = name ? toPascalCase(name) : undefined;
+
+  const rootPath = join(PROJECT_LIBS_DIR, name);
 
   return {
     [join(rootPath, `${name}.service.ts`)]: `
