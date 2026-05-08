@@ -44,8 +44,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "cli": "bun run ./src/main.ts",
-    "demo": "bun run cli -d -C ./../../examples/monorepo g app mono"
+    "cli": "bun run ./src/main.ts"
   },
   "dependencies": {
     "@bunito/common": "workspace:0.0.10",
