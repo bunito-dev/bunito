@@ -3,6 +3,11 @@
   "extends": ["./packages/biome/biome.base.json"],
   "files": {
     "ignoreUnknown": true,
-    "includes": ["docs/.vitepress/**/*.ts", "example/**/*.ts", "packages/**/*.ts"]
+    "includes": [
+      "docs/.vitepress/**/*.ts",
+      "examples/**/*.ts",
+      "packages/**/*.ts",
+      "scripts/**/*.ts"
+    ]
   }
 }

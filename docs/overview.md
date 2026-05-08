@@ -105,5 +105,15 @@ The framework is split into packages so applications can stay small:
 - `@bunito/logger`: injectable logger and output extensions
 - `@bunito/bun`: Bun-specific integrations
 
+## Examples
+
+Runnable examples live in separate workspaces under `examples/`:
+
+- `examples/basics`: one standard app
+- `examples/http`: three HTTP apps discovered from `apps/*/src/main.ts`
+- `examples/monorepo`: several apps plus a shared library
+
+HTTP examples use app-local `.env` files for ports.
+
 Continue with [Modules And Providers](/techniques/modules-and-providers) or jump
 straight into [HTTP](/techniques/http).

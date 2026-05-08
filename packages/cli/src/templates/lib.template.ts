@@ -24,6 +24,7 @@ export function LibTemplate(options: { name: string }): TemplateResult {
       
       @Module({
         providers: [${classPrefix}Service],
+        exports: [${classPrefix}Service],
       })
       export class ${classPrefix}Module {}
     `,

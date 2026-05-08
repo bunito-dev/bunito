@@ -1,6 +1,6 @@
 {
   "name": "@bunito/container",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Dependency injection container, modules, providers, and lifecycle hooks for bunito.",
   "keywords": [
     "bunito",
@@ -39,10 +39,10 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.8"
+    "@bunito/common": "workspace:0.0.9"
   },
   "devDependencies": {},
   "engines": {
-    "bun": ">=1.3.11"
+    "bun": ">=1.3.10"
   }
 }

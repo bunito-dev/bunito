@@ -1,0 +1,15 @@
+### Foo text response
+GET http://0.0.0.0:4002/foo/a
+
+### Foo validation failure
+GET http://0.0.0.0:4002/foo/aaaa
+
+### Bar JSON response
+GET http://0.0.0.0:4002/bar/b
+
+### Bar validation failure
+GET http://0.0.0.0:4002/bar/bbbb
+
+### Bar not found handler
+GET http://0.0.0.0:4002/bar/missing/path
+

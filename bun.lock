@@ -11,8 +11,17 @@
         "vitepress": "1.6.4",
       },
     },
-    "example": {
-      "name": "example",
+    "examples/basics": {
+      "name": "basics",
+      "dependencies": {
+        "@bunito/bunito": "workspace:*",
+      },
+      "devDependencies": {
+        "@bunito/cli": "workspace:*",
+      },
+    },
+    "examples/http": {
+      "name": "http-examples",
       "dependencies": {
         "@bunito/bunito": "workspace:*",
         "@bunito/http": "workspace:*",
@@ -22,50 +31,59 @@
         "@bunito/cli": "workspace:*",
       },
     },
+    "examples/monorepo": {
+      "name": "monorepo",
+      "dependencies": {
+        "@bunito/bunito": "workspace:*",
+      },
+      "devDependencies": {
+        "@bunito/cli": "workspace:*",
+      },
+    },
     "packages/app": {
       "name": "@bunito/app",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.8",
-        "@bunito/config": "workspace:0.0.8",
-        "@bunito/container": "workspace:0.0.8",
-        "@bunito/logger": "workspace:0.0.8",
+        "@bunito/common": "workspace:0.0.9",
+        "@bunito/config": "workspace:0.0.9",
+        "@bunito/container": "workspace:0.0.9",
+        "@bunito/logger": "workspace:0.0.9",
       },
     },
     "packages/biome": {
       "name": "@bunito/biome",
-      "version": "0.0.8",
+      "version": "0.0.9",
     },
     "packages/bun": {
       "name": "@bunito/bun",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
-        "@bunito/app": "workspace:0.0.8",
-        "@bunito/common": "workspace:0.0.8",
-        "@bunito/config": "workspace:0.0.8",
-        "@bunito/container": "workspace:0.0.8",
-        "@bunito/logger": "workspace:0.0.8",
+        "@bunito/app": "workspace:0.0.9",
+        "@bunito/common": "workspace:0.0.9",
+        "@bunito/config": "workspace:0.0.9",
+        "@bunito/container": "workspace:0.0.9",
+        "@bunito/logger": "workspace:0.0.9",
       },
     },
     "packages/bunito": {
       "name": "@bunito/bunito",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
-        "@bunito/app": "workspace:0.0.8",
-        "@bunito/common": "workspace:0.0.8",
-        "@bunito/config": "workspace:0.0.8",
-        "@bunito/container": "workspace:0.0.8",
-        "@bunito/logger": "workspace:0.0.8",
+        "@bunito/app": "workspace:0.0.9",
+        "@bunito/common": "workspace:0.0.9",
+        "@bunito/config": "workspace:0.0.9",
+        "@bunito/container": "workspace:0.0.9",
+        "@bunito/logger": "workspace:0.0.9",
       },
     },
     "packages/cli": {
       "name": "@bunito/cli",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "bin": {
         "bunito": "./src/main.ts",
       },
       "dependencies": {
-        "@bunito/common": "workspace:0.0.8",
+        "@bunito/common": "workspace:0.0.9",
         "@inquirer/prompts": "8.4.2",
         "yargs": "18.0.0",
         "zod": "catalog:",
@@ -76,14 +94,14 @@
     },
     "packages/common": {
       "name": "@bunito/common",
-      "version": "0.0.8",
+      "version": "0.0.9",
     },
     "packages/config": {
       "name": "@bunito/config",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.8",
-        "@bunito/container": "workspace:0.0.8",
+        "@bunito/common": "workspace:0.0.9",
+        "@bunito/container": "workspace:0.0.9",
       },
       "devDependencies": {
         "zod": "catalog:",
@@ -94,20 +112,20 @@
     },
     "packages/container": {
       "name": "@bunito/container",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.8",
+        "@bunito/common": "workspace:0.0.9",
       },
     },
     "packages/http": {
       "name": "@bunito/http",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
-        "@bunito/bun": "workspace:0.0.8",
-        "@bunito/common": "workspace:0.0.8",
-        "@bunito/config": "workspace:0.0.8",
-        "@bunito/container": "workspace:0.0.8",
-        "@bunito/logger": "workspace:0.0.8",
+        "@bunito/bun": "workspace:0.0.9",
+        "@bunito/common": "workspace:0.0.9",
+        "@bunito/config": "workspace:0.0.9",
+        "@bunito/container": "workspace:0.0.9",
+        "@bunito/logger": "workspace:0.0.9",
       },
       "devDependencies": {
         "zod": "catalog:",
@@ -118,11 +136,11 @@
     },
     "packages/logger": {
       "name": "@bunito/logger",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.8",
-        "@bunito/config": "workspace:0.0.8",
-        "@bunito/container": "workspace:0.0.8",
+        "@bunito/common": "workspace:0.0.9",
+        "@bunito/config": "workspace:0.0.9",
+        "@bunito/container": "workspace:0.0.9",
       },
     },
   },
@@ -440,6 +458,8 @@
 
     "ansi-styles": ["ansi-styles@6.2.3", "", {}, "sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg=="],
 
+    "basics": ["basics@workspace:examples/basics"],
+
     "birpc": ["birpc@2.9.0", "", {}, "sha512-KrayHS5pBi69Xi9JmvoqrIgYGDkD6mcSe/i6YKi3w5kekCLzrX4+nawcXqrj2tIp50Kw/mT/s3p+GVK0A0sKxw=="],
 
     "bun-types": ["bun-types@1.3.13", "", { "dependencies": { "@types/node": "*" } }, "sha512-QXKeHLlOLqQX9LgYaHJfzdBaV21T63HhFJnvuRCcjZiaUDpbs5ED1MgxbMra71CsryN/1dAoXuJJJwIv/2drVA=="],
@@ -478,8 +498,6 @@
 
     "estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
 
-    "example": ["example@workspace:example"],
-
     "fast-string-truncated-width": ["fast-string-truncated-width@3.0.3", "", {}, "sha512-0jjjIEL6+0jag3l2XWWizO64/aZVtpiGE3t0Zgqxv0DPuxiMjvB3M24fCyhZUO4KomJQPj3LTSUnDP3GpdwC0g=="],
 
     "fast-string-width": ["fast-string-width@3.0.2", "", { "dependencies": { "fast-string-truncated-width": "^3.0.2" } }, "sha512-gX8LrtNEI5hq8DVUfRQMbr5lpaS4nMIWV+7XEbXk2b8kiQIizgnlr12B4dA3ZEx3308ze0O4Q1R+cHts8kyUJg=="],
@@ -501,6 +519,8 @@
     "hookable": ["hookable@5.5.3", "", {}, "sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ=="],
 
     "html-void-elements": ["html-void-elements@3.0.0", "", {}, "sha512-bEqo66MRXsUGxWHV5IP0PUiAWwoEjba4VCzg0LjFJBpchPaTfyfCKTG6bc5F8ucKec3q5y6qOdGyYTSBEvhCrg=="],
+
+    "http-examples": ["http-examples@workspace:examples/http"],
 
     "iconv-lite": ["iconv-lite@0.7.2", "", { "dependencies": { "safer-buffer": ">= 2.1.2 < 3.0.0" } }, "sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw=="],
 
@@ -525,6 +545,8 @@
     "minisearch": ["minisearch@7.2.0", "", {}, "sha512-dqT2XBYUOZOiC5t2HRnwADjhNS2cecp9u+TJRiJ1Qp/f5qjkeT5APcGPjHw+bz89Ms8Jp+cG4AlE+QZ/QnDglg=="],
 
     "mitt": ["mitt@3.0.1", "", {}, "sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw=="],
+
+    "monorepo": ["monorepo@workspace:examples/monorepo"],
 
     "mute-stream": ["mute-stream@3.0.0", "", {}, "sha512-dkEJPVvun4FryqBmZ5KhDo0K9iDXAwn08tMLDinNdRBNPcYEDiWYysLcc6k3mjTMlbP9KyylvRpd4wFtwrT9rw=="],
 

@@ -41,8 +41,8 @@ bunito start
 Start selected apps in a monorepo:
 
 ```bash
-bunito start http-simple-controller
-bunito start http-json-middleware http-multiple-apis
+bunito start simple-controller
+bunito start json-middleware multiple-apis
 ```
 
 Useful start flags:
@@ -57,7 +57,7 @@ Build apps into `out/`:
 
 ```bash
 bunito build
-bunito build http-simple-controller --minify --sourcemap
+bunito build simple-controller --minify --sourcemap
 ```
 
 Generate files:
@@ -72,12 +72,12 @@ bunito generate lib shared-auth
 Use `--cwd` when running the CLI from outside the project directory:
 
 ```bash
-bunito --cwd example start http-simple-controller
+bunito --cwd examples/http start simple-controller
 ```
 
 ## Package Scripts
 
-The example workspace keeps scripts small:
+Each example workspace keeps scripts small:
 
 ```json
 {
@@ -92,43 +92,58 @@ The example workspace keeps scripts small:
 Run all example apps:
 
 ```bash
-cd example
+cd examples/http
 bun run start
 ```
 
 Run one example app:
 
 ```bash
-cd example
-bun run start http-json-middleware
+cd examples/http
+bun run start json-middleware
 ```
 
 Build the examples:
 
 ```bash
-cd example
+cd examples/http
 bun run build
 ```
 
-## Example Workspace
+## Repository Examples
 
-The repository example workspace is a monorepo:
+The repository keeps examples as separate workspaces:
 
 ```text
-example/
-  apps/
-    basics/
-      src/main.ts
-    http-json-middleware/
-      .env
-      src/main.ts
-    http-multiple-apis/
-      .env
-      src/main.ts
-    http-simple-controller/
-      .env
-      src/main.ts
+examples/
+  basics/
+    src/main.ts
+  http/
+    apps/
+      json-middleware/
+        .env
+        src/main.ts
+      multiple-apis/
+        .env
+        src/main.ts
+      simple-controller/
+        .env
+        src/main.ts
+  monorepo/
+    apps/
+      first/
+        src/main.ts
+      second/
+        src/main.ts
+      mono/
+        src/main.ts
+    libs/
+      example/
+        index.ts
 ```
+
+`.env` files are app-local. For example, `examples/http/apps/json-middleware/.env`
+sets the port for only the `json-middleware` app.
 
 The tutorials explain those apps step by step:
 
@@ -136,3 +151,4 @@ The tutorials explain those apps step by step:
 - [Simple Controller](/tutorials/simple-controller)
 - [JSON Middleware](/tutorials/json-middleware)
 - [Multiple APIs](/tutorials/multiple-apis)
+- [Monorepo](/tutorials/monorepo)

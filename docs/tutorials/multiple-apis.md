@@ -1,7 +1,7 @@
 # Multiple APIs
 
-This tutorial mirrors the `http-multiple-apis` example. It shows how to split an
-app into feature modules with their own prefixes and middleware.
+This tutorial mirrors the `examples/http` `multiple-apis` app. It shows how to
+split an app into feature modules with their own prefixes and middleware.
 
 ## Create A Feature Module
 
@@ -106,16 +106,18 @@ class AppModule {}
 await App.start(AppModule);
 ```
 
-In the repository example workspace, this app lives at
-`apps/http-multiple-apis/src/main.ts`. Its port is defined in
-`apps/http-multiple-apis/.env`.
+In the repository examples, this app lives at
+`examples/http/apps/multiple-apis/src/main.ts`. Its port is defined in
+`examples/http/apps/multiple-apis/.env`.
 
 Run it:
 
 ```bash
-cd example
-bun run start http-multiple-apis
+cd examples/http
+bun run start multiple-apis
 ```
+
+Request examples are available in `examples/http/apps/multiple-apis.http`.
 
 You now have two route groups:
 

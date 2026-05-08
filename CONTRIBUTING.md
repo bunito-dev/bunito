@@ -33,9 +33,9 @@ Framework packages live in `packages/*`:
 - `@bunito/cli`: `bunito` command-line entrypoint
 - `@bunito/biome`: shared Biome configuration
 
-Runnable applications live in `example/apps/*` and are documented in
-[`example/`](./example/README.md). Documentation lives in `docs/` and is
-built with VitePress. Long-lived specs and ADR scaffolding live in `specs/`.
+Runnable example workspaces live in `examples/*` and are documented in
+[`examples/`](./examples/README.md). Documentation lives in `docs/` and is built
+with VitePress. Long-lived specs and ADR scaffolding live in `specs/`.
 
 ## Useful Commands
 
@@ -48,10 +48,11 @@ bun run format
 bun run test
 bun run coverage
 bun run docs:build
+bun run sync-versions
 ```
 
 Run examples through the commands documented in
-[`example/README.md`](./example/README.md).
+[`examples/README.md`](./examples/README.md).
 
 Run package-specific tests when the change is narrow:
 
@@ -132,7 +133,7 @@ For documentation changes, run:
 bun run docs:build
 ```
 
-For runtime-flow changes, also run the relevant example from `example/`.
+For runtime-flow changes, also run the relevant example from `examples/`.
 
 ## Documentation
 
@@ -162,7 +163,7 @@ useful draft content or remove it from the navigation.
   integrations.
 - `@bunito/http`: check both decorator declaration and runtime consumption when
   changing routing, injections, middleware, or validation.
-- `@bunito/cli`: validate at least one `example` start command when CLI project
+- `@bunito/cli`: validate at least one `examples` start command when CLI project
   discovery or command behavior changes.
 
 ## Pull Request Checklist

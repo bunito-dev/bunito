@@ -13,7 +13,7 @@ The project is intentionally split into focused packages. You can start with
 ## Examples
 
 The best way to understand the current API is to read and run the examples.
-Start with the example workspace guide: [`example/`](./example/README.md).
+Start with the examples guide: [`examples/`](./examples/README.md).
 
 ## Packages
 
@@ -35,6 +35,12 @@ bun run typecheck
 bun run lint
 bun run test
 bun run coverage
+```
+
+Package versions are synchronized from the root manifest with:
+
+```bash
+bun run sync-versions
 ```
 
 For contribution notes, see [`CONTRIBUTING.md`](./CONTRIBUTING.md).

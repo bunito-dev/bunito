@@ -53,9 +53,7 @@ export class GenerateCommand extends Command<GenerateCommandOptions> {
           throw new Exception(`App "${name}" already exists`);
         }
 
-        const files = await project.renderTemplate(AppTemplate, {
-          name,
-        })(PROJECT_APPS_DIR, name);
+        const files = await project.renderTemplate(AppTemplate)(PROJECT_APPS_DIR, name);
 
         logger.info(`App "${name}" generated with files:`, ...files);
 

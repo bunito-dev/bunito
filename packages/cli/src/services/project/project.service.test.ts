@@ -138,7 +138,8 @@ describe('ProjectService', () => {
     const files = await service.create('demo', ['api']);
 
     expect(files).toContain('package.json');
-    expect(await Bun.file(join(dir, 'apps/api/src/api.module.ts')).exists()).toBeTrue();
+    expect(await Bun.file(join(dir, 'apps/api/src/app.module.ts')).exists()).toBeTrue();
+    expect(await Bun.file(join(dir, 'apps/api/src/index.ts')).exists()).toBeTrue();
 
     try {
       await service.create('demo', ['api']);
@@ -146,7 +147,7 @@ describe('ProjectService', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(Exception);
       expect((error as Error).message).toBe(
-        'File "apps/api/src/api.module.ts" already exists',
+        'File "apps/api/src/app.module.ts" already exists',
       );
     }
   });

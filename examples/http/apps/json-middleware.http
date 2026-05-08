@@ -1,0 +1,21 @@
+### JSON response with params
+GET http://0.0.0.0:4001/foo/a
+
+### Params validation failure
+GET http://0.0.0.0:4001/foo/aaaa
+
+### JSON body with defaults
+POST http://0.0.0.0:4001/foo/x
+Content-Type: application/json
+
+{
+  "foo": "bar"
+}
+
+### JSON body validation failure
+POST http://0.0.0.0:4001/foo/xxxx
+Content-Type: application/json
+
+{
+  "foo": "bar"
+}

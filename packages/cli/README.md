@@ -17,10 +17,14 @@ bun install --global @bunito/cli
 ```bash
 bunito --help
 bunito init my-app
+bunito init my-workspace --app api --app worker
 bunito start
 bunito build
 bunito generate app worker
+bunito generate lib shared
 ```
+
+The CLI loads `.env` for standard apps and `apps/<name>/.env` for monorepo apps.
 
 ## License
 

@@ -23,7 +23,7 @@ workspace:
 - `packages/common`: shared exceptions, predicates, type helpers, and small utilities
 - `packages/cli`: `bunito` command-line entrypoint used by the example workspace
 - `packages/biome`: shared Biome configuration published as `@bunito/biome`
-- `example`: private workspace with runnable applications showing the current API
+- `examples`: private workspaces with runnable applications showing the current API
 
 The repository uses Bun workspaces, Bun's built-in test runner, strict TypeScript,
 modern decorators, VitePress for documentation, and Biome for linting and formatting.
@@ -36,13 +36,13 @@ modern decorators, VitePress for documentation, and Biome for linting and format
   - `bunfig.toml`
   - `tsconfig.json`
 - Framework packages live in `packages/*`.
-- Runnable examples live in `example/apps/*` and are documented in
-  `example/README.md`.
+- Runnable examples live in `examples/*` and are documented in
+  `examples/README.md`.
 - VitePress documentation lives in `docs/`.
 - Long-lived technical notes and ADR scaffolding live in `specs/`.
 - GitHub Actions CI lives in `.github/workflows/ci.yml`.
 
-Current examples and run commands are listed in `example/README.md`.
+Current examples and run commands are listed in `examples/README.md`.
 
 ## Current Package Inventory
 
@@ -82,11 +82,11 @@ Current examples and run commands are listed in `example/README.md`.
   - Owns base exception classes, type helpers, predicates, and utility functions
 - `@bunito/cli`
   - Depends on `@bunito/common`, `@inquirer/prompts`, `yargs`, and `zod`
-  - Exposes the `bunito` binary used by `example/package.json`
+  - Exposes the `bunito` binary used by the example workspace package scripts
 - `@bunito/biome`
   - Publishes the shared `biome.base.json` config
-- `example`
-  - Private workspace used for runnable examples
+- `examples`
+  - Private workspaces used for runnable examples
   - Depends on `@bunito/bunito`, `@bunito/http`, `@bunito/cli`, and `zod`
   - Uses CLI filesystem discovery; there is no `bunito.json`
 
@@ -108,10 +108,10 @@ Use Bun for package management and scripts.
 - Run docs locally: `bun run docs:dev`
 - Build docs: `bun run docs:build`
 - Preview built docs: `bun run docs:preview`
-- Sync package versions with the root manifest: `./scripts/sync-versions.sh`
-- Publish all packages: `./scripts/publish-all.sh`
+- Sync package versions with the root manifest: `bun run sync-versions`
+- Publish all packages: `bun run publish-all`
 
-Run examples using the commands documented in `example/README.md`.
+Run examples using the commands documented in `examples/README.md`.
 
 Run tests for a specific package:
 
@@ -273,7 +273,7 @@ Notes:
 - route injections such as `Params`, `Query`, `Body`, and `Method` may validate
   through Zod when schemas are supplied
 - validate routing-related changes against the relevant HTTP example documented in
-  `example/README.md`
+  `examples/http/README.md`
 
 ### `@bunito/bunito`
 
@@ -314,11 +314,11 @@ Important areas:
 
 Notes:
 
-- the `bunito` binary is used by the `example` workspace scripts
+- the `bunito` binary is used by the `examples` workspace scripts
 - the CLI discovers standard apps from `src/main.ts` and monorepo apps from
   `apps/*/src/main.ts`
 - when CLI behavior changes, validate at least one
-  `cd example && bun run start <app>` command
+  `cd examples/http && bun run start <app>` command
 
 ## Validation Expectations
 
@@ -330,7 +330,7 @@ Before finishing work, run whichever checks fit the change:
 - For coverage-sensitive work: `bun run coverage`
 - If formatting is needed: `bun run format`
 - For documentation changes: `bun run docs:build`
-- For runtime-flow changes: run a relevant example from `example/`
+- For runtime-flow changes: run a relevant example from `examples/`
 
 Current baseline:
 
@@ -365,7 +365,7 @@ The project documentation is being developed as a VitePress site in `docs/`.
 - VitePress config lives in `docs/.vitepress/config.ts`
 - Root and package README files should give quick orientation, not full documentation
 - Documentation pages should reflect the current examples documented in
-  `example/README.md`
+  `examples/README.md`
 - Avoid placeholder docs; if a page exists, give it useful draft content or remove it
 - `specs/` is currently mostly scaffolding except for ADR folders and template files
 - there is no `TODO.md` in the repository; do not point docs there
@@ -381,8 +381,8 @@ file together with the relevant README/docs.
 - GitHub Actions CI runs typecheck, lint, tests, and coverage.
 - Coverage is enforced natively through `bunfig.toml`.
 - Tests are written with `bun:test` only.
-- `biome.json` includes `docs/.vitepress/**/*.ts`, `example/**/*.ts`,
-  `example/**/*.json`, `packages/**/*.ts`, `packages/**/*.json`, and root JSON files.
+- `biome.json` includes TypeScript files in `docs/.vitepress`, `examples`,
+  `packages`, and `scripts`.
 
 ## Specifications And ADRs
 

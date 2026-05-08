@@ -19,10 +19,7 @@ The preferred entrypoint for bunito projects is the CLI.
 bun install --global @bunito/cli
 ```
 
-> The CLI is still under active development. It is already used by the example
-> workspace, but project scaffolding and day-to-day workflows may change. For the
-> most reliable starting point today, continue with the manual setup below and the
-> step-by-step [tutorials](/tutorials/basics).
+The CLI is also used by the repository examples in `examples/*`.
 
 ## Manual Setup
 
@@ -48,10 +45,10 @@ Configure TypeScript by extending the bunito config:
 }
 ```
 
-Create `src/main.ts`:
+Create `src/app.module.ts`:
 
 ```ts
-import { App, Logger, LoggerModule, Provider } from '@bunito/bunito';
+import { Logger, LoggerModule, Module, Provider } from '@bunito/bunito';
 
 @Provider({
   injects: [Logger],
@@ -68,17 +65,20 @@ class HelloService {
   }
 }
 
-const app = await App.create({
+@Module({
   imports: [LoggerModule],
   providers: [HelloService],
-});
+})
+export class AppModule {}
+```
 
-const helloService = await app.resolve(HelloService);
+Create `src/main.ts`:
 
-console.log(helloService.hello());
+```ts
+import { App } from '@bunito/bunito';
+import { AppModule } from './app.module';
 
-await app.start();
-await app.shutdown();
+await App.start(AppModule);
 ```
 
 Add scripts to `package.json`:
@@ -93,6 +93,8 @@ Add scripts to `package.json`:
 ```
 
 The CLI discovers `src/main.ts` automatically in standard projects.
+If you add a `.env` file next to `package.json`, the CLI loads it before starting
+the app.
 
 Run the app:
 
@@ -106,3 +108,4 @@ bun run start
 - Learn how the CLI discovers projects in [CLI](/cli).
 - Build the first example in [Basics](/tutorials/basics).
 - Add HTTP controllers in [HTTP](/techniques/http).
+- Explore composed apps in [Monorepo](/tutorials/monorepo).

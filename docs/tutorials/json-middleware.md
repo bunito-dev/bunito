@@ -1,7 +1,8 @@
 # JSON Middleware
 
-This tutorial mirrors the `http-json-middleware` example. It adds JSON request body
-handling, raw body injection, parsed body injection, and body validation.
+This tutorial mirrors the `examples/http` `json-middleware` app. It adds JSON
+request body handling, raw body injection, parsed body injection, and body
+validation.
 
 ## Import JSON Tools
 
@@ -95,15 +96,17 @@ class AppModule {}
 await App.start(AppModule);
 ```
 
-In the repository example workspace, this app lives at
-`apps/http-json-middleware/src/main.ts`. Its port is defined in
-`apps/http-json-middleware/.env`.
+In the repository examples, this app lives at
+`examples/http/apps/json-middleware/src/main.ts`. Its port is defined in
+`examples/http/apps/json-middleware/.env`.
 
 Run it:
 
 ```bash
-cd example
-bun run start http-json-middleware
+cd examples/http
+bun run start json-middleware
 ```
+
+Request examples are available in `examples/http/apps/json-middleware.http`.
 
 Continue with [Multiple APIs](/tutorials/multiple-apis).

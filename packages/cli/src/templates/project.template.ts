@@ -28,7 +28,7 @@ export function ProjectTemplate(options: {
     pkgFiles = ['apps', 'libs', '!apps/**/*.test.ts', '!libs/**/*.test.ts'];
 
     for (const app of apps) {
-      const appSrc = AppTemplate({ name: app });
+      const appSrc = AppTemplate();
 
       src = {
         ...src,
@@ -43,8 +43,8 @@ export function ProjectTemplate(options: {
 
     tsCompilerOptions = {
       paths: {
-        '@apps/*': ['./apps/*'],
-        '@libs/*': ['./libs/*'],
+        '@apps/*': ['./apps/*/src/index.ts'],
+        '@libs/*': ['./libs/*/index.ts'],
       },
     };
   }
@@ -108,7 +108,7 @@ export function ProjectTemplate(options: {
     `,
 
     'tsconfig.json': {
-      extends: '@bunito/common/tsconfig.json',
+      extends: '@bunito/bunito/tsconfig.json',
       compilerOptions: tsCompilerOptions,
     },
   };

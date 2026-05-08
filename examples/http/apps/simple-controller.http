@@ -1,0 +1,15 @@
+### Basic JSON response
+GET http://0.0.0.0:4003/foo
+
+### Params and query
+GET http://0.0.0.0:4003/foo/bar/a/b?bar=hello&baz=world
+
+### Params and query defaults
+GET http://0.0.0.0:4003/foo/bar/a/b/c
+
+### Validation failure
+GET http://0.0.0.0:4003/foo/bar/aaaa/b/c
+
+### POST route
+POST http://0.0.0.0:4003/foo/bar
+

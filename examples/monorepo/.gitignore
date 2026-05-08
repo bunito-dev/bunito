@@ -1,0 +1,21 @@
+# system / ide
+.idea
+.DS_Store
+
+# dependencies
+node_modules
+
+# dotenv
+.env*
+!.env*.sample
+
+# output
+artifacts
+out
+dist
+*.tgz
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo

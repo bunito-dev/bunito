@@ -1,6 +1,6 @@
 # Simple Controller
 
-This tutorial mirrors the `http-simple-controller` example. It adds HTTP routing,
+This tutorial mirrors the `examples/http` `simple-controller` app. It adds HTTP routing,
 controllers, params, query values, and validation.
 
 ## Install HTTP
@@ -131,15 +131,18 @@ class AppModule {}
 await App.start(AppModule);
 ```
 
-In the repository example workspace, this app lives at
-`apps/http-simple-controller/src/main.ts`. Its port is defined in
-`apps/http-simple-controller/.env`.
+In the repository examples, this app lives at
+`examples/http/apps/simple-controller/src/main.ts`. Its port is defined in
+`examples/http/apps/simple-controller/.env`.
 
 Run it:
 
 ```bash
-cd example
-bun run start http-simple-controller
+cd examples/http
+bun run start simple-controller
 ```
+
+Request examples are available in
+`examples/http/apps/simple-controller.http`.
 
 Continue with [JSON Middleware](/tutorials/json-middleware).

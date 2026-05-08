@@ -1,6 +1,6 @@
 {
   "name": "@bunito/http",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "HTTP module, controllers, routing, middleware, and exceptions for bunito.",
   "keywords": [
     "bunito",
@@ -36,11 +36,11 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/bun": "workspace:0.0.8",
-    "@bunito/common": "workspace:0.0.8",
-    "@bunito/config": "workspace:0.0.8",
-    "@bunito/container": "workspace:0.0.8",
-    "@bunito/logger": "workspace:0.0.8"
+    "@bunito/bun": "workspace:0.0.9",
+    "@bunito/common": "workspace:0.0.9",
+    "@bunito/config": "workspace:0.0.9",
+    "@bunito/container": "workspace:0.0.9",
+    "@bunito/logger": "workspace:0.0.9"
   },
   "devDependencies": {
     "zod": "catalog:"
@@ -49,6 +49,6 @@
     "zod": "catalog:range"
   },
   "engines": {
-    "bun": ">=1.3.11"
+    "bun": ">=1.3.10"
   }
 }
