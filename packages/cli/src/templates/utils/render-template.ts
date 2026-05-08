@@ -23,7 +23,7 @@ export function renderTemplate<TTemplate extends Template>(
         return [key, lines.join('\n')];
       }
 
-      return [key, JSON.stringify(value, null, 2)];
+      return [key, `${JSON.stringify(value, null, 2)}\n`];
     }),
   );
 }

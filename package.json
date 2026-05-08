@@ -1,7 +1,7 @@
 {
   "name": "bunito",
   "private": true,
-  "version": "0.0.9",
+  "version": "0.0.10",
   "type": "module",
   "scripts": {
     "docs:dev": "vitepress dev docs",
@@ -11,8 +11,8 @@
     "coverage": "bun test --coverage",
     "lint": "biome check",
     "format": "biome format",
-    "typecheck": "bun scripts/typecheck.ts",
-    "publish-all": "bun --filter './packages/*' publish",
+    "typecheck": "tsc --noEmit",
+    "publish-all": "for dir in packages/*; do (cd \"$dir\" && bun publish || true); done",
     "sync-versions": "bun scripts/sync-versions.ts"
   },
   "workspaces": {

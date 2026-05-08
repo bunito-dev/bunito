@@ -1,6 +1,6 @@
 {
   "name": "@bunito/bunito",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Main application entrypoint for the Bun-first bunito framework.",
   "keywords": [
     "bunito",
@@ -37,11 +37,11 @@
     "tsconfig.json"
   ],
   "dependencies": {
-    "@bunito/app": "workspace:0.0.9",
-    "@bunito/common": "workspace:0.0.9",
-    "@bunito/config": "workspace:0.0.9",
-    "@bunito/container": "workspace:0.0.9",
-    "@bunito/logger": "workspace:0.0.9"
+    "@bunito/app": "workspace:0.0.10",
+    "@bunito/common": "workspace:0.0.10",
+    "@bunito/config": "workspace:0.0.10",
+    "@bunito/container": "workspace:0.0.10",
+    "@bunito/logger": "workspace:0.0.10"
   },
   "devDependencies": {},
   "engines": {

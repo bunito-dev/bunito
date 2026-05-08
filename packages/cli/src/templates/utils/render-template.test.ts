@@ -14,7 +14,7 @@ describe('renderTemplate', () => {
 
     expect(result).toEqual({
       'src/main.ts': 'const value = 1;\n',
-      'package.json': '{\n  "name": "demo"\n}',
+      'package.json': '{\n  "name": "demo"\n}\n',
     });
   });
 });
