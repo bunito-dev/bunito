@@ -1,6 +1,6 @@
 # JSON Middleware
 
-This tutorial mirrors the `202-json-middleware` example. It adds JSON request body
+This tutorial mirrors the `http-json-middleware` example. It adds JSON request body
 handling, raw body injection, parsed body injection, and body validation.
 
 ## Import JSON Tools
@@ -95,25 +95,15 @@ class AppModule {}
 await App.start(AppModule);
 ```
 
-Add the app to `bunito.json`:
-
-```json
-{
-  "apps": {
-    "202-json-middleware": {
-      "entry": "apps/202-json-middleware/main.ts",
-      "envs": {
-        "PORT": "4202"
-      }
-    }
-  }
-}
-```
+In the repository example workspace, this app lives at
+`apps/http-json-middleware/src/main.ts`. Its port is defined in
+`apps/http-json-middleware/.env`.
 
 Run it:
 
 ```bash
-bunito start 202-json-middleware
+cd example
+bun run start http-json-middleware
 ```
 
 Continue with [Multiple APIs](/tutorials/multiple-apis).

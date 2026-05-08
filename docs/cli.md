@@ -1,7 +1,7 @@
 # CLI
 
-The `bunito` CLI is intended to be the main way developers run bunito applications.
-It reads a project-level `bunito.json` file and starts one or more configured apps.
+The `bunito` CLI runs, builds, and generates bunito projects. It discovers project
+shape from the filesystem instead of a project config file.
 
 Install it globally:
 
@@ -9,88 +9,125 @@ Install it globally:
 bun install --global @bunito/cli
 ```
 
-> The CLI is still under active development. The examples already use it, but some
-> commands and project creation flows are expected to evolve. If you want a stable
-> reference today, follow the [tutorials](/tutorials/basics), which are based on the
-> repository example workspace.
+The examples use the workspace dependency directly:
 
-## `bunito.json`
-
-A bunito project declares runnable apps in `bunito.json`:
-
-```json
-{
-  "apps": {
-    "api": {
-      "entry": "src/main.ts",
-      "envs": {
-        "PORT": "4201"
-      }
-    }
-  }
-}
+```bash
+bunx bunito --help
 ```
 
-Each app has:
+## Project Discovery
 
-- `entry`: the TypeScript file to run
-- `envs`: optional environment values passed to the app
+A bunito project is any directory, or parent directory, whose `package.json`
+depends on `@bunito/bunito`.
+
+The CLI supports two layouts:
+
+- standard apps: `src/main.ts`
+- monorepos: `apps/<name>/src/main.ts`
+
+Optional environment files are discovered automatically:
+
+- standard apps: `.env`
+- monorepo apps: `apps/<name>/.env`
+
+## Commands
+
+Start every discovered app:
+
+```bash
+bunito start
+```
+
+Start selected apps in a monorepo:
+
+```bash
+bunito start http-simple-controller
+bunito start http-json-middleware http-multiple-apis
+```
+
+Useful start flags:
+
+```bash
+bunito start --watch
+bunito start --prod
+bunito start --pad
+```
+
+Build apps into `out/`:
+
+```bash
+bunito build
+bunito build http-simple-controller --minify --sourcemap
+```
+
+Generate files:
+
+```bash
+bunito init my-app
+bunito init my-workspace --app api --app admin
+bunito generate app worker
+bunito generate lib shared-auth
+```
+
+Use `--cwd` when running the CLI from outside the project directory:
+
+```bash
+bunito --cwd example start http-simple-controller
+```
 
 ## Package Scripts
 
-The examples expose CLI commands through `package.json`:
+The example workspace keeps scripts small:
 
 ```json
 {
   "scripts": {
-    "start:all": "bunito start",
-    "start:api": "bunito start api"
+    "cli": "bunx bunito",
+    "build": "bunx bunito build",
+    "start": "bunx bunito start"
   }
 }
 ```
 
-Run one app:
+Run all example apps:
 
 ```bash
-bun run start:api
+cd example
+bun run start
 ```
 
-Run all apps from `bunito.json`:
+Run one example app:
 
 ```bash
-bun run start:all
+cd example
+bun run start http-json-middleware
+```
+
+Build the examples:
+
+```bash
+cd example
+bun run build
 ```
 
 ## Example Workspace
 
-The repository example workspace uses this setup:
+The repository example workspace is a monorepo:
 
-```json
-{
-  "apps": {
-    "101-basics": {
-      "entry": "apps/101-basics/main.ts"
-    },
-    "201-simple-controller": {
-      "entry": "apps/201-simple-controller/main.ts",
-      "envs": {
-        "PORT": "4201"
-      }
-    },
-    "202-json-middleware": {
-      "entry": "apps/202-json-middleware/main.ts",
-      "envs": {
-        "PORT": "4202"
-      }
-    },
-    "203-multiple-apis": {
-      "entry": "apps/203-multiple-apis/main.ts",
-      "envs": {
-        "PORT": "4203"
-      }
-    }
-  }
-}
+```text
+example/
+  apps/
+    basics/
+      src/main.ts
+    http-json-middleware/
+      .env
+      src/main.ts
+    http-multiple-apis/
+      .env
+      src/main.ts
+    http-simple-controller/
+      .env
+      src/main.ts
 ```
 
 The tutorials explain those apps step by step:

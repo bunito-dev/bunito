@@ -59,5 +59,11 @@ Server port: `4003`
 ## Running All Apps
 
 ```bash
-bun run start:all
+bun run start
+```
+
+## Building Apps
+
+```bash
+bun run build
 ```

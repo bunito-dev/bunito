@@ -8,6 +8,9 @@ export class SpawnService {
 
   private readonly processes: ProcessRunning[] = [];
 
+  // biome-ignore lint/complexity/noUselessConstructor: Bun coverage counts generated constructors as uncovered.
+  constructor() {}
+
   addProcess(options: ProcessOptions): void {
     const { name, args, envs = {} } = options;
 
@@ -25,7 +28,11 @@ export class SpawnService {
     });
   }
 
-  async startProcesses(padRefix = false): Promise<number> {
+  async startProcesses(padPrefix = false): Promise<number> {
+    if (!this.processes.length) {
+      return 0;
+    }
+
     const finished: Promise<number>[] = [];
 
     const { stdout, stderr } = process;
@@ -47,7 +54,7 @@ export class SpawnService {
         const color = PROCESS_COLORS[index % PROCESS_COLORS.length];
 
         if (color) {
-          prefix = padRefix ? name.padStart(prefixWidth) : name;
+          prefix = padPrefix ? name.padStart(prefixWidth) : name;
           prefix = styleText(color, `${prefix} → `);
         }
       }
@@ -69,7 +76,7 @@ export class SpawnService {
           const code = Math.max(...codes);
           const message = styleText(
             [code ? 'red' : 'gray', 'italic'],
-            `Finished with exit code ${code}`,
+            `Process finished with exit code ${code}`,
           );
 
           if (code) {
@@ -83,7 +90,7 @@ export class SpawnService {
       );
     }
 
-    return await Promise.all(finished).then((codes) => Math.max(...codes));
+    return Promise.all(finished).then((codes) => Math.max(...codes));
   }
 
   private async pipeWriter(

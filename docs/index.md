@@ -81,27 +81,18 @@ await app.start();
 await app.shutdown();
 ```
 
-Add a `bunito.json` file. The CLI reads this file to discover runnable apps:
-
-```json
-{
-  "apps": {
-    "main": {
-      "entry": "src/main.ts"
-    }
-  }
-}
-```
-
 Add scripts to `package.json`:
 
 ```json
 {
   "scripts": {
-    "start": "bunito start main"
+    "build": "bunito build",
+    "start": "bunito start"
   }
 }
 ```
+
+The CLI discovers `src/main.ts` automatically in standard projects.
 
 Run the app:
 
@@ -112,6 +103,6 @@ bun run start
 ## Next Steps
 
 - Read the project model in [Overview](/overview).
-- Learn how the CLI reads `bunito.json` in [CLI](/cli).
+- Learn how the CLI discovers projects in [CLI](/cli).
 - Build the first example in [Basics](/tutorials/basics).
 - Add HTTP controllers in [HTTP](/techniques/http).

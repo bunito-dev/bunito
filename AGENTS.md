@@ -81,13 +81,14 @@ Current examples and run commands are listed in `example/README.md`.
   - Has no workspace dependencies
   - Owns base exception classes, type helpers, predicates, and utility functions
 - `@bunito/cli`
-  - Depends on `@bunito/common`, `yargs`, and `zod`
+  - Depends on `@bunito/common`, `@inquirer/prompts`, `yargs`, and `zod`
   - Exposes the `bunito` binary used by `example/package.json`
 - `@bunito/biome`
   - Publishes the shared `biome.base.json` config
 - `example`
   - Private workspace used for runnable examples
   - Depends on `@bunito/bunito`, `@bunito/http`, `@bunito/cli`, and `zod`
+  - Uses CLI filesystem discovery; there is no `bunito.json`
 
 Many packages expose a public `.` entrypoint and an `./internals` entrypoint.
 Prefer public entrypoints in application-facing examples and docs. Use `./internals`
@@ -305,15 +306,19 @@ Notes:
 
 Important areas:
 
-- `packages/cli/src/cli.ts`
+- `packages/cli/src/main.ts`
 - `packages/cli/src/commands/*`
-- `packages/cli/src/project/*`
+- `packages/cli/src/context/*`
+- `packages/cli/src/services/*`
+- `packages/cli/src/templates/*`
 
 Notes:
 
 - the `bunito` binary is used by the `example` workspace scripts
-- when CLI behavior changes, validate at least one `cd example && bun run start:*`
-  command
+- the CLI discovers standard apps from `src/main.ts` and monorepo apps from
+  `apps/*/src/main.ts`
+- when CLI behavior changes, validate at least one
+  `cd example && bun run start <app>` command
 
 ## Validation Expectations
 

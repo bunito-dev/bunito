@@ -1,7 +1,7 @@
 # Multiple APIs
 
-This tutorial mirrors the `203-multiple-apis` example. It shows how to split an app
-into feature modules with their own prefixes and middleware.
+This tutorial mirrors the `http-multiple-apis` example. It shows how to split an
+app into feature modules with their own prefixes and middleware.
 
 ## Create A Feature Module
 
@@ -106,25 +106,15 @@ class AppModule {}
 await App.start(AppModule);
 ```
 
-Add the app to `bunito.json`:
-
-```json
-{
-  "apps": {
-    "203-multiple-apis": {
-      "entry": "apps/203-multiple-apis/main.ts",
-      "envs": {
-        "PORT": "4203"
-      }
-    }
-  }
-}
-```
+In the repository example workspace, this app lives at
+`apps/http-multiple-apis/src/main.ts`. Its port is defined in
+`apps/http-multiple-apis/.env`.
 
 Run it:
 
 ```bash
-bunito start 203-multiple-apis
+cd example
+bun run start http-multiple-apis
 ```
 
 You now have two route groups:

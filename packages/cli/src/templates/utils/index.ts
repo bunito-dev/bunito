@@ -1,1 +1,1 @@
-export * from './render-template'
+export * from './render-template';

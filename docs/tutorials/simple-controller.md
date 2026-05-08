@@ -1,6 +1,6 @@
 # Simple Controller
 
-This tutorial mirrors the `201-simple-controller` example. It adds HTTP routing,
+This tutorial mirrors the `http-simple-controller` example. It adds HTTP routing,
 controllers, params, query values, and validation.
 
 ## Install HTTP
@@ -131,25 +131,15 @@ class AppModule {}
 await App.start(AppModule);
 ```
 
-Add an app entry to `bunito.json`:
-
-```json
-{
-  "apps": {
-    "201-simple-controller": {
-      "entry": "apps/201-simple-controller/main.ts",
-      "envs": {
-        "PORT": "4201"
-      }
-    }
-  }
-}
-```
+In the repository example workspace, this app lives at
+`apps/http-simple-controller/src/main.ts`. Its port is defined in
+`apps/http-simple-controller/.env`.
 
 Run it:
 
 ```bash
-bunito start 201-simple-controller
+cd example
+bun run start http-simple-controller
 ```
 
 Continue with [JSON Middleware](/tutorials/json-middleware).

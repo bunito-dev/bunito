@@ -1,21 +1,27 @@
-import process from 'node:process';
-import type { RawObject } from '@bunito/common';
 import { Exception, notEmptySet } from '#common';
+import type { Context } from '#context';
 import { CLIService } from '#services';
 import { Command } from './command';
 
-export class StartCommand extends Command<{
+type StartCommandOptions = {
   apps?: Set<string>;
   watch?: boolean;
   prod?: boolean;
   pad?: boolean;
-}> {
+};
+
+export class StartCommand extends Command<StartCommandOptions> {
+  // biome-ignore lint/complexity/noUselessConstructor: Bun coverage counts generated subclass constructors as uncovered.
+  constructor(options: StartCommandOptions, context: Context) {
+    super(options, context);
+  }
+
   public async run(): Promise<void> {
     const { project, spawn } = this.context;
     const { settings } = project;
 
     if (settings.mode === 'unknown') {
-      throw new Exception('Project not initialized');
+      throw new Exception('Project is not initialized');
     }
 
     const { apps: appNames, prod, pad, watch } = this.options;
@@ -24,7 +30,7 @@ export class StartCommand extends Command<{
     const bunArgs = ['bun', `--cwd=${path}`];
     const runArgs = ['run'];
 
-    const envs: RawObject<string> = {};
+    const envs: Record<string, string> = {};
 
     if (watch) {
       runArgs.push('--watch');
@@ -87,7 +93,7 @@ CLIService.registerCommand(StartCommand, {
         alias: 'p',
       })
       .option('pad', {
-        describe: 'Pad prefix with app name',
+        describe: 'Align app name prefixes',
         default: false,
         type: 'boolean',
       }),

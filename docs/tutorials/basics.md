@@ -1,6 +1,6 @@
 # Basics
 
-This tutorial mirrors the `101-basics` example. It shows providers, dependency
+This tutorial mirrors the `basics` example. It shows providers, dependency
 injection, logger usage, manual provider resolution, and lifecycle hooks.
 
 ## Install
@@ -117,22 +117,16 @@ await app.shutdown();
 `App.create()` builds the container. `app.resolve()` lets scripts or small apps pull
 providers directly from it.
 
-## Add `bunito.json`
+## Run The Example
 
-```json
-{
-  "apps": {
-    "101-basics": {
-      "entry": "apps/101-basics/main.ts"
-    }
-  }
-}
-```
+In the repository example workspace, this app lives at
+`apps/basics/src/main.ts`. The CLI discovers it from that path.
 
 Run it:
 
 ```bash
-bunito start 101-basics
+cd example
+bun run start basics
 ```
 
 Next, build an HTTP controller in [Simple Controller](/tutorials/simple-controller).

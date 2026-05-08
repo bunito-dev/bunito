@@ -24,7 +24,7 @@ export class ProjectService {
 
   get settings(): ProjectSettings {
     if (!this.settingsLoaded) {
-      throw new Exception('Project settings not loaded');
+      throw new Exception('Project settings have not been loaded');
     }
 
     return this.settingsLoaded;
@@ -66,7 +66,7 @@ export class ProjectService {
 
       if (entryStats) {
         if (!entryStats.isFile()) {
-          throw new Exception(`Project ${PROJECT_ENTRY_FILE} is not a file`);
+          throw new Exception(`Project entry "${PROJECT_ENTRY_FILE}" must be a file`);
         }
 
         this.settingsLoaded = {
@@ -135,7 +135,7 @@ export class ProjectService {
   async create(name: string, apps: string[]): Promise<string[]> {
     const { bunVersion, pkgVersion } = this.context.settings;
 
-    return await this.renderTemplate(ProjectTemplate, {
+    return this.renderTemplate(ProjectTemplate, {
       name,
       pkgVersion,
       bunVersion,
@@ -150,7 +150,7 @@ export class ProjectService {
 
       case 'standard': {
         if (names) {
-          throw new Exception('Supported only in monorepo');
+          throw new Exception('This command is available only in monorepo projects');
         }
 
         const { name, path, envs, entry } = this.settings;
@@ -169,7 +169,7 @@ export class ProjectService {
         const { apps } = this.settings;
 
         if (apps.size === 0) {
-          throw new Exception('No apps found');
+          throw new Exception('No runnable apps were found');
         }
 
         if (!names) {
@@ -182,7 +182,7 @@ export class ProjectService {
           const app = apps.get(name);
 
           if (!app) {
-            throw new Exception(`App ${name} not found`);
+            throw new Exception(`App "${name}" was not found`);
           }
 
           result.push(app);
@@ -216,11 +216,11 @@ export class ProjectService {
         const fileStats = await file.tryStat();
 
         if (fileStats?.isFile()) {
-          throw new Exception(`File ${path} already exists`);
+          throw new Exception(`File "${path}" already exists`);
         }
 
         if (fileStats?.isDirectory()) {
-          throw new Exception(`${path} is a directory`);
+          throw new Exception(`Path "${path}" is a directory`);
         }
       }
 

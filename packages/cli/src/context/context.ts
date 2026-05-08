@@ -16,7 +16,7 @@ export class Context {
 
   get settings(): ContextSettings {
     if (!this.settingsLoaded) {
-      throw new Error('Context settings not loaded');
+      throw new Error('Context settings have not been loaded');
     }
 
     return this.settingsLoaded;
@@ -59,6 +59,8 @@ export class Context {
     } = pkgInfo;
 
     const { cwd: cwdArgv, debug } = await yargs(argv)
+      .help(false)
+      .version(false)
       .option({
         cwd: {
           type: 'string',
@@ -105,7 +107,7 @@ export class Context {
     const service = this.services[name];
 
     if (service === undefined) {
-      throw new Error(`Service ${name} not found`);
+      throw new Error(`Service "${name}" is not registered`);
     }
 
     return service as ContextService<TName>;

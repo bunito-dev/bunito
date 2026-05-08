@@ -34,7 +34,7 @@ export class CLIService {
       .scriptName('bunito')
       .option({
         cwd: {
-          describe: 'Current working directory',
+          describe: 'Project working directory',
           type: 'string',
           alias: 'C',
           global: true,
@@ -49,7 +49,7 @@ export class CLIService {
 
     await args
       .strictCommands()
-      .demandCommand(1, 'You need at least one command before moving on...')
+      .demandCommand(1, 'Provide a command to run.')
       .completion('completion', 'Generate completion script')
       .help()
       .alias({
@@ -62,7 +62,7 @@ export class CLIService {
         } else if (msg) {
           logger.error(msg).br();
         } else {
-          logger.error('Unknown error').br();
+          logger.error('An unexpected CLI error occurred.').br();
         }
         yargs.showHelp('log');
         process.exit(2);

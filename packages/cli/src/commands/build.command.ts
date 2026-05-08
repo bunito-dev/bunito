@@ -1,19 +1,27 @@
 import { join } from 'node:path';
 import { Exception, notEmptySet } from '#common';
+import type { Context } from '#context';
 import { CLIService, PROJECT_OUT_DIR } from '#services';
 import { Command } from './command';
 
-export class BuildCommand extends Command<{
+type BuildCommandOptions = {
   apps?: Set<string>;
   minify?: boolean;
   sourcemap?: boolean;
-}> {
+};
+
+export class BuildCommand extends Command<BuildCommandOptions> {
+  // biome-ignore lint/complexity/noUselessConstructor: Bun coverage counts generated subclass constructors as uncovered.
+  constructor(options: BuildCommandOptions, context: Context) {
+    super(options, context);
+  }
+
   public async run(): Promise<void> {
     const { project, logger, fs } = this.context;
     const { settings } = project;
 
     if (settings.mode === 'unknown') {
-      throw new Exception('Project not initialized');
+      throw new Exception('Project is not initialized');
     }
 
     const { apps: appNames, minify, sourcemap } = this.options;
@@ -23,7 +31,7 @@ export class BuildCommand extends Command<{
     const app = apps[0];
 
     if (!app) {
-      throw new Exception('No apps to build');
+      throw new Exception('No runnable apps were found');
     }
 
     for (const [index, app] of apps.entries()) {
@@ -53,7 +61,7 @@ export class BuildCommand extends Command<{
         const file = fs.getFile(path, 'main.js');
         await file.write(content);
 
-        logger.info(`Built ${app.name} app:`, join(outPath, 'main.js'));
+        logger.info(`Built "${app.name}" app:`, join(outPath, 'main.js'));
       }
     }
   }
@@ -72,7 +80,7 @@ CLIService.registerCommand(BuildCommand, {
         coerce: notEmptySet<string>,
       })
       .option('sourcemap', {
-        describe: 'Build with inline sourcemap',
+        describe: 'Build with inline source maps',
         default: false,
         type: 'boolean',
         alias: 's',

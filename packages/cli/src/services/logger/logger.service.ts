@@ -4,6 +4,9 @@ import { styleText } from 'node:util';
 import { Exception } from '#common';
 
 export class LoggerService {
+  // biome-ignore lint/complexity/noUselessConstructor: Bun coverage counts generated constructors as uncovered.
+  constructor() {}
+
   info(...args: unknown[]): this {
     return this.print('info', ...args);
   }
