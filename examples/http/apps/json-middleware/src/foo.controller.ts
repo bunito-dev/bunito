@@ -1,10 +1,10 @@
 import type { RawObject } from '@bunito/bunito';
-import { Logger } from '@bunito/bunito';
+import { Controller, Logger } from '@bunito/bunito';
 import {
   Body,
-  Controller,
+  BodyParser,
   Get,
-  JSONMiddleware,
+  JSONSerializer,
   Params,
   Post,
   UseMiddleware,
@@ -14,8 +14,8 @@ import { FooBody, FooParams } from './schemas';
 @Controller('/foo', {
   injects: [Logger],
 })
-// JSONMiddleware serializes plain object responses and parses JSON request bodies.
-@UseMiddleware(JSONMiddleware)
+@UseMiddleware(JSONSerializer)
+@UseMiddleware(BodyParser, { parser: 'json' })
 export class FooController {
   constructor(private readonly logger: Logger) {
     logger.setContext(FooController);

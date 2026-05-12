@@ -4,7 +4,7 @@ import type {
   LoggerService,
   ProjectService,
   SpawnService,
-} from '#services';
+} from '../services';
 
 export type ContextSettings = {
   cwd: string;

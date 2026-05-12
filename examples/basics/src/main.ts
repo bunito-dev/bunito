@@ -1,7 +1,7 @@
 import { App } from '@bunito/bunito';
-import { AppModule } from './app.module';
-import { BarService } from './bar.service';
-import { FooService } from './foo.service';
+import { AppModule } from './app-module';
+import { BarService } from './bar-service';
+import { FooService } from './foo-service';
 
 const app = await App.create(AppModule);
 

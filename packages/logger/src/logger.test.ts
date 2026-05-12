@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Id } from '@bunito/container/internals';
 import { Logger } from './logger';
-import type { LoggerService } from './logger.service';
+import type { LoggerService } from './logger-service';
 import type { WriteLogOptions } from './types';
 
 class Recorder implements Pick<LoggerService, 'writeLog'> {
@@ -45,7 +45,7 @@ describe('Logger', () => {
     logger.verbose('verbose');
 
     expect(debugValue).toEqual({ value: true });
-    expect(recorder.logs.map((log) => log.level)).toEqual([
+    expect(recorder.logs.map((log) => log.kind)).toEqual([
       'DEBUG',
       'FATAL',
       'ERROR',
@@ -59,7 +59,7 @@ describe('Logger', () => {
   it('writes trace logs with duration and returns debug values', () => {
     const recorder = new Recorder();
     const logger = new Logger(recorder as unknown as LoggerService);
-    const trace = logger.trace();
+    const trace = logger.track();
 
     trace.fatal('fatal');
     trace.error('error');
@@ -70,7 +70,7 @@ describe('Logger', () => {
     const debugValue = trace.debug('debug-value');
 
     expect(debugValue).toBe('debug-value');
-    expect(recorder.logs.map((log) => log.level)).toEqual([
+    expect(recorder.logs.map((log) => log.kind)).toEqual([
       'FATAL',
       'ERROR',
       'WARN',
@@ -79,6 +79,6 @@ describe('Logger', () => {
       'VERBOSE',
       'DEBUG',
     ]);
-    expect(recorder.logs.every((log) => log.duration !== undefined)).toBeTrue();
+    expect(recorder.logs.every((log) => log.timestamp !== undefined)).toBeTrue();
   });
 });

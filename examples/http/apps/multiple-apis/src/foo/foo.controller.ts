@@ -1,5 +1,5 @@
-import { Logger } from '@bunito/bunito';
-import { Controller, Get, Params } from '@bunito/http';
+import { Controller, Logger } from '@bunito/bunito';
+import { Get, Params } from '@bunito/http';
 import { FooParams } from './schemas';
 
 @Controller('/', {

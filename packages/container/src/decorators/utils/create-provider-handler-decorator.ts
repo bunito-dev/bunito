@@ -1,6 +1,6 @@
 import type { Fn } from '@bunito/common';
-import { ContainerException } from '../../container.exception';
-import { PROVIDER_METADATA_KEY } from '../constants';
+import { InternalException } from '@bunito/common';
+import { CLASS_METADATA_KEYS } from '../constants';
 import type {
   ProviderHandlerDecorator,
   ProviderHandlerDecoratorOptions,
@@ -12,21 +12,19 @@ export function createProviderHandlerDecorator(
   options: ProviderHandlerDecoratorOptions = {},
 ): ProviderHandlerDecorator {
   return (target, context) => {
-    const { metadata, name: propKey } = context;
+    context.metadata[CLASS_METADATA_KEYS.provider] ??= {};
 
-    metadata[PROVIDER_METADATA_KEY] ??= {};
+    const metadata = context.metadata[CLASS_METADATA_KEYS.provider] as ProviderMetadata;
 
-    const providerMetadata = metadata[PROVIDER_METADATA_KEY] as ProviderMetadata;
+    metadata.handlers ??= new Map();
 
-    providerMetadata.handlers ??= new Map();
-
-    if (providerMetadata.handlers.has(decorator)) {
-      return ContainerException.throw`@${decorator}() decorator can only be applied once`;
+    if (metadata.handlers.has(decorator)) {
+      return InternalException.throw`@${decorator}() decorator can only be applied once`;
     }
 
-    providerMetadata.handlers.set(decorator, {
+    metadata.handlers.set(decorator, {
+      propKey: context.name,
       ...options,
-      propKey,
     });
 
     return target;

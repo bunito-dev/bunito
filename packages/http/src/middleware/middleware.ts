@@ -4,7 +4,7 @@ import type {
   ProviderDecoratorOptions,
 } from '@bunito/container/internals';
 import { createExtensionDecorator } from '@bunito/container/internals';
-import type { HTTPException } from '../http.exception';
+import type { HTTPException } from '../http-exception';
 import type { MiddlewareContext } from './types';
 
 export interface Middleware<TOptions extends RawObject = EmptyObject> {

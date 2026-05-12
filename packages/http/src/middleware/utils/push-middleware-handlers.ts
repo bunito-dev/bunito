@@ -13,12 +13,14 @@ export function pushMiddlewareHandlers(
       options,
     });
   }
+
   if (instance.serializeResponseData) {
     handlers.serializeResponseData.push({
       handler: instance.serializeResponseData,
       options,
     });
   }
+
   if (instance.serializeException) {
     handlers.serializeException.push({
       handler: instance.serializeException,

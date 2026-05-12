@@ -1,5 +1,7 @@
 import type { HTTPErrorStatus } from './types';
 
+export const HTTP_CONTROLLER_KEY = Symbol('http');
+
 export const HTTP_ERROR_STATUS_CODES = {
   BAD_REQUEST: 400,
   UNAUTHORIZED: 401,

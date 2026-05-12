@@ -1,0 +1,94 @@
+import { join } from 'node:path';
+import { Exception, notEmptySet } from '../common';
+import type { Context } from '../context';
+import { CLIService, PROJECT_OUT_DIR } from '../services';
+import { AbstractCommand } from './abstract-command';
+
+type BuildCommandOptions = {
+  apps?: Set<string>;
+  minify?: boolean;
+  sourcemap?: boolean;
+};
+
+export class BuildCommand extends AbstractCommand<BuildCommandOptions> {
+  // biome-ignore lint/complexity/noUselessConstructor: Bun coverage counts generated subclass constructors as uncovered.
+  constructor(options: BuildCommandOptions, context: Context) {
+    super(options, context);
+  }
+
+  public async run(): Promise<void> {
+    const { project, logger, fs } = this.context;
+    const { settings } = project;
+
+    if (settings.mode === 'unknown') {
+      throw new Exception('Project is not initialized');
+    }
+
+    const { apps: appNames, minify, sourcemap } = this.options;
+    const { mode, path: root } = settings;
+
+    const apps = project.getApps(appNames);
+    const app = apps[0];
+
+    if (!app) {
+      throw new Exception('No runnable apps were found');
+    }
+
+    for (const [index, app] of apps.entries()) {
+      if (index) {
+        logger.br();
+      }
+
+      const {
+        success,
+        outputs: [output],
+      } = await Bun.build({
+        root,
+        target: 'bun',
+        minify,
+        sourcemap: sourcemap ? 'inline' : 'none',
+        entrypoints: [app.entry],
+      });
+
+      if (success && output) {
+        const outPath =
+          mode === 'standard' ? join(PROJECT_OUT_DIR) : join(PROJECT_OUT_DIR, app.name);
+
+        const path = join(root, outPath);
+        await fs.ensurePath(path);
+
+        const content = await output.text();
+        const file = fs.getFile(path, 'main.js');
+        await file.write(content);
+
+        logger.info(`Built "${app.name}" app:`, join(outPath, 'main.js'));
+      }
+    }
+  }
+}
+
+CLIService.registerCommand(BuildCommand, {
+  command: 'build [apps...]',
+  aliases: ['b'],
+  describe: 'Build the app(s)',
+  builder: (yargs) =>
+    yargs
+      .positional('apps', {
+        describe: 'App names',
+        array: true,
+        type: 'string',
+        coerce: notEmptySet<string>,
+      })
+      .option('sourcemap', {
+        describe: 'Build with inline source maps',
+        default: false,
+        type: 'boolean',
+        alias: 's',
+      })
+      .option('minify', {
+        describe: 'Minify the output',
+        default: false,
+        type: 'boolean',
+        alias: 'm',
+      }),
+});

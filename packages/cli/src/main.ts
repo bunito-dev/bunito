@@ -2,15 +2,15 @@
 
 import * as process from 'node:process';
 import { hideBin } from 'yargs/helpers';
-import { Context } from '#context';
+import { Context } from './context';
 import {
   CLIService,
   FSService,
   LoggerService,
   ProjectService,
   SpawnService,
-} from '#services';
-import '#commands';
+} from './services';
+import './commands';
 
 const context = new Context()
   .createService('cli', CLIService)

@@ -1,13 +1,11 @@
 import type { HTTPPath } from '../types';
 
-export function normalizePath(...paths: Array<HTTPPath | undefined>): HTTPPath {
-  const normalized = paths.filter<HTTPPath>(
-    (path): path is HTTPPath => path !== undefined && path !== '/',
-  );
+export function normalizePath(...paths: Array<string | undefined>): HTTPPath {
+  const normalized = paths
+    .filter((path): path is string => !!path && path !== '/')
+    .join('/')
+    .split('/')
+    .filter(Boolean);
 
-  if (normalized.length === 0) {
-    return '/';
-  }
-
-  return normalized.join('') as HTTPPath;
+  return `/${normalized.join('/')}`;
 }

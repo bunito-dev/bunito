@@ -1,12 +1,11 @@
-import { Module } from '@bunito/bunito';
-import { JSONMiddleware, JSONModule, UseMiddleware, UsePrefix } from '@bunito/http';
+import { Module, UsePrefix } from '@bunito/bunito';
+import { JSONSerializer, UseMiddleware } from '@bunito/http';
 import { BarController } from './bar.controller';
 
 @Module({
-  imports: [JSONModule],
   controllers: [BarController],
 })
 // Module-level middleware keeps JSON behavior local to the /bar API.
 @UsePrefix('/bar')
-@UseMiddleware(JSONMiddleware)
+@UseMiddleware(JSONSerializer)
 export class BarModule {}

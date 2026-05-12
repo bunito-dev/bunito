@@ -1,7 +1,12 @@
 import type { RawObject } from '@bunito/common';
-import { assignNonNullish, isFn, isObject, isString } from '@bunito/common';
-import { ConfigException } from '../config.exception';
-import { ConfigService } from '../config.service';
+import {
+  assignNonNullish,
+  InternalException,
+  isFn,
+  isObject,
+  isString,
+} from '@bunito/common';
+import { ConfigService } from '../config-service';
 import type { ConfigBuilder, ConfigProvider } from '../types';
 
 export function defineConfig<TConfig extends RawObject>(
@@ -47,7 +52,7 @@ export function defineConfig<TConfig extends RawObject>(
   }
 
   if (!name) {
-    return ConfigException.throw`Unnamed config detected`;
+    return InternalException.throw`Unnamed config detected`;
   }
 
   const token = Symbol(`config(${name})`);
@@ -74,11 +79,11 @@ export function defineConfig<TConfig extends RawObject>(
           await builder.call(configService, configService),
         );
       } catch (err) {
-        if (ConfigException.isInstance(err)) {
+        if (InternalException.isInstance(err)) {
           throw err.setContext(name);
         }
 
-        throw new ConfigException(`Failed to build config`, err).setContext(name);
+        throw new InternalException('Failed to build config', err).setContext(name);
       }
     },
     scope: 'singleton',

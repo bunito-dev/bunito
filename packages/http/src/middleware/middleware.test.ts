@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { getProviderMetadata } from '@bunito/container/internals';
+import { getClassMetadata } from '@bunito/container/internals';
 import { Middleware } from './middleware';
 
 describe('Middleware', () => {
@@ -11,7 +11,7 @@ describe('Middleware', () => {
       }
     }
 
-    expect(getProviderMetadata(ExampleMiddleware)).toEqual({
+    expect(getClassMetadata(ExampleMiddleware, 'provider')).toEqual({
       decorator: Middleware,
       options: {
         injects: ['dependency'],

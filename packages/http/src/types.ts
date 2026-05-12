@@ -25,14 +25,21 @@ export type HTTPContext = {
   body: unknown;
 };
 
-export type ControllerOptions = {
-  prefix: HTTPPath;
-};
-
 export type ControllerDefinition = {
   moduleId: ModuleId;
   providerId: ProviderId;
   middleware: MiddlewareHandlers;
+};
+
+export type ControllerClassOptions = {
+  kind: 'middleware';
+  middleware: Class;
+  options: RawObject;
+};
+
+export type ControllerMethodOptions = {
+  kind: 'route';
+  options: RouteOptions;
 };
 
 export type RouteMethod = HTTPMethod | 'ALL';
@@ -46,21 +53,3 @@ export type RouteDefinition = WithInjections<{
   controller: ControllerDefinition;
   propKey: PropertyKey;
 }>;
-
-// controller component
-
-export type ControllerClassOptions =
-  | {
-      kind: 'prefix';
-      prefix: HTTPPath;
-    }
-  | {
-      kind: 'middleware';
-      middleware: Class;
-      options: RawObject;
-    };
-
-export type ControllerMethodOptions = {
-  kind: 'route';
-  options: RouteOptions;
-};

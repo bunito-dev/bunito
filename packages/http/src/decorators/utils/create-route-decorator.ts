@@ -1,17 +1,15 @@
-import type { Fn } from '@bunito/common';
 import { isObject, isString } from '@bunito/common';
-import { createComponentDecorator } from '@bunito/container/internals';
+import { createClassPropDecorator } from '@bunito/container/internals';
+import { HTTP_CONTROLLER_KEY } from '../../constants';
 import type {
   ControllerMethodOptions,
   HTTPPath,
   RouteMethod,
   RouteOptions,
 } from '../../types';
-import { Controller } from '../controller.decorator';
 import type { RouteDecorator, RouteDecoratorOptions } from '../types';
 
 export function createRouteDecorator<TOmit extends keyof RouteOptions = never>(
-  decorator: Fn,
   method: RouteMethod,
   pathOrOptions?: HTTPPath | RouteDecoratorOptions<TOmit>,
   extraOptions?: RouteDecoratorOptions<'path' | TOmit>,
@@ -29,8 +27,8 @@ export function createRouteDecorator<TOmit extends keyof RouteOptions = never>(
     options = {};
   }
 
-  return createComponentDecorator<RouteDecorator, ControllerMethodOptions>(
-    Controller,
+  return createClassPropDecorator<ControllerMethodOptions, RouteDecorator>(
+    HTTP_CONTROLLER_KEY,
     {
       kind: 'route',
       options: {
@@ -39,6 +37,5 @@ export function createRouteDecorator<TOmit extends keyof RouteOptions = never>(
         ...options,
       },
     },
-    decorator,
   );
 }

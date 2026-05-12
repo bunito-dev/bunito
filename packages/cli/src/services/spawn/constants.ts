@@ -12,3 +12,16 @@ export const PROCESS_COLORS: InspectColor[] = [
   'yellowBright',
   'blueBright',
 ];
+
+export const PROCESS_BG_COLORS: InspectColor[] = [
+  'bgCyan',
+  'bgGreen',
+  'bgMagenta',
+  'bgYellow',
+  'bgBlue',
+  'bgCyanBright',
+  'bgGreenBright',
+  'bgMagentaBright',
+  'bgYellowBright',
+  'bgBlueBright',
+];

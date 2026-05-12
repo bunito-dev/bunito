@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { ConfigException } from '../config.exception';
-import { ConfigService } from '../config.service';
+import { InternalException } from '@bunito/common';
+import { ConfigService } from '../config-service';
 import { defineConfig } from './define-config';
 
 describe('defineConfig', () => {
@@ -119,7 +119,7 @@ describe('defineConfig', () => {
 
   it('adds config context to config exceptions thrown by builders', async () => {
     const config = defineConfig('Feature', () => {
-      throw new ConfigException('Invalid value');
+      throw new InternalException('Invalid value');
     });
 
     if (!('useFactory' in config)) {
@@ -133,7 +133,7 @@ describe('defineConfig', () => {
       error = err;
     }
 
-    expect(error).toBeInstanceOf(ConfigException);
+    expect(error).toBeInstanceOf(InternalException);
     expect((error as Error).message).toBe('Feature: Invalid value');
   });
 
@@ -153,7 +153,7 @@ describe('defineConfig', () => {
       error = err;
     }
 
-    expect(error).toBeInstanceOf(ConfigException);
+    expect(error).toBeInstanceOf(InternalException);
     expect((error as Error).message).toBe('Feature: Failed to build config');
     expect((error as Error).cause).toBeInstanceOf(Error);
   });

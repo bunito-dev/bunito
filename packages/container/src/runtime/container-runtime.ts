@@ -1,5 +1,5 @@
 import type { CallableInstance, Fn, MaybePromise, RawObject } from '@bunito/common';
-import { isFn, isObject, isString } from '@bunito/common';
+import { InternalException, isFn, isObject, isString } from '@bunito/common';
 import type {
   ContainerCompiler,
   InjectionLike,
@@ -7,7 +7,6 @@ import type {
   ModuleId,
   ProviderId,
 } from '../compiler';
-import { ContainerException } from '../container.exception';
 import { OnDestroy, OnInit, OnResolve } from '../decorators';
 import type { TokenLike } from '../utils';
 import { Id } from '../utils';
@@ -114,7 +113,7 @@ export class ContainerRuntime {
 
     if (!provider) {
       if (orThrow) {
-        return ContainerException.throw`Provider ${providerId} was not found`;
+        return InternalException.throw`Provider ${providerId} was not found`;
       }
 
       return;
@@ -128,7 +127,7 @@ export class ContainerRuntime {
 
     if (!providerModuleId) {
       if (orThrow) {
-        return ContainerException.throw`Provider ${providerId} is not available in module ${moduleId}`;
+        return InternalException.throw`Provider ${providerId} is not available in module ${moduleId}`;
       }
 
       return;
@@ -236,7 +235,7 @@ export class ContainerRuntime {
 
       if (disposable) {
         instance[propKey] = () => {
-          return ContainerException.throw`Handler @${handlerDecorator} for provider ${providerId} can only be called once`;
+          return InternalException.throw`Handler @${handlerDecorator} for provider ${providerId} can only be called once`;
         };
       }
     };
@@ -369,7 +368,7 @@ export class ContainerRuntime {
     }
 
     if (value === undefined && !optional) {
-      return ContainerException.throw`Injection ${injection} at ${pos} could not be resolved`;
+      return InternalException.throw`Injection ${Id.for(token)} at ${pos} could not be resolved`;
     }
 
     return value ?? null;

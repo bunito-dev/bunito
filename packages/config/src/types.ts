@@ -4,7 +4,7 @@ import type {
   ProviderValueOptions,
 } from '@bunito/container/internals';
 import type { ZodType } from 'zod';
-import type { ConfigService } from './config.service';
+import type { ConfigService } from './config-service';
 
 export type ConfigBuilder<TConfig> = (
   this: ConfigService,

@@ -1,7 +1,7 @@
+import { InternalException } from '@bunito/common';
 import { Container } from '@bunito/container';
 import type { ModuleLike, ResolveToken, Token } from '@bunito/container/internals';
 import { Logger } from '@bunito/logger';
-import { AppException } from './app.exception';
 import { OnAppShutdown, OnAppStart } from './decorators';
 
 export class App {
@@ -42,7 +42,7 @@ export class App {
   }
 
   protected async triggerAction(action: 'start' | 'shutdown'): Promise<void> {
-    const trace = this.logger?.trace();
+    const trace = this.logger?.track();
 
     try {
       switch (action) {
@@ -67,7 +67,7 @@ export class App {
     }
 
     this[action] = async () => {
-      const err = new AppException(`App ${action} can only be called once`);
+      const err = new InternalException(`App ${action} can only be called once`);
 
       if (!this.logger) {
         throw err;

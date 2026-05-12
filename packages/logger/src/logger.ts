@@ -1,8 +1,8 @@
-import { isFn, isObject, isString } from '@bunito/common';
 import type { RequestId } from '@bunito/container';
 import { Provider, REQUEST_ID } from '@bunito/container';
-import { LoggerService } from './logger.service';
-import type { LogArgs, LogLevelName, TraceLogger, WriteLogOptions } from './types';
+import { LoggerService } from './logger-service';
+import type { LogArg, LogArgs, LoggerSettings, LogLevelKind } from './types';
+import { resolveContext } from './utils';
 
 @Provider({
   scope: 'request',
@@ -16,114 +16,66 @@ import type { LogArgs, LogLevelName, TraceLogger, WriteLogOptions } from './type
   ],
 })
 export class Logger {
-  private context: string | undefined;
-
-  private readonly traceId: number | undefined;
-
   constructor(
     private readonly loggerService: LoggerService,
     requestId: RequestId | null = null,
+    private readonly settings: LoggerSettings = {},
   ) {
-    this.traceId = requestId?.index;
+    if (requestId) {
+      settings.traceId = requestId.index;
+    }
   }
 
-  setContext(contextLike: unknown, description?: string): void {
-    let context: string | undefined;
+  setContext(...contextLike: unknown[]): this {
+    this.settings.context = resolveContext(contextLike);
 
-    if (isFn(contextLike)) {
-      context = contextLike.name;
-    } else if (isString(contextLike, true)) {
-      context = contextLike;
-    } else if (isObject(contextLike)) {
-      context = `${contextLike}`;
-    }
-
-    if (context) {
-      this.context = description ? `${context}(${description})` : context;
-    }
+    return this;
   }
 
   fatal(...args: LogArgs): void {
-    this.writeLog({
-      level: 'FATAL',
-      args,
-    });
+    this.writeLog('FATAL', args);
   }
 
   error(...args: LogArgs): void {
-    this.writeLog({
-      level: 'ERROR',
-      args,
-    });
+    this.writeLog('ERROR', args);
   }
 
   warn(...args: LogArgs): void {
-    this.writeLog({
-      level: 'WARN',
-      args,
-    });
+    this.writeLog('WARN', args);
   }
 
   info(...args: LogArgs): void {
-    this.writeLog({
-      level: 'INFO',
-      args,
-    });
+    this.writeLog('INFO', args);
   }
 
   ok(...args: LogArgs): void {
-    this.writeLog({
-      level: 'OK',
-      args,
-    });
+    this.writeLog('OK', args);
   }
 
   verbose(...args: LogArgs): void {
-    this.writeLog({
-      level: 'VERBOSE',
-      args,
-    });
+    this.writeLog('VERBOSE', args);
   }
 
   debug<TArg0>(...args: LogArgs<TArg0>): TArg0 {
-    this.writeLog({
-      level: 'DEBUG',
-      args,
-    });
-
+    this.writeLog('DEBUG', args);
     return args[0];
   }
 
-  trace(): TraceLogger {
-    const now = Date.now();
+  track(...contextLike: unknown[]): Logger {
+    const { context, traceId } = this.settings;
 
-    const writeLogWithDuration = (level: LogLevelName, args: LogArgs) => {
-      this.writeLog({
-        level,
-        args,
-        duration: Date.now() - now,
-      });
-    };
-
-    return {
-      fatal: (...args) => writeLogWithDuration('FATAL', args),
-      error: (...args) => writeLogWithDuration('ERROR', args),
-      warn: (...args) => writeLogWithDuration('WARN', args),
-      info: (...args) => writeLogWithDuration('INFO', args),
-      ok: (...args) => writeLogWithDuration('OK', args),
-      verbose: (...args) => writeLogWithDuration('VERBOSE', args),
-      debug: (...args) => {
-        writeLogWithDuration('DEBUG', args);
-        return args[0];
-      },
-    };
+    return new Logger(this.loggerService, null, {
+      context: resolveContext(contextLike) ?? context,
+      traceId,
+      timestamp: new Date(),
+    });
   }
 
-  protected writeLog(options: WriteLogOptions): void {
+  protected writeLog(kind: LogLevelKind, args: LogArg[]): void {
     this.loggerService.writeLog({
-      context: this.context,
-      traceId: this.traceId,
-      ...options,
+      ...this.settings,
+      kind,
+      args,
     });
   }
 }

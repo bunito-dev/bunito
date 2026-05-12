@@ -1,6 +1,6 @@
 import type { RawObject } from '@bunito/bunito';
-import { Logger } from '@bunito/bunito';
-import { Controller, Get, NotFoundException, Params } from '@bunito/http';
+import { Controller, Logger } from '@bunito/bunito';
+import { Get, NotFoundException, Params } from '@bunito/http';
 import { BarParams } from './schemas';
 
 @Controller('/', {

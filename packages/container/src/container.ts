@@ -1,12 +1,5 @@
 import type { Fn } from '@bunito/common';
-import type {
-  ComponentKey,
-  ComponentPropSchema,
-  Injections,
-  MatchedComponents,
-  ModuleId,
-  ModuleLike,
-} from './compiler';
+import type { Injections, MatchedControllers, ModuleId, ModuleLike } from './compiler';
 import { ContainerCompiler } from './compiler';
 import type { RequestId, ResolveProviderOptions } from './runtime';
 import { ContainerRuntime } from './runtime';
@@ -104,16 +97,13 @@ export class Container {
     }
   }
 
-  locateComponents<
-    TOptions = unknown,
-    TPropOptions extends ComponentPropSchema = ComponentPropSchema,
-  >(
-    componentKey: ComponentKey,
+  locateComponents<TClassOptions = unknown, TMethodOptions = unknown>(
+    controllerKey: symbol,
     moduleId?: ModuleId,
-  ): MatchedComponents<TOptions, TPropOptions> | undefined {
-    return this.compiler.locateComponents(componentKey, moduleId) as MatchedComponents<
-      TOptions,
-      TPropOptions
+  ): MatchedControllers<TClassOptions, TMethodOptions> | undefined {
+    return this.compiler.locateControllers(controllerKey, moduleId) as MatchedControllers<
+      TClassOptions,
+      TMethodOptions
     >;
   }
 }

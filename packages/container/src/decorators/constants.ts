@@ -1,5 +1,8 @@
-export const PROVIDER_METADATA_KEY = Symbol('di(provider)');
+export const CLASS_METADATA_KEYS = {
+  module: Symbol('di(module)'),
+  provider: Symbol('di(provider)'),
+  controller: Symbol('di(controller)'),
+  props: Symbol('di(props)'),
+};
 
-export const MODULE_METADATA_KEY = Symbol('di(module)');
-
-export const COMPONENT_METADATA_KEY = Symbol('di(component)');
+export const DEFAULT_CONTROLLER_KEY = Symbol('default');

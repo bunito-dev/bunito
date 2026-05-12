@@ -1,16 +1,13 @@
 export type {
   Class,
+  EmptyObject,
   Fn,
   Mandatory,
   Optional,
   RawObject,
 } from '@bunito/common';
 export {
-  Exception,
-  isClass,
-  isFn,
-  isNumber,
-  isObject,
-  isString,
-  isSymbol,
+  AbstractException,
+  InternalException,
+  utils,
 } from '@bunito/common';

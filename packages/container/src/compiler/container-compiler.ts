@@ -1,22 +1,20 @@
-import type { Class } from '@bunito/common';
-import { isClass, isFn, isObject } from '@bunito/common';
-import { ContainerException } from '../container.exception';
+import type { Class, Fn } from '@bunito/common';
+import { InternalException, isClass, isFn, isObject } from '@bunito/common';
 import type { ProviderMetadata } from '../decorators';
 import {
-  getComponentMetadata,
-  getModuleMetadata,
-  getProviderMetadata,
+  Controller,
+  getClassMetadata,
+  getControllerProps,
+  Module,
   OnDestroy,
   OnInit,
   OnResolve,
+  Provider,
 } from '../decorators';
 import type { TokenLike } from '../utils';
 import { Id } from '../utils';
 import type {
-  ComponentDefinition,
-  ComponentId,
-  ComponentKey,
-  MatchedComponents,
+  MatchedControllers,
   ModuleId,
   ModuleLike,
   ModuleNode,
@@ -38,8 +36,6 @@ export class ContainerCompiler {
 
   private readonly providerIds = new Map<ProviderKey, Set<ProviderId>>();
 
-  private readonly components = new Map<ComponentId, ComponentDefinition>();
-
   constructor(moduleLike: ModuleLike) {
     [this.rootModuleId] = this.compileModule(moduleLike);
   }
@@ -50,7 +46,7 @@ export class ContainerCompiler {
     const result = this.modules.get(moduleId);
 
     if (!result && orThrow) {
-      return ContainerException.throw`Module ${moduleId} was not found`;
+      return InternalException.throw`Module ${moduleId} was not found`;
     }
 
     return result;
@@ -62,73 +58,7 @@ export class ContainerCompiler {
     const result = this.providers.get(providerId);
 
     if (!result && orThrow) {
-      return ContainerException.throw`Provider ${providerId} was not found`;
-    }
-
-    return result;
-  }
-
-  getComponent(componentId: ComponentId, orThrow?: true): ComponentDefinition;
-  getComponent(
-    componentId: ComponentId,
-    orThrow: boolean,
-  ): ComponentDefinition | undefined;
-  getComponent(
-    componentId: ComponentId,
-    orThrow = true,
-  ): ComponentDefinition | undefined {
-    const result = this.components.get(componentId);
-
-    if (!result && orThrow) {
-      return ContainerException.throw`Component ${componentId} was not found`;
-    }
-
-    return result;
-  }
-
-  locateComponents(
-    componentKey: ComponentKey,
-    moduleId = this.rootModuleId,
-  ): MatchedComponents | undefined {
-    let result: MatchedComponents | undefined;
-
-    const { children, components } = this.getModule(moduleId);
-
-    if (components) {
-      for (const componentId of components) {
-        const component = this.getComponent(componentId);
-        const options = component.options.get(componentKey);
-        if (!options) {
-          continue;
-        }
-
-        result ??= { moduleId };
-        result.components ??= [];
-        result.components.push(
-          'useProvider' in component
-            ? {
-                useProvider: component.useProvider,
-                options,
-              }
-            : {
-                useClass: component.useClass,
-                options,
-              },
-        );
-      }
-    }
-
-    if (children) {
-      for (const childId of children) {
-        const child = this.locateComponents(componentKey, childId);
-        if (!child) {
-          continue;
-        }
-
-        result ??= { moduleId };
-        result.children ??= [];
-        result.children.push(child);
-      }
+      return InternalException.throw`Provider ${providerId} was not found`;
     }
 
     return result;
@@ -157,6 +87,63 @@ export class ContainerCompiler {
     return result;
   }
 
+  locateControllers(
+    propsKey: symbol,
+    moduleId = this.rootModuleId,
+  ): MatchedControllers | undefined {
+    let matched: MatchedControllers | undefined;
+
+    const { classes, controllers, children } = this.getModule(moduleId);
+
+    if (classes) {
+      for (const classRef of classes) {
+        const props = getControllerProps(classRef, propsKey);
+
+        if (!props) {
+          continue;
+        }
+
+        matched ??= { moduleId };
+        matched.props ??= [];
+        matched.props.push(...props);
+      }
+    }
+
+    if (controllers) {
+      for (const { classRef, providerId, options } of controllers) {
+        const props = getControllerProps(classRef, propsKey);
+
+        if (!props) {
+          continue;
+        }
+
+        matched ??= { moduleId };
+        matched.controllers ??= [];
+        matched.controllers.push({
+          providerId,
+          options,
+          props,
+        });
+      }
+    }
+
+    if (children) {
+      for (const childModuleId of children) {
+        const child = this.locateControllers(propsKey, childModuleId);
+
+        if (!child) {
+          continue;
+        }
+
+        matched ??= { moduleId };
+        matched.children ??= [];
+        matched.children.push(child);
+      }
+    }
+
+    return matched;
+  }
+
   private compileModule(
     moduleLike: ModuleLike,
     parentId?: Id,
@@ -165,7 +152,7 @@ export class ContainerCompiler {
     const moduleId = Id.for(moduleLike);
 
     if (parentStack.has(moduleId)) {
-      return ContainerException.throw`Circular module dependency detected: ${[
+      return InternalException.throw`Circular module dependency detected: ${[
         ...parentStack,
         moduleId,
       ]}`;
@@ -187,13 +174,13 @@ export class ContainerCompiler {
 
     if (isClass(moduleLike)) {
       moduleClass = moduleLike;
-      moduleOptions = getModuleMetadata(moduleLike);
+      moduleOptions = getClassMetadata(moduleClass, 'module');
     } else if (isObject<ModuleOptions>(moduleLike)) {
       moduleOptions = moduleLike;
     }
 
     if (!moduleOptions) {
-      return ContainerException.throw`Missing @Module() metadata on ${moduleLike}`;
+      return InternalException.throw`Missing @Module() metadata on ${moduleLike}`;
     }
 
     const {
@@ -206,14 +193,10 @@ export class ContainerCompiler {
     const moduleProvidersLike = Object.values(moduleProviders).flat(1) as ProviderLike[];
 
     if (!moduleImports && !moduleExports && !moduleProvidersLike.length) {
-      return ContainerException.throw`Module ${moduleLike} must declare imports, exports, or providers`;
+      return InternalException.throw`Module ${moduleLike} must declare imports, exports, or providers`;
     }
 
     moduleNode = {};
-
-    const components: Set<ComponentId> = new Set();
-    const componentsWithProvider: ComponentId[] = [];
-    const componentsWithClass: ComponentId[] = [];
 
     if (parentId) {
       moduleNode.parents = new Set([parentId]);
@@ -222,18 +205,16 @@ export class ContainerCompiler {
     this.modules.set(moduleId, moduleNode);
 
     if (moduleClass) {
-      const [providerId] = this.compileProvider(moduleId, moduleClass);
+      const [providerId, , classRef] = this.compileProvider(moduleId, moduleClass);
 
       if (providerId) {
         moduleNode.providers ??= new Map();
         moduleNode.providers.set(providerId, moduleId);
       }
 
-      const componentId = this.compileComponent(moduleClass);
-
-      if (componentId) {
-        components.add(componentId);
-        componentsWithClass.push(componentId);
+      if (classRef) {
+        moduleNode.classes ??= [];
+        moduleNode.classes.push(classRef);
       }
     }
 
@@ -250,7 +231,7 @@ export class ContainerCompiler {
         );
 
         if (moduleNode.children.has(importId)) {
-          return ContainerException.throw`Module ${importId} is already imported by module ${moduleId}`;
+          return InternalException.throw`Module ${importId} is already imported by module ${moduleId}`;
         }
 
         moduleNode.children.add(importId);
@@ -270,7 +251,7 @@ export class ContainerCompiler {
           }
 
           if (moduleNode.providers.has(providerId)) {
-            return ContainerException.throw`Provider ${providerId} is already available in module ${moduleId}`;
+            return InternalException.throw`Provider ${providerId} is already available in module ${moduleId}`;
           }
 
           moduleNode.providers.set(providerId, providerModuleId);
@@ -281,35 +262,41 @@ export class ContainerCompiler {
     }
 
     for (const providerLike of moduleProvidersLike) {
-      const [providerId, providerClass] = this.compileProvider(moduleId, providerLike);
+      const [providerId, providerDecorator, classRef] = this.compileProvider(
+        moduleId,
+        providerLike,
+      );
 
       if (providerId) {
         moduleNode.providers ??= new Map();
         moduleNode.providers.set(providerId, moduleId);
-      }
 
-      let componentId: ComponentId | undefined;
+        switch (providerDecorator) {
+          case Module:
+            return InternalException.throw`Module ${moduleId} cannot have providers decorated with @Module`;
 
-      if (providerClass) {
-        componentId = this.compileComponent(providerClass, providerId);
+          case Controller:
+            if (classRef) {
+              const options = getClassMetadata(classRef, 'controller');
 
-        if (componentId) {
-          if (components.has(componentId)) {
-            return ContainerException.throw`Component ${providerClass} is already registered in module ${moduleId}`;
-          }
+              if (options) {
+                moduleNode.controllers ??= [];
+                moduleNode.controllers.push({
+                  providerId,
+                  classRef,
+                  options,
+                });
+              }
+            }
+            break;
 
-          components.add(componentId);
-
-          if (providerId) {
-            componentsWithProvider.push(componentId);
-          } else {
-            componentsWithClass.push(componentId);
-          }
+          default:
         }
-      }
-
-      if (!providerId && !componentId) {
-        return ContainerException.throw`Provider ${providerLike} in module ${moduleId} is missing provider options`;
+      } else if (classRef) {
+        moduleNode.classes ??= [];
+        moduleNode.classes.push(classRef);
+      } else {
+        return InternalException.throw`Provider ${providerLike} in module ${moduleId} is missing provider options`;
       }
     }
 
@@ -322,7 +309,7 @@ export class ContainerCompiler {
 
         if (providerModuleId) {
           if (moduleNode.exports.has(exportId)) {
-            return ContainerException.throw`Provider ${exportId} is already exported from module ${moduleId}`;
+            return InternalException.throw`Provider ${exportId} is already exported from module ${moduleId}`;
           }
 
           moduleNode.exports.add(exportId);
@@ -338,7 +325,7 @@ export class ContainerCompiler {
 
           for (const providerId of exportProviderIds) {
             if (moduleNode.exports.has(providerId)) {
-              return ContainerException.throw`Provider ${providerId} from module ${exportId} is already exported from module ${moduleId}`;
+              return InternalException.throw`Provider ${providerId} from module ${exportId} is already exported from module ${moduleId}`;
             }
 
             moduleNode.exports.add(providerId);
@@ -347,12 +334,8 @@ export class ContainerCompiler {
           continue;
         }
 
-        return ContainerException.throw`Export ${exportId} was not found in module ${moduleId}`;
+        return InternalException.throw`Export ${exportId} was not found in module ${moduleId}`;
       }
-    }
-
-    if (components.size) {
-      moduleNode.components = [...componentsWithClass, ...componentsWithProvider];
     }
 
     return [moduleId, moduleNode];
@@ -361,16 +344,16 @@ export class ContainerCompiler {
   private compileProvider(
     moduleId: ModuleId,
     providerLike: ProviderLike,
-  ): [providerId?: ProviderId, providerClass?: Class] {
-    let providerClass: Class | undefined;
+  ): [providerId?: ProviderId, providerDecorator?: Fn, classRef?: Class] {
+    let classRef: Class | undefined;
     let providerOptions: ProviderOptions | undefined;
     let providerMetadata: ProviderMetadata | undefined;
 
     if (isClass(providerLike)) {
-      providerClass = providerLike;
-      providerMetadata = getProviderMetadata(providerLike);
+      classRef = providerLike;
+      providerMetadata = getClassMetadata(providerLike, 'provider');
 
-      if (providerMetadata) {
+      if (providerMetadata?.options || providerMetadata?.handlers) {
         providerOptions = {
           ...(providerMetadata.options ?? {}),
           useClass: providerLike,
@@ -382,42 +365,43 @@ export class ContainerCompiler {
       };
     } else if (isObject<ProviderOptions>(providerLike)) {
       providerOptions = providerLike;
+
+      if ('useClass' in providerOptions) {
+        classRef = providerOptions.useClass;
+        providerMetadata = getClassMetadata(classRef, 'provider');
+      }
     }
 
-    if (!providerOptions) {
-      return [undefined, providerClass];
+    if (classRef && !getClassMetadata(classRef, 'props')) {
+      classRef = undefined;
     }
 
     let token: TokenLike | undefined;
 
-    if ('useClass' in providerOptions) {
-      ({ token } = providerOptions);
-      const { useClass } = providerOptions;
-
-      token ??= useClass;
-      providerMetadata ??= getProviderMetadata(providerOptions.useClass);
-    } else if ('useFactory' in providerOptions) {
-      ({ token } = providerOptions);
-      const { useFactory } = providerOptions;
-
-      token ??= useFactory;
-    } else if ('useValue' in providerOptions) {
-      ({ token } = providerOptions);
+    if (providerOptions) {
+      if ('useClass' in providerOptions) {
+        token = providerOptions.token ?? providerOptions.useClass;
+      } else if ('useFactory' in providerOptions) {
+        token = providerOptions.token ?? providerOptions.useFactory;
+      } else if ('useValue' in providerOptions) {
+        token = providerOptions.token;
+      }
     }
 
-    if (!token) {
-      return [undefined, providerClass];
+    if (!providerOptions || !token) {
+      return [undefined, undefined, classRef];
     }
 
     const providerId = Id.for(token);
     const providerDefinition = this.providers.get(providerId);
 
     if (providerDefinition) {
-      return ContainerException.throw`Provider ${providerId} is already defined in module ${providerDefinition.moduleId}`;
+      return InternalException.throw`Provider ${providerId} is already defined in module ${providerDefinition.moduleId}`;
     }
 
     const { global } = providerOptions;
 
+    const decorator = providerMetadata?.decorator;
     const handlers = providerMetadata?.handlers;
 
     this.providers.set(providerId, {
@@ -427,8 +411,8 @@ export class ContainerCompiler {
       handlers,
     });
 
-    if (providerMetadata?.decorator) {
-      this.indexProvider(providerMetadata.decorator, providerId);
+    if (decorator) {
+      this.indexProvider(decorator, providerId);
     }
 
     if (handlers) {
@@ -437,39 +421,14 @@ export class ContainerCompiler {
       }
     }
 
-    return [providerId, providerClass];
-  }
-
-  private compileComponent(
-    componentClass: Class,
-    providerId?: ProviderId,
-  ): ComponentId | undefined {
-    const options = getComponentMetadata(componentClass);
-
-    if (!options) {
-      return;
-    }
-
-    const componentId = Id.for(componentClass);
-
-    this.components.set(
-      componentId,
-      providerId
-        ? {
-            useProvider: providerId,
-            options,
-          }
-        : {
-            useClass: componentClass,
-            options,
-          },
-    );
-
-    return componentId;
+    return [providerId, decorator, classRef];
   }
 
   private indexProvider(providerKey: ProviderKey, providerId: ProviderId): void {
     switch (providerKey) {
+      case Provider:
+      case Module:
+      case Controller:
       case OnInit:
       case OnResolve:
       case OnDestroy:

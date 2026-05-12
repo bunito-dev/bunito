@@ -1,2 +1,2 @@
-export * from './on-app-shutdown.decorator';
-export * from './on-app-start.decorator';
+export * from './on-app-shutdown';
+export * from './on-app-start';

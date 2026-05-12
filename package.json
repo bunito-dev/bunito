@@ -19,10 +19,12 @@
     "packages": ["examples/*", "packages/*"],
     "catalog": {
       "@biomejs/biome": "2.4.13",
+      "@nats-io/transport-node": "3.4.0",
       "zod": "4.3.6"
     },
     "catalogs": {
       "range": {
+        "@nats-io/transport-node": "^3.4.0",
         "zod": "^4.3.0"
       }
     }

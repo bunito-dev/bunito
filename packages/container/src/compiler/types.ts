@@ -1,4 +1,5 @@
-import type { Any, Class, Fn, WithBase } from '@bunito/common';
+import type { Any, Class, Fn } from '@bunito/common';
+import type { ClassPropMetadata, ControllerClassOptions } from '../decorators';
 import type { Id, Token, TokenLike } from '../utils';
 
 // modules
@@ -18,7 +19,8 @@ export type ModuleNode = {
   parents?: Set<ModuleId>;
   children?: Set<ModuleId>;
   providers?: Map<ProviderId, ModuleId>;
-  components?: ComponentId[];
+  controllers?: ControllerDefinition[];
+  classes?: Class[];
   exports?: Set<ProviderId>;
 };
 
@@ -106,63 +108,40 @@ export type WithInjections<TValue extends object = object> = {
   injects?: Injections;
 } & TValue;
 
-// components
+// controllers
 
-export type ComponentId = Id;
-export type ComponentKey = Fn;
-export type ComponentPropKind = 'class' | 'field' | 'method';
-export type ComponentPropSchema = Partial<Record<ComponentPropKind, unknown>>;
-
-export type ComponentPropOptions<
-  TOptions extends ComponentPropSchema = ComponentPropSchema,
-> =
-  | {
-      propKind: 'class';
-      value: TOptions['class'];
-    }
-  | {
-      propKind: 'field';
-      propKey: PropertyKey;
-      value: TOptions['field'];
-    }
-  | {
-      propKind: 'method';
-      propKey: PropertyKey;
-      value: TOptions['method'];
-    };
-
-export type ComponentOptions<
-  TOptions = unknown,
-  TPropOptions extends ComponentPropSchema = ComponentPropSchema,
-> = {
-  value?: TOptions;
-  props?: ComponentPropOptions<TPropOptions>[];
+export type ControllerOptions = {
+  prefix?: string;
 };
 
-export type ComponentDefinition = WithBase<
-  {
-    options: Map<ComponentKey, ComponentOptions>;
-  },
-  { useClass: Class },
-  { useProvider: ProviderId }
->;
+export type ControllerDefinition = {
+  providerId: ProviderId;
+  classRef: Class;
+  options: ControllerOptions;
+};
 
-export type ComponentEntity<
-  TOptions = unknown,
-  TPropOptions extends ComponentPropSchema = ComponentPropSchema,
-> = WithBase<
-  {
-    options: ComponentOptions<TOptions, TPropOptions>;
-  },
-  { useClass: Class },
-  { useProvider: ProviderId }
->;
+export type ControllerPropOptions = {
+  kind: string;
+  [key: string]: unknown;
+};
 
-export type MatchedComponents<
-  TOptions = unknown,
-  TPropOptions extends ComponentPropSchema = ComponentPropSchema,
-> = {
+export type MatchedControllerProps<TClassOptions, TMethodOptions> = ClassPropMetadata<
+  TClassOptions extends ControllerPropOptions
+    ? TClassOptions | ControllerClassOptions
+    : ControllerClassOptions,
+  unknown,
+  TMethodOptions
+>[];
+
+export type MatchedController<TClassOptions, TMethodOptions> = {
+  providerId: ProviderId;
+  options: ControllerOptions;
+  props: MatchedControllerProps<TClassOptions, TMethodOptions>;
+};
+
+export type MatchedControllers<TClassOptions = unknown, TMethodOptions = unknown> = {
   moduleId: ModuleId;
-  components?: ComponentEntity<TOptions, TPropOptions>[];
-  children?: MatchedComponents<TOptions, TPropOptions>[];
+  props?: MatchedControllerProps<TClassOptions, TMethodOptions>;
+  controllers?: MatchedController<TClassOptions, TMethodOptions>[];
+  children?: MatchedControllers<TClassOptions, TMethodOptions>[];
 };

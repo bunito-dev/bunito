@@ -31,6 +31,17 @@
         "@bunito/cli": "workspace:*",
       },
     },
+    "examples/microservices": {
+      "name": "microservices",
+      "dependencies": {
+        "@bunito/broker": "workspace:*",
+        "@bunito/bunito": "workspace:*",
+        "@bunito/http": "workspace:*",
+      },
+      "devDependencies": {
+        "@bunito/cli": "workspace:*",
+      },
+    },
     "examples/monorepo": {
       "name": "monorepo",
       "dependencies": {
@@ -42,48 +53,65 @@
     },
     "packages/app": {
       "name": "@bunito/app",
-      "version": "0.0.9",
+      "version": "0.0.10",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.9",
-        "@bunito/config": "workspace:0.0.9",
-        "@bunito/container": "workspace:0.0.9",
-        "@bunito/logger": "workspace:0.0.9",
+        "@bunito/common": "workspace:0.0.10",
+        "@bunito/config": "workspace:0.0.10",
+        "@bunito/container": "workspace:0.0.10",
+        "@bunito/logger": "workspace:0.0.10",
       },
     },
     "packages/biome": {
       "name": "@bunito/biome",
-      "version": "0.0.9",
+      "version": "0.0.10",
+    },
+    "packages/broker": {
+      "name": "@bunito/broker",
+      "version": "0.0.10",
+      "dependencies": {
+        "@bunito/app": "workspace:0.0.10",
+        "@bunito/common": "workspace:0.0.10",
+        "@bunito/config": "workspace:0.0.10",
+        "@bunito/container": "workspace:0.0.10",
+        "@bunito/logger": "workspace:0.0.10",
+      },
+      "devDependencies": {
+        "@nats-io/transport-node": "catalog:",
+      },
+      "optionalDependencies": {
+        "@nats-io/transport-node": "catalog:range",
+      },
     },
     "packages/bun": {
       "name": "@bunito/bun",
-      "version": "0.0.9",
+      "version": "0.0.10",
       "dependencies": {
-        "@bunito/app": "workspace:0.0.9",
-        "@bunito/common": "workspace:0.0.9",
-        "@bunito/config": "workspace:0.0.9",
-        "@bunito/container": "workspace:0.0.9",
-        "@bunito/logger": "workspace:0.0.9",
+        "@bunito/app": "workspace:0.0.10",
+        "@bunito/common": "workspace:0.0.10",
+        "@bunito/config": "workspace:0.0.10",
+        "@bunito/container": "workspace:0.0.10",
+        "@bunito/logger": "workspace:0.0.10",
       },
     },
     "packages/bunito": {
       "name": "@bunito/bunito",
-      "version": "0.0.9",
+      "version": "0.0.10",
       "dependencies": {
-        "@bunito/app": "workspace:0.0.9",
-        "@bunito/common": "workspace:0.0.9",
-        "@bunito/config": "workspace:0.0.9",
-        "@bunito/container": "workspace:0.0.9",
-        "@bunito/logger": "workspace:0.0.9",
+        "@bunito/app": "workspace:0.0.10",
+        "@bunito/common": "workspace:0.0.10",
+        "@bunito/config": "workspace:0.0.10",
+        "@bunito/container": "workspace:0.0.10",
+        "@bunito/logger": "workspace:0.0.10",
       },
     },
     "packages/cli": {
       "name": "@bunito/cli",
-      "version": "0.0.9",
+      "version": "0.0.10",
       "bin": {
         "bunito": "./src/main.ts",
       },
       "dependencies": {
-        "@bunito/common": "workspace:0.0.9",
+        "@bunito/common": "workspace:0.0.10",
         "@inquirer/prompts": "8.4.2",
         "yargs": "18.0.0",
         "zod": "catalog:",
@@ -94,14 +122,14 @@
     },
     "packages/common": {
       "name": "@bunito/common",
-      "version": "0.0.9",
+      "version": "0.0.10",
     },
     "packages/config": {
       "name": "@bunito/config",
-      "version": "0.0.9",
+      "version": "0.0.10",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.9",
-        "@bunito/container": "workspace:0.0.9",
+        "@bunito/common": "workspace:0.0.10",
+        "@bunito/container": "workspace:0.0.10",
       },
       "devDependencies": {
         "zod": "catalog:",
@@ -112,20 +140,20 @@
     },
     "packages/container": {
       "name": "@bunito/container",
-      "version": "0.0.9",
+      "version": "0.0.10",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.9",
+        "@bunito/common": "workspace:0.0.10",
       },
     },
     "packages/http": {
       "name": "@bunito/http",
-      "version": "0.0.9",
+      "version": "0.0.10",
       "dependencies": {
-        "@bunito/bun": "workspace:0.0.9",
-        "@bunito/common": "workspace:0.0.9",
-        "@bunito/config": "workspace:0.0.9",
-        "@bunito/container": "workspace:0.0.9",
-        "@bunito/logger": "workspace:0.0.9",
+        "@bunito/bun": "workspace:0.0.10",
+        "@bunito/common": "workspace:0.0.10",
+        "@bunito/config": "workspace:0.0.10",
+        "@bunito/container": "workspace:0.0.10",
+        "@bunito/logger": "workspace:0.0.10",
       },
       "devDependencies": {
         "zod": "catalog:",
@@ -136,20 +164,22 @@
     },
     "packages/logger": {
       "name": "@bunito/logger",
-      "version": "0.0.9",
+      "version": "0.0.10",
       "dependencies": {
-        "@bunito/common": "workspace:0.0.9",
-        "@bunito/config": "workspace:0.0.9",
-        "@bunito/container": "workspace:0.0.9",
+        "@bunito/common": "workspace:0.0.10",
+        "@bunito/config": "workspace:0.0.10",
+        "@bunito/container": "workspace:0.0.10",
       },
     },
   },
   "catalog": {
     "@biomejs/biome": "2.4.13",
+    "@nats-io/transport-node": "3.4.0",
     "zod": "4.3.6",
   },
   "catalogs": {
     "range": {
+      "@nats-io/transport-node": "^3.4.0",
       "zod": "^4.3.0",
     },
   },
@@ -219,6 +249,8 @@
     "@bunito/app": ["@bunito/app@workspace:packages/app"],
 
     "@bunito/biome": ["@bunito/biome@workspace:packages/biome"],
+
+    "@bunito/broker": ["@bunito/broker@workspace:packages/broker"],
 
     "@bunito/bun": ["@bunito/bun@workspace:packages/bun"],
 
@@ -325,6 +357,14 @@
     "@inquirer/type": ["@inquirer/type@4.0.5", "", { "peerDependencies": { "@types/node": ">=18" }, "optionalPeers": ["@types/node"] }, "sha512-aetVUNeKNc/VriqXlw1NRSW0zhMBB0W4bNbWRJgzRl/3d0QNDQFfk0GO5SDdtjMZVg6o8ZKEiadd7SCCzoOn5Q=="],
 
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
+
+    "@nats-io/nats-core": ["@nats-io/nats-core@3.4.0", "", { "dependencies": { "@nats-io/nkeys": "2.0.3", "@nats-io/nuid": "3.0.0" } }, "sha512-QMDM86EUNm+wudlKC67HLar/KHHQUvJGLfb4jbahje3pUk3K9afeck9fwsxBZF0eUFox6T/TA6m/t+lQqf+QsQ=="],
+
+    "@nats-io/nkeys": ["@nats-io/nkeys@2.0.3", "", { "dependencies": { "tweetnacl": "^1.0.3" } }, "sha512-JVt56GuE6Z89KUkI4TXUbSI9fmIfAmk6PMPknijmuL72GcD+UgIomTcRWiNvvJKxA01sBbmIPStqJs5cMRBC3A=="],
+
+    "@nats-io/nuid": ["@nats-io/nuid@3.0.0", "", {}, "sha512-QbXZDrxmYlrn5AD06gYcUTmEHwxn96HBQMIk7XTjDlEcx6FPzVBBPjp4AMRh1lEv6B4iJ6Xb/Uz61JugPXFRQg=="],
+
+    "@nats-io/transport-node": ["@nats-io/transport-node@3.4.0", "", { "dependencies": { "@nats-io/nats-core": "3.4.0", "@nats-io/nkeys": "2.0.3", "@nats-io/nuid": "3.0.0" } }, "sha512-hH7u7ejIBTFEJIZ8rIcMrHJI6wl+HhpO5sVFs1+ppmXa8RuB2+Lh1+UwTzZ5xTNNm1TKcRkYy+2qCV56qp8RxA=="],
 
     "@rollup/rollup-android-arm-eabi": ["@rollup/rollup-android-arm-eabi@4.60.3", "", { "os": "android", "cpu": "arm" }, "sha512-x35CNW/ANXG3hE/EZpRU8MXX1JDN86hBb2wMGAtltkz7pc6cxgjpy1OMMfDosOQ+2hWqIkag/fGok1Yady9nGw=="],
 
@@ -542,6 +582,8 @@
 
     "micromark-util-types": ["micromark-util-types@2.0.2", "", {}, "sha512-Yw0ECSpJoViF1qTU4DC6NwtC4aWGt1EkzaQB8KPPyCRR8z9TWeV0HbEFGTO+ZY1wB22zmxnJqhPyTpOVCpeHTA=="],
 
+    "microservices": ["microservices@workspace:examples/microservices"],
+
     "minisearch": ["minisearch@7.2.0", "", {}, "sha512-dqT2XBYUOZOiC5t2HRnwADjhNS2cecp9u+TJRiJ1Qp/f5qjkeT5APcGPjHw+bz89Ms8Jp+cG4AlE+QZ/QnDglg=="],
 
     "mitt": ["mitt@3.0.1", "", {}, "sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw=="],
@@ -599,6 +641,8 @@
     "tabbable": ["tabbable@6.4.0", "", {}, "sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg=="],
 
     "trim-lines": ["trim-lines@3.0.1", "", {}, "sha512-kRj8B+YHZCc9kQYdWfJB2/oUl9rA99qbowYYBtr4ui4mZyAQ2JpvVBd/6U2YloATfqBhBTSMhTpgBHtU0Mf3Rg=="],
+
+    "tweetnacl": ["tweetnacl@1.0.3", "", {}, "sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw=="],
 
     "typescript": ["typescript@6.0.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 

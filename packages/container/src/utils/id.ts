@@ -1,5 +1,4 @@
-import { inspectName, isFn, isObject, isString } from '@bunito/common';
-import { ContainerException } from '../container.exception';
+import { InternalException, inspectName, isFn, isObject, isString } from '@bunito/common';
 import type { TokenLike } from './types';
 
 export class Id {
@@ -54,7 +53,7 @@ export class Id {
 
   private static forString(token: string): Id {
     if (!token) {
-      return ContainerException.throw`Token must be a non-empty string`;
+      return InternalException.throw`Token must be a non-empty string`;
     }
 
     const key = Symbol.for(token);

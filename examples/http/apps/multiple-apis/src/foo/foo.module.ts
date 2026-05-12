@@ -1,5 +1,4 @@
-import { Module } from '@bunito/bunito';
-import { UsePrefix } from '@bunito/http';
+import { Module, UsePrefix } from '@bunito/bunito';
 import { FooController } from './foo.controller';
 
 @Module({

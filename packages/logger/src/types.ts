@@ -1,24 +1,31 @@
+import type { Mandatory } from '@bunito/common';
 import type { LOG_LEVELS } from './constants';
-import type { Logger } from './logger';
 
-export type TraceLogger = Omit<Logger, 'trace' | 'setContext'>;
+export type LoggerSettings = {
+  context?: string;
+  traceId?: number;
+  timestamp?: Date;
+};
 
-export type LogLevelName = keyof typeof LOG_LEVELS;
-
+export type LogLevelKind = keyof typeof LOG_LEVELS;
 export type LogLevel = {
-  name: LogLevelName;
+  kind: LogLevelKind;
   value: number;
 };
 
-export type LogArgs<TArg0 = unknown> = [TArg0, ...unknown[]];
+export type LogArg = { context: unknown } | unknown;
+export type LogArgs<TArg0 = LogArg> = [TArg0, ...LogArg[]];
 
-export type LogOptions<TLevel> = {
-  context?: string;
-  traceId?: number;
-  level: TLevel;
-  duration?: number;
+export type WriteLogOptions = LoggerSettings & {
+  kind: LogLevelKind;
+  args: LogArg[];
 };
 
-export type WriteLogOptions = LogOptions<LogLevelName> & {
-  args: LogArgs;
+export type LogRecord = Mandatory<LoggerSettings, 'timestamp'> & {
+  level: LogLevel;
+  message?: string;
+  data?: unknown[];
+  error?: Error;
+  duration?: number;
+  timestamp: Date;
 };
