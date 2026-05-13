@@ -40,9 +40,9 @@ export default defineConfig({
       {
         text: 'Techniques',
         items: [
-          { text: 'Modules And Providers', link: '/techniques/modules-and-providers' },
+          { text: 'Modules and Providers', link: '/techniques/modules-and-providers' },
           {
-            text: 'Configuration And Logging',
+            text: 'Configuration and Logging',
             link: '/techniques/configuration-and-logging',
           },
           { text: 'HTTP', link: '/techniques/http' },

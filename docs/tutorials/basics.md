@@ -17,10 +17,11 @@ Or install it globally if you want the `bunito` binary available everywhere:
 bun install --global @bunito/cli
 ```
 
-Install the core package in your project:
+Install the core package and CLI in your project:
 
 ```bash
 bun add @bunito/bunito
+bun add -d @bunito/cli
 ```
 
 Configure TypeScript:

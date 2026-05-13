@@ -60,8 +60,8 @@ These schemas will be attached to route injections.
 ## Create A Controller
 
 ```ts
-import { Logger } from '@bunito/bunito';
-import { Controller, Get, Params, Post, Query } from '@bunito/http';
+import { Controller, Logger } from '@bunito/bunito';
+import { Get, Params, Post, Query } from '@bunito/http';
 
 @Controller('/foo', {
   injects: [Logger, FooProvider],

@@ -5,15 +5,21 @@ title: Documentation
 # Getting Started
 
 `bunito` is a small Bun-first TypeScript framework for applications built from
-modules, providers, lifecycle hooks, configuration, logging, and HTTP controllers.
+modules, providers, lifecycle hooks, configuration, logging, HTTP controllers, and
+broker-based messaging.
 
 The framework is intentionally split into focused packages. Start with
 `@bunito/bunito` for application code, then add feature packages such as
-`@bunito/http` when the application needs them.
+`@bunito/http` or `@bunito/broker` when the application needs them.
 
-## Run The CLI
+The fastest way to learn the API is to run one of the repository examples, then
+read the matching tutorial. The snippets below show the same standard project
+shape the CLI expects.
 
-The preferred entrypoint for bunito projects is the CLI.
+## Run the CLI
+
+The preferred entrypoint for bunito projects is the CLI. It can create projects,
+start discovered apps, build them, and generate app/library files.
 
 Run it without installing it globally:
 
@@ -34,15 +40,16 @@ The CLI is also used by the repository examples in `examples/*`.
 Create a Bun project:
 
 ```bash
-mkdir my-bunito-app
-cd my-bunito-app
+mkdir my-app
+cd my-app
 bun init -y
 ```
 
-Install the core package:
+Install the core package and the CLI:
 
 ```bash
 bun add @bunito/bunito
+bun add -d @bunito/cli
 ```
 
 Configure TypeScript by extending the bunito config:

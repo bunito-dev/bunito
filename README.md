@@ -16,6 +16,10 @@ The project is intentionally split into focused packages. You can start with
 The best way to understand the current API is to read and run the examples.
 Start with the examples guide: [`examples/`](./examples/README.md).
 
+The VitePress documentation lives in [`docs/`](./docs) and follows the examples:
+getting started, core concepts, CLI discovery, focused techniques, and step-by-step
+tutorials.
+
 ## Packages 📦
 
 - [`@bunito/cli`](./packages/cli/README.md): command-line tools for running bunito projects

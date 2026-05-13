@@ -2,8 +2,8 @@
 
 HTTP module for bunito applications.
 
-It provides controllers, route decorators, request injections, middleware, JSON
-handling, and HTTP exceptions.
+It provides route decorators, request injections, middleware, JSON handling, and
+HTTP exceptions for bunito controllers.
 
 ## Installation 📦
 
@@ -14,9 +14,8 @@ bun add @bunito/http
 ## Usage ✨
 
 ```ts
-import { Module } from '@bunito/bunito';
+import { Controller, Module } from '@bunito/bunito';
 import {
-  Controller,
   Get,
   HTTPModule,
   JSONSerializer,

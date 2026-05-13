@@ -1,4 +1,4 @@
-# Modules And Providers
+# Modules and Providers
 
 Modules and providers are the core building blocks of a bunito application.
 
@@ -20,6 +20,23 @@ class UsersService {
 The `injects` array defines constructor dependencies in order. This keeps runtime
 behavior explicit and friendly to TypeScript and Bun.
 
+When dependency names are more useful than position, use object-based injections:
+
+```ts
+@Provider({
+  injects: {
+    logger: Logger,
+  },
+})
+class UsersService {
+  private readonly logger: Logger;
+
+  constructor(options: { logger: Logger }) {
+    this.logger = options.logger;
+  }
+}
+```
+
 ## Modules
 
 A module groups providers and imports other modules:
@@ -36,6 +53,16 @@ class AppModule {}
 
 Modules are also how feature packages plug into an app. For example, HTTP apps add
 `HTTPModule`, and message-driven apps add `BrokerModule` plus an adapter module.
+
+Export providers when another module should be able to inject them:
+
+```ts
+@Module({
+  providers: [UsersService],
+  exports: [UsersService],
+})
+class UsersModule {}
+```
 
 ## Resolving Providers Manually
 
@@ -79,11 +106,12 @@ class Worker {
 ```
 
 Use them for setup, app-start actions, and teardown. Keep normal application logic
-in regular methods.
+in regular methods, and keep hooks idempotent enough that failures are easy to
+diagnose.
 
 ## Where To Go Next
 
-- Use config and logging in [Configuration And Logging](/techniques/configuration-and-logging).
+- Use config and logging in [Configuration and Logging](/techniques/configuration-and-logging).
 - Build controllers in [HTTP](/techniques/http).
 - Add message handlers in [Broker](/techniques/broker).
 - Walk through the full first app in [Basics](/tutorials/basics).

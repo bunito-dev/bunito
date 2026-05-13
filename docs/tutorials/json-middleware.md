@@ -7,10 +7,10 @@ validation.
 ## Import JSON Tools
 
 ```ts
+import { Controller } from '@bunito/bunito';
 import {
   Body,
   BodyParser,
-  Controller,
   Get,
   HTTPModule,
   JSONSerializer,
@@ -45,7 +45,16 @@ Params and body validation are independent.
 
 ```ts
 import type { RawObject } from '@bunito/bunito';
-import { Logger } from '@bunito/bunito';
+import { Controller, Logger } from '@bunito/bunito';
+import {
+  Body,
+  BodyParser,
+  Get,
+  JSONSerializer,
+  Params,
+  Post,
+  UseMiddleware,
+} from '@bunito/http';
 
 @Controller('/foo', {
   injects: [Logger],

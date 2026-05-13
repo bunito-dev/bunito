@@ -1,7 +1,9 @@
 # HTTP
 
-HTTP support lives in `@bunito/http`. Add it when an application needs controllers,
-routes, middleware, request injections, JSON handling, or HTTP exceptions.
+HTTP support lives in `@bunito/http`. Add it when an application needs routes,
+middleware, request injections, JSON handling, or HTTP exceptions. Controllers use
+the core `@Controller()` decorator from `@bunito/bunito`; route decorators and HTTP
+runtime pieces come from `@bunito/http`.
 
 ## Installation
 
@@ -39,8 +41,8 @@ routes from controller metadata.
 Controllers are classes decorated with `@Controller()`:
 
 ```ts
-import { Logger, Provider } from '@bunito/bunito';
-import { Controller, Get } from '@bunito/http';
+import { Controller, Logger, Provider } from '@bunito/bunito';
+import { Get } from '@bunito/http';
 
 @Provider()
 class UsersService {
@@ -85,18 +87,19 @@ class AppModule {}
 Use route decorators for HTTP methods:
 
 ```ts
-import { Delete, Get, Post, Put, Route } from '@bunito/http';
+import { Delete, Get, OnRequest, Post, Put } from '@bunito/http';
 ```
 
-Available decorators include `Get`, `Post`, `Put`, `Delete`, and `Route`.
-Use `Route` when a handler should target a method dynamically or match all methods.
+Available decorators include `Get`, `Post`, `Put`, `Delete`, and `OnRequest`.
+Use `OnRequest` when a handler should match any HTTP method.
 
 ## Request Injections
 
 HTTP handlers can receive request data through explicit injections:
 
 ```ts
-import { Controller, Get, Params, Query } from '@bunito/http';
+import { Controller } from '@bunito/bunito';
+import { Get, Params, Query } from '@bunito/http';
 import { z } from 'zod';
 
 const ParamsSchema = z.object({
@@ -134,11 +137,11 @@ Use `JSONSerializer` and `BodyParser` to work with plain object responses and JS
 bodies. `HTTPModule` imports the bundled parser and serializer providers:
 
 ```ts
-import { LoggerModule, Module } from '@bunito/bunito';
+import { Controller, LoggerModule, Module } from '@bunito/bunito';
 import {
   Body,
   BodyParser,
-  Controller,
+  HTTPModule,
   JSONSerializer,
   Post,
   UseMiddleware,
@@ -174,7 +177,7 @@ class AppModule {}
 `UseMiddleware` accepts one middleware class and optional middleware options. Apply
 the decorator more than once when a controller or module needs several middleware.
 
-## Prefixes And Middleware
+## Prefixes and Middleware
 
 `UsePrefix` and `UseMiddleware` can be applied at module level:
 
