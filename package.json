@@ -1,7 +1,7 @@
 {
   "name": "bunito",
   "private": true,
-  "version": "0.0.10",
+  "version": "0.0.11",
   "type": "module",
   "scripts": {
     "docs:dev": "vitepress dev docs",
@@ -9,7 +9,7 @@
     "docs:preview": "vitepress preview docs",
     "test": "bun test",
     "coverage": "bun test --coverage",
-    "coverage:html": "bun run coverage --coverage-reporter=lcov",
+    "coverage:html": "bun run coverage --coverage-reporter=lcov && genhtml -o ./coverage ./coverage/lcov.info",
     "lint": "biome check",
     "format": "biome format",
     "typecheck": "tsc --noEmit",

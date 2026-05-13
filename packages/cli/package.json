@@ -1,6 +1,6 @@
 {
   "name": "@bunito/cli",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Command-line tools for running bunito projects.",
   "keywords": [
     "bunito",
@@ -40,7 +40,7 @@
     "cli": "bun run ./src/main.ts"
   },
   "dependencies": {
-    "@bunito/common": "workspace:0.0.10",
+    "@bunito/common": "workspace:0.0.11",
     "@inquirer/prompts": "8.4.2",
     "yargs": "18.0.0",
     "zod": "catalog:"

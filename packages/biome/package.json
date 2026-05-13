@@ -1,6 +1,6 @@
 {
   "name": "@bunito/biome",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Shared Biome configuration for bunito projects.",
   "keywords": [
     "bunito",
