@@ -11,9 +11,17 @@ The framework is intentionally split into focused packages. Start with
 `@bunito/bunito` for application code, then add feature packages such as
 `@bunito/http` when the application needs them.
 
-## Install The CLI
+## Run The CLI
 
 The preferred entrypoint for bunito projects is the CLI.
+
+Run it without installing it globally:
+
+```bash
+bunx @bunito/cli --help
+```
+
+Or install it globally if you want the `bunito` binary available everywhere:
 
 ```bash
 bun install --global @bunito/cli

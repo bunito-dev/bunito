@@ -1,22 +1,22 @@
-# Basics
+# Basics ⚡
 
 Minimal bunito app with providers, dependency injection, lifecycle hooks, logger
 usage, and manual provider resolution.
 
-## Run
+## Run 🚀
 
 ```bash
 cd examples/basics
 bun run start
 ```
 
-## Build
+## Build 🏗️
 
 ```bash
 bun run build
 ```
 
-## What To Read
+## What To Read 🔎
 
 - `src/app-module.ts`: imports `LoggerModule` and registers providers.
 - `src/foo-service.ts`: uses object-based dependency injection.

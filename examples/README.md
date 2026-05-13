@@ -1,8 +1,8 @@
-# Examples
+# Examples 🚀
 
 Small runnable workspaces that mirror the current bunito API.
 
-## Workspaces
+## Workspaces 📦
 
 - [`basics`](./basics): providers, explicit injections, lifecycle hooks, logger
   usage, and manual provider resolution.

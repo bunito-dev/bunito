@@ -6,13 +6,21 @@ It provides the `bunito` binary. The CLI discovers standard projects from
 `src/main.ts` and monorepo apps from `apps/*/src/main.ts`; no project config file is
 required.
 
-## Installation
+## Installation 📦
+
+Run the CLI without installing it globally:
+
+```bash
+bunx @bunito/cli --help
+```
+
+Or install it globally if you want the `bunito` binary available everywhere:
 
 ```bash
 bun install --global @bunito/cli
 ```
 
-## Usage
+## Usage 🚀
 
 ```bash
 bunito --help

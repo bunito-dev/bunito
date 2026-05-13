@@ -1,11 +1,11 @@
-# Contributing
+# Contributing 🤝
 
 Thanks for contributing to bunito.
 
 `bunito` is intentionally small, modular, and Bun-first. Prefer changes that keep
 the runtime easy to follow, the package boundaries clear, and the public API compact.
 
-## Setup
+## Setup ⚙️
 
 Install dependencies from the repository root:
 
@@ -16,7 +16,7 @@ bun install
 The repository uses Bun workspaces, Bun's built-in test runner, TypeScript, Biome,
 and VitePress.
 
-## Repository Shape
+## Repository Shape 🧭
 
 Framework packages live in `packages/*`:
 
@@ -39,7 +39,7 @@ Runnable example workspaces live in `examples/*` and are documented in
 [`examples/`](./examples/README.md). Documentation lives in `docs/` and is built
 with VitePress. Long-lived specs and ADR scaffolding live in `specs/`.
 
-## Useful Commands
+## Useful Commands 🛠️
 
 Run these from the repository root unless noted otherwise:
 
@@ -69,7 +69,7 @@ bun test packages/broker/src
 bun test packages/bun/src
 ```
 
-## General Expectations
+## General Expectations ✅
 
 - Prefer small, local changes over broad refactors.
 - Follow the existing package boundaries.
@@ -81,7 +81,7 @@ bun test packages/bun/src
 - Keep examples current with the actual API and runtime behavior.
 - Do not introduce new runtime dependencies unless the tradeoff is clear.
 
-## Code Style
+## Code Style ✨
 
 - TypeScript with ESM.
 - Two-space indentation.
@@ -105,7 +105,7 @@ For imports:
 - avoid cross-package relative imports and direct imports from another package's
   source path
 
-## Tests
+## Tests 🧪
 
 Tests use `bun:test`.
 
@@ -119,7 +119,7 @@ Keep tests aligned with the source tree:
 
 Coverage is expected to stay at `100%` functions and lines.
 
-## Validation
+## Validation 🚦
 
 Before finishing a code change, the expected baseline is:
 
@@ -138,7 +138,7 @@ bun run docs:build
 
 For runtime-flow changes, also run the relevant example from `examples/`.
 
-## Documentation
+## Documentation 📚
 
 Keep documentation lightweight, accurate, and useful.
 
@@ -153,7 +153,7 @@ When relevant, update:
 If a documentation page exists, avoid leaving placeholder text behind. Either give it
 useful draft content or remove it from the navigation.
 
-## Sensitive Areas
+## Sensitive Areas 🔎
 
 - `@bunito/common`: keep it lightweight and framework-agnostic.
 - `@bunito/container`: be careful around module/provider metadata, provider exports,
@@ -171,7 +171,7 @@ useful draft content or remove it from the navigation.
 - `@bunito/cli`: validate at least one `examples` start command when CLI project
   discovery or command behavior changes.
 
-## Pull Request Checklist
+## Pull Request Checklist 🚀
 
 Before opening or merging a pull request, make sure:
 

@@ -1,4 +1,4 @@
-# Microservices Example
+# Microservices Example 📡
 
 Three apps showing broker-based communication:
 
@@ -10,7 +10,7 @@ The `foo` and `bar` apps expose HTTP routes and call each other through
 `BrokerService.sendRequest()`. The example uses the local broker adapter by
 default, configured through app-local `.env` files.
 
-## Commands
+## Commands 🚀
 
 ```bash
 bun run start foo
@@ -21,7 +21,7 @@ bun run build
 
 Run those commands from `examples/microservices`.
 
-## What To Read
+## What To Read 🔎
 
 - `apps/foo/src/foo-controller.ts`: HTTP route that sends a broker request to
   `bar.process`.

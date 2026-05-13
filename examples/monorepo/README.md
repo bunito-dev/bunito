@@ -1,4 +1,4 @@
-# Monorepo
+# Monorepo 🧩
 
 A workspace with three apps and one shared library.
 
@@ -6,7 +6,7 @@ A workspace with three apps and one shared library.
 - `second` imports the same shared module.
 - `mono` composes the `first` and `second` app modules into one app.
 
-## Run
+## Run 🚀
 
 ```bash
 cd examples/monorepo
@@ -31,7 +31,7 @@ Build every app:
 bun run build
 ```
 
-## What To Read
+## What To Read 🔎
 
 - `libs/example`: shared module and provider exported for apps.
 - `apps/first/src/first-module.ts`: imports the shared library.

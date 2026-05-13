@@ -4,7 +4,13 @@ Broker support for bunito applications. The package provides a `BrokerModule`,
 message-handler decorators, request/event publishing through `BrokerService`, and
 local or NATS-backed adapters.
 
-## Usage
+## Installation 📦
+
+```bash
+bun add @bunito/broker
+```
+
+## Usage ✨
 
 ```ts
 import { BrokerModule, LocalBrokerModule } from '@bunito/broker';
@@ -36,7 +42,7 @@ export class OrdersController {
 Use `BrokerService.sendRequest()` when a reply is expected and
 `BrokerService.sendEvent()` for fire-and-forget messages.
 
-## Adapters
+## Adapters 🔌
 
 - `LocalBrokerModule`: local development adapter, with in-memory and filesystem
   modes.

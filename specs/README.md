@@ -1,4 +1,4 @@
-# Specs
+# Specs 🧭
 
 `specs/` is reserved for longer-lived technical notes and ADRs.
 

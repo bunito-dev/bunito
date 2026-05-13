@@ -11,12 +11,12 @@ The project is intentionally split into focused packages. You can start with
 `@bunito/bunito` for the core application APIs, then add feature packages such as
 `@bunito/http` or `@bunito/broker` when you need them.
 
-## Examples
+## Examples 🚀
 
 The best way to understand the current API is to read and run the examples.
 Start with the examples guide: [`examples/`](./examples/README.md).
 
-## Packages
+## Packages 📦
 
 - [`@bunito/cli`](./packages/cli/README.md): command-line tools for running bunito projects
 - [`@bunito/bunito`](./packages/bunito/README.md): main application entrypoint
@@ -30,7 +30,7 @@ Start with the examples guide: [`examples/`](./examples/README.md).
 - [`@bunito/http`](./packages/http/README.md): HTTP controllers, routing, middleware, and exceptions
 - [`@bunito/broker`](./packages/broker/README.md): message handlers, broker adapters, and request/reply messaging
 
-## Development
+## Development 🛠️
 
 ```bash
 bun run typecheck

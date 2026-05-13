@@ -5,7 +5,13 @@ injection, logger usage, manual provider resolution, and lifecycle hooks.
 
 ## Install
 
-Start with the CLI:
+Run the CLI without installing it globally:
+
+```bash
+bunx @bunito/cli --help
+```
+
+Or install it globally if you want the `bunito` binary available everywhere:
 
 ```bash
 bun install --global @bunito/cli

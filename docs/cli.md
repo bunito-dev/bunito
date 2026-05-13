@@ -3,16 +3,16 @@
 The `bunito` CLI runs, builds, and generates bunito projects. It discovers project
 shape from the filesystem instead of a project config file.
 
-Install it globally:
+Install it globally if you want the `bunito` binary available everywhere:
 
 ```bash
 bun install --global @bunito/cli
 ```
 
-The examples use the workspace dependency directly:
+Run it without a global install through `bunx`:
 
 ```bash
-bunx bunito --help
+bunx @bunito/cli --help
 ```
 
 ## Project Discovery
@@ -82,9 +82,9 @@ Each example workspace keeps scripts small:
 ```json
 {
   "scripts": {
-    "cli": "bunx bunito",
-    "build": "bunx bunito build",
-    "start": "bunx bunito start"
+    "cli": "bunito",
+    "build": "bunito build",
+    "start": "bunito start"
   }
 }
 ```

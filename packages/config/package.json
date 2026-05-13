@@ -1,6 +1,6 @@
 {
   "name": "@bunito/config",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Configuration module, environment parsing, and secret lookup for bunito.",
   "keywords": [
     "bunito",
@@ -36,8 +36,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.11",
-    "@bunito/container": "workspace:0.0.11"
+    "@bunito/common": "workspace:0.0.12",
+    "@bunito/container": "workspace:0.0.12"
   },
   "devDependencies": {
     "zod": "catalog:"

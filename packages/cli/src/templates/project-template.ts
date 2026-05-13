@@ -81,9 +81,9 @@ export function ProjectTemplate(options: {
       type: 'module',
       files: [...pkgFiles, 'README.md'],
       scripts: {
-        cli: 'bunx bunito',
-        build: 'bunx bunito build',
-        start: 'bunx bunito start',
+        cli: 'bunito',
+        build: 'bunito build',
+        start: 'bunito start',
       },
       dependencies: {
         '@bunito/bunito': pkgVersion,
