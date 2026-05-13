@@ -1,5 +1,6 @@
 import { Exception, notEmptySet } from '../common';
 import type { Context } from '../context';
+import type { StartProcessOptions } from '../services';
 import { CLIService } from '../services';
 import { AbstractCommand } from './abstract-command';
 
@@ -7,8 +8,7 @@ type StartCommandOptions = {
   apps?: Set<string>;
   watch?: boolean;
   prod?: boolean;
-  pad?: boolean;
-};
+} & StartProcessOptions;
 
 export class StartCommand extends AbstractCommand<StartCommandOptions> {
   // biome-ignore lint/complexity/noUselessConstructor: Bun coverage counts generated subclass constructors as uncovered.
@@ -24,7 +24,7 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
       throw new Exception('Project is not initialized');
     }
 
-    const { apps: appNames, prod, pad, watch } = this.options;
+    const { apps: appNames, prod, label, watch } = this.options;
     const { path } = settings;
 
     const bunArgs = ['bun', `--cwd=${path}`];
@@ -58,7 +58,9 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
       });
     }
 
-    const code = await spawn.startProcesses(pad);
+    const code = await spawn.startProcesses({
+      label,
+    });
 
     process.exit(code);
   }
@@ -92,9 +94,10 @@ CLIService.registerCommand(StartCommand, {
         type: 'boolean',
         alias: 'p',
       })
-      .option('pad', {
-        describe: 'Align app name prefixes',
-        default: false,
-        type: 'boolean',
+      .option('label', {
+        describe: 'App label kind',
+        default: 'full',
+        type: 'string',
+        choices: ['name', 'pid', 'full'],
       }),
 });

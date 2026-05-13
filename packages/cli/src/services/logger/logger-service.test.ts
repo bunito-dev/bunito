@@ -15,7 +15,7 @@ describe('LoggerService', () => {
       const logger = new LoggerService();
 
       expect(logger.info('Created', 'file.ts')).toBe(logger);
-      expect(logger.warn(new Exception('Careful', 'details'))).toBe(logger);
+      expect(logger.warn(new Exception(['Careful', 'details']))).toBe(logger);
       expect(logger.error(new Error('Boom'))).toBe(logger);
       logger.br();
     } finally {

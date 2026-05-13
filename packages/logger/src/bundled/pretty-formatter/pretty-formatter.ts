@@ -17,28 +17,22 @@ export class PrettyFormatter implements LoggerFormatter {
   constructor(private readonly config: ResolveConfig<typeof PrettyFormatterConfig>) {}
 
   formatLog(options: LogRecord): string {
-    const { timestamp, context, level, message, data, error, traceId, duration } =
+    const { timestamp, context, level, message, data, error, requestId, duration } =
       options;
 
-    const prefix = `${this.styleText(formatTimestamp(timestamp), 'gray')} `;
+    const prefix = this.styleText(
+      [formatTimestamp(timestamp), requestId ? ` ⌗${requestId}` : '', ' '].join(''),
+      'gray',
+    );
 
     const buffer: string[] = [];
 
     const levelTheme = PRETTY_LEVEL_THEMES[level.kind];
 
-    buffer.push(
-      prefix,
-      this.styleText(levelTheme.icon, levelTheme.primary),
-      ' ',
-      this.styleText(level.kind, levelTheme.primary),
-    );
+    buffer.push(prefix, this.styleText(level.kind, levelTheme.primary));
 
     if (context) {
       buffer.push(' ', this.styleText(`[${context}]`, levelTheme.secondary, 'bold'));
-    }
-
-    if (traceId) {
-      buffer.push(' ', this.styleText(`#${traceId}`, 'gray', 'bold'));
     }
 
     if (message) {

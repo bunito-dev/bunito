@@ -1,7 +1,7 @@
 import type { Fn } from '@bunito/common';
 import type { Injections, MatchedControllers, ModuleId, ModuleLike } from './compiler';
 import { ContainerCompiler } from './compiler';
-import type { RequestId, ResolveProviderOptions } from './runtime';
+import type { ResolveProviderOptions } from './runtime';
 import { ContainerRuntime } from './runtime';
 import type { ResolveToken, Token } from './utils';
 import { Id } from './utils';
@@ -15,6 +15,12 @@ export class Container {
     this.runtime = new ContainerRuntime(this.compiler);
 
     this.setInstance(Container, this);
+  }
+
+  runInRequestContext<TResult = unknown>(
+    contextHandler: Fn<Promise<TResult>>,
+  ): Promise<TResult> {
+    return this.runtime.runInRequestContext(contextHandler);
   }
 
   setInstance<TInstance = unknown>(token: Token, instance: TInstance): void {
@@ -65,10 +71,6 @@ export class Container {
 
   async destroyInstances(): Promise<void> {
     await this.runtime.destroyInstances();
-  }
-
-  async destroyRequest(requestId: RequestId): Promise<void> {
-    await this.runtime.destroyInstances(requestId);
   }
 
   async triggerProviders(handlerDecorator: Fn): Promise<void> {

@@ -9,18 +9,20 @@ validation.
 ```ts
 import {
   Body,
+  BodyParser,
   Controller,
   Get,
   HTTPModule,
-  JSONMiddleware,
-  JSONModule,
+  JSONSerializer,
   Params,
   Post,
   UseMiddleware,
 } from '@bunito/http';
 ```
 
-`JSONModule` registers JSON support. `JSONMiddleware` applies it to routes.
+`HTTPModule` registers the bundled body parser and JSON serializer providers.
+`UseMiddleware` applies one middleware at a time and can pass options to that
+middleware.
 
 ## Define Schemas
 
@@ -48,7 +50,8 @@ import { Logger } from '@bunito/bunito';
 @Controller('/foo', {
   injects: [Logger],
 })
-@UseMiddleware(JSONMiddleware)
+@UseMiddleware(JSONSerializer)
+@UseMiddleware(BodyParser, { parser: 'json' })
 class FooController {
   constructor(private readonly logger: Logger) {}
 
@@ -81,14 +84,14 @@ class FooController {
 `Body()` injects the parsed body. `Body(FooBody)` injects the parsed and validated
 body.
 
-## Register JSONModule
+## Register HTTPModule
 
 ```ts
 import { App, LoggerModule, Module } from '@bunito/bunito';
-import { HTTPModule, JSONModule } from '@bunito/http';
+import { HTTPModule } from '@bunito/http';
 
 @Module({
-  imports: [LoggerModule, HTTPModule, JSONModule],
+  imports: [LoggerModule, HTTPModule],
   controllers: [FooController],
 })
 class AppModule {}

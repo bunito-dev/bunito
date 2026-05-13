@@ -1,7 +1,12 @@
 import process from 'node:process';
 import { styleText } from 'node:util';
-import { PROCESS_BG_COLORS, PROCESS_COLORS } from './constants';
-import type { ProcessOptions, ProcessRunning, ProcessWriter } from './types';
+import { PROCESS_COLORS } from './constants';
+import type {
+  ProcessOptions,
+  ProcessRunning,
+  ProcessWriter,
+  StartProcessOptions,
+} from './types';
 
 export class SpawnService {
   private readonly textDecoder = new TextDecoder();
@@ -28,7 +33,7 @@ export class SpawnService {
     });
   }
 
-  async startProcesses(padPrefix = false): Promise<number> {
+  async startProcesses(options: StartProcessOptions): Promise<number> {
     if (!this.processes.length) {
       return 0;
     }
@@ -48,22 +53,37 @@ export class SpawnService {
     }
 
     for (const [index, { name, proc }] of this.processes.entries()) {
-      let prefix = '';
+      let prefix: string;
 
       if (usePrefix) {
-        const color = padPrefix
-          ? PROCESS_BG_COLORS[index % PROCESS_BG_COLORS.length]
-          : PROCESS_COLORS[index % PROCESS_COLORS.length];
+        const parts: string[] = [];
+        const color = PROCESS_COLORS[index % PROCESS_COLORS.length] ?? 'gray';
 
-        if (color) {
-          if (padPrefix) {
-            prefix = !padPrefix ? name.padStart(prefixWidth) : name;
-            prefix = styleText(color, ` ${prefix} `);
-            prefix = `${prefix} → `;
-          } else {
-            prefix = styleText(color, `${name} → `);
-          }
+        const pid = proc.pid;
+
+        let label: string;
+
+        const pidLabel = `[${pid}]`;
+        const nameLabel = name.padEnd(prefixWidth, '_');
+
+        switch (options.label) {
+          case 'pid':
+            label = pidLabel;
+            break;
+
+          case 'name':
+            label = nameLabel;
+            break;
+
+          default:
+            label = `${pidLabel} ${nameLabel}`;
         }
+
+        parts.push(styleText(color, label));
+        parts.push(' ');
+        prefix = parts.join('');
+      } else {
+        prefix = '';
       }
 
       const writeOut: ProcessWriter = (buffer: string): void => {

@@ -46,6 +46,7 @@ export default defineConfig({
             link: '/techniques/configuration-and-logging',
           },
           { text: 'HTTP', link: '/techniques/http' },
+          { text: 'Broker', link: '/techniques/broker' },
         ],
       },
       {
@@ -55,6 +56,7 @@ export default defineConfig({
           { text: 'Simple Controller', link: '/tutorials/simple-controller' },
           { text: 'JSON Middleware', link: '/tutorials/json-middleware' },
           { text: 'Multiple APIs', link: '/tutorials/multiple-apis' },
+          { text: 'Microservices', link: '/tutorials/microservices' },
           { text: 'Monorepo', link: '/tutorials/monorepo' },
         ],
       },

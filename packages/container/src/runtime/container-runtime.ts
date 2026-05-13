@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type { CallableInstance, Fn, MaybePromise, RawObject } from '@bunito/common';
 import { InternalException, isFn, isObject, isString } from '@bunito/common';
 import type {
@@ -11,87 +12,44 @@ import { OnDestroy, OnInit, OnResolve } from '../decorators';
 import type { TokenLike } from '../utils';
 import { Id } from '../utils';
 import {
-  GLOBAL_SCOPE_ID,
   MODULE_ID,
   PARENT_MODULE_IDS,
-  PROVIDER_OPTIONS,
   REQUEST_ID,
+  REQUEST_ID_GETTER,
+  REQUEST_STATE,
   ROOT_MODULE_ID,
 } from './constants';
-import type {
-  GetInstanceOptions,
-  InstanceDefinition,
-  RequestId,
-  ResolveProviderOptions,
-  ScopeId,
-  SetInstanceInstanceOptions,
-} from './types';
+import { ProviderStore } from './provider-store';
+import type { ResolveProviderOptions } from './types';
 
-export class ContainerRuntime {
-  private readonly instances = new Map<ScopeId, Map<ProviderId, InstanceDefinition>>();
+export class ContainerRuntime extends ProviderStore {
+  private static requestCounter = 0;
 
-  constructor(private readonly compiler: ContainerCompiler) {}
+  private readonly requestStorage = new AsyncLocalStorage<{
+    id?: number;
+    providers?: ProviderStore;
+    state?: Map<unknown, unknown>;
+  }>();
 
-  async getInstance<TInstance = unknown>(
-    providerId: ProviderId,
-    options: GetInstanceOptions = {},
-  ): Promise<TInstance | undefined> {
-    const { scopeId = GLOBAL_SCOPE_ID } = options;
-
-    const definition = this.instances.get(scopeId)?.get(providerId);
-
-    if (definition === undefined) {
-      return;
-    }
-
-    const { onResolve, instance } = definition;
-
-    if (onResolve) {
-      await onResolve();
-    }
-
-    return instance as TInstance;
+  constructor(private readonly compiler: ContainerCompiler) {
+    super();
   }
 
-  setInstance<TInstance = unknown>(
-    providerId: ProviderId,
-    instance: TInstance,
-    options: SetInstanceInstanceOptions = {},
-  ): void {
-    const { scopeId = GLOBAL_SCOPE_ID, ...instanceOptions } = options;
-
-    this.instances
-      .getOrInsertComputed(scopeId, () => new Map())
-      .set(providerId, {
-        instance,
-        ...instanceOptions,
-      });
-  }
-
-  async destroyInstances(scopeId?: ScopeId): Promise<number> {
-    let destroyed = 0;
-
-    if (!scopeId) {
-      for (const scopeId of this.instances.keys()) {
-        destroyed += await this.destroyInstances(scopeId);
-      }
-    } else {
-      const providers = this.instances.get(scopeId);
-
-      if (providers) {
-        for (const { onDestroy } of providers.values()) {
-          if (onDestroy) {
-            await onDestroy();
-          }
+  runInRequestContext<TResult = unknown>(
+    contextHandler: Fn<Promise<TResult>>,
+  ): Promise<TResult> {
+    return this.requestStorage.run(
+      {
+        id: ++ContainerRuntime.requestCounter,
+      },
+      async () => {
+        try {
+          return await contextHandler();
+        } finally {
+          await this.requestStorage.getStore()?.providers?.destroyInstances?.();
         }
-
-        destroyed = providers.size;
-
-        this.instances.delete(scopeId);
-      }
-    }
-
-    return destroyed;
+      },
+    );
   }
 
   async resolveProvider<TInstance = unknown>(
@@ -107,13 +65,13 @@ export class ContainerRuntime {
 
     const { rootModuleId } = this.compiler;
 
-    const { moduleId = rootModuleId } = options;
+    const { moduleId: moduleIdOption = rootModuleId } = options;
 
     const provider = this.compiler.getProvider(providerId, orThrow);
 
     if (!provider) {
       if (orThrow) {
-        return InternalException.throw`Provider ${providerId} was not found`;
+        InternalException.throw`Provider ${providerId} was not found`;
       }
 
       return;
@@ -121,13 +79,13 @@ export class ContainerRuntime {
 
     let providerModuleId: ModuleId | undefined;
 
-    if (provider.options.global || provider.moduleIds?.has(moduleId)) {
+    if (provider.options.global || provider.moduleIds?.has(moduleIdOption)) {
       providerModuleId = provider.moduleId;
     }
 
     if (!providerModuleId) {
       if (orThrow) {
-        return InternalException.throw`Provider ${providerId} is not available in module ${moduleId}`;
+        InternalException.throw`Provider ${providerId} is not available in module ${moduleIdOption}`;
       }
 
       return;
@@ -139,27 +97,45 @@ export class ContainerRuntime {
 
     const { scope = 'singleton', injects } = provider.options;
 
-    let scopeId: ScopeId | undefined;
-    let requestId: RequestId | undefined;
+    let providerStore: ProviderStore | undefined;
+    let moduleId: ModuleId | undefined;
 
     switch (scope) {
       case 'singleton':
-        scopeId = providerModuleId;
+        moduleId = providerModuleId;
+        providerStore = this;
         break;
 
       case 'module':
-        scopeId = moduleId;
+        moduleId = moduleIdOption;
+        providerStore = this;
         break;
 
-      case 'request':
-        scopeId = options.requestId;
-        requestId = options.requestId;
+      case 'request': {
+        const requestStore = this.requestStorage.getStore();
+
+        if (!requestStore) {
+          if (orThrow) {
+            InternalException.throw`Provider ${providerId} is not available outside request scope`;
+          }
+
+          return;
+        }
+
+        requestStore.providers ??= new ProviderStore();
+
+        moduleId = moduleIdOption;
+        providerStore = requestStore.providers;
+        break;
+      }
+
+      case 'transient':
         break;
     }
 
-    if (scopeId) {
-      instance = await this.getInstance<TInstance>(providerId, {
-        scopeId,
+    if (moduleId && providerStore) {
+      instance = await providerStore.getInstance<TInstance>(providerId, {
+        moduleId,
       });
 
       if (instance !== undefined) {
@@ -170,7 +146,6 @@ export class ContainerRuntime {
     const args = await this.resolveInjections(injects, {
       ...options,
       moduleId: providerModuleId,
-      requestId,
     });
 
     if ('useClass' in provider.options) {
@@ -193,9 +168,9 @@ export class ContainerRuntime {
       await onResolve();
     }
 
-    if (scopeId) {
-      this.setInstance(providerId, instance, {
-        scopeId,
+    if (moduleId && providerStore) {
+      providerStore.setInstance(providerId, instance, {
+        moduleId,
         onResolve,
         onDestroy,
       });
@@ -271,12 +246,7 @@ export class ContainerRuntime {
   ): Promise<unknown> {
     const { rootModuleId } = this.compiler;
 
-    const {
-      requestId,
-      moduleId = rootModuleId,
-      providerOptions,
-      injectionResolver,
-    } = options;
+    const { moduleId = rootModuleId, providerOptions, injectionResolver } = options;
 
     switch (injection) {
       case MODULE_ID:
@@ -289,10 +259,20 @@ export class ContainerRuntime {
         return this.compiler.getModule(moduleId).parents ?? null;
 
       case REQUEST_ID:
-        return requestId ?? null;
+        return this.requestStorage.getStore()?.id ?? null;
 
-      case PROVIDER_OPTIONS:
-        return providerOptions ?? null;
+      case REQUEST_ID_GETTER:
+        return () => this.requestStorage.getStore()?.id;
+
+      case REQUEST_STATE: {
+        const requestStore = this.requestStorage.getStore();
+
+        if (requestStore) {
+          requestStore.state ??= new Map();
+        }
+
+        return requestStore?.state ?? null;
+      }
     }
 
     if (isString(injection, false)) {
@@ -346,7 +326,6 @@ export class ContainerRuntime {
             await this.resolveProvider(providerId, {
               ...options,
               moduleId,
-              requestId,
             }),
           );
         }

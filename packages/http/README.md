@@ -18,8 +18,7 @@ import {
   Controller,
   Get,
   HTTPModule,
-  JSONMiddleware,
-  JSONModule,
+  JSONSerializer,
   Post,
   UseMiddleware,
 } from '@bunito/http';

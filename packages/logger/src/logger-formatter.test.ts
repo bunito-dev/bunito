@@ -16,7 +16,6 @@ describe('LogFormatter', () => {
     expect(getClassMetadata(ExampleFormatter, 'provider')).toEqual({
       decorator: LoggerFormatter,
       options: {
-        scope: 'singleton',
         injects: ['config'],
       },
     });

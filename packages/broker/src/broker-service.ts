@@ -4,7 +4,6 @@ import { InternalException } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import { Container, Provider } from '@bunito/container';
 import type { MatchedControllers } from '@bunito/container/internals';
-import { Id } from '@bunito/container/internals';
 import { Logger } from '@bunito/logger';
 import { BrokerAdapter } from './broker-adapter';
 import { BrokerConfig } from './broker-config';
@@ -86,59 +85,57 @@ export class BrokerService {
       return;
     }
 
-    const requestId = Id.unique('BrokerRequest');
+    await this.container.runInRequestContext(async () => {
+      for (const handler of handlers) {
+        const {
+          controller: { moduleId, providerId },
+          propKey,
+          injects = [],
+        } = handler;
 
-    for (const handler of handlers) {
-      const {
-        controller: { moduleId, providerId },
-        propKey,
-        injects = [],
-      } = handler;
+        const controller = await this.container.resolveProvider<
+          CallableInstance<MaybePromise>
+        >(providerId, {
+          moduleId,
+        });
 
-      const controller = await this.container.resolveProvider<
-        CallableInstance<MaybePromise>
-      >(providerId, {
-        requestId,
-        moduleId,
-      });
+        if (!controller[propKey]) {
+          continue;
+        }
 
-      if (!controller[propKey]) {
-        continue;
+        const args = await this.container.resolveInjections(injects, {
+          moduleId,
+          injectionResolver: async (token) => {
+            let arg: unknown;
+
+            switch (token) {
+              case Data:
+                arg = payload.data;
+                break;
+
+              case Context:
+                arg = payload.context;
+                break;
+
+              case Topic:
+              case Subject:
+                arg = payload.topic;
+                break;
+            }
+
+            return arg;
+          },
+        });
+
+        const data = await controller[propKey](...args);
+
+        const { kind, context } = payload;
+
+        if (kind === 'request') {
+          await this.adapter.sendResponse(context, data);
+        }
       }
-
-      const args = await this.container.resolveInjections(injects, {
-        requestId,
-        moduleId,
-        injectionResolver: async (token) => {
-          let arg: unknown;
-
-          switch (token) {
-            case Data:
-              arg = payload.data;
-              break;
-
-            case Context:
-              arg = payload.context;
-              break;
-
-            case Topic:
-            case Subject:
-              arg = payload.topic;
-              break;
-          }
-
-          return arg;
-        },
-      });
-
-      const data = await controller[propKey](...args);
-
-      const { kind, context } = payload;
-
-      if (kind === 'request') {
-        await this.adapter.sendResponse(context, data);
-      }
-    }
+    });
   }
 
   private buildHandlers(

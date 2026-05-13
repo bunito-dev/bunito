@@ -25,6 +25,7 @@ describe('LoggerService', () => {
         level: 'DEBUG',
         format: 'test',
       },
+      () => 123,
       [formatter],
     );
 
@@ -32,12 +33,12 @@ describe('LoggerService', () => {
       kind: 'ERROR',
       args: [new Error('Boom'), 'ignored message', { extra: true }],
       context: 'Context',
-      traceId: 1,
     });
 
     expect(writes).toHaveLength(1);
     expect(writes[0]).toContain('"message":"Boom"');
     expect(writes[0]).toContain('"context":"Context"');
+    expect(writes[0]).toContain('"requestId":123');
     expect(writes[0]).toContain('"data":["ignored message",{"extra":true}]');
   });
 
@@ -57,6 +58,7 @@ describe('LoggerService', () => {
         level: 'ERROR',
         format: 'test',
       },
+      () => undefined,
       [formatter],
     );
 
@@ -79,6 +81,7 @@ describe('LoggerService', () => {
           level: 'INFO',
           format: 'missing',
         },
+        () => undefined,
         [],
       );
     }).toThrow('Logger format missing is not supported');

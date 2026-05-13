@@ -1,6 +1,7 @@
 import { InternalException, isObject, isString } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
-import { Provider } from '@bunito/container';
+import type { RequestIdGetter } from '@bunito/container';
+import { Provider, REQUEST_ID_GETTER } from '@bunito/container';
 import { LOG_LEVELS } from './constants';
 import { LoggerConfig } from './logger-config';
 import { LoggerFormatter } from './logger-formatter';
@@ -9,7 +10,7 @@ import { resolveContext } from './utils';
 
 @Provider({
   scope: 'singleton',
-  injects: [LoggerConfig, LoggerFormatter],
+  injects: [LoggerConfig, REQUEST_ID_GETTER, LoggerFormatter],
 })
 export class LoggerService {
   private readonly stdout = process.stdout;
@@ -18,6 +19,7 @@ export class LoggerService {
 
   constructor(
     private readonly config: ResolveConfig<typeof LoggerConfig>,
+    private readonly requestIdGetter: RequestIdGetter,
     formatters: LoggerFormatter[],
   ) {
     const { format } = config;
@@ -34,7 +36,7 @@ export class LoggerService {
   }
 
   writeLog(options: WriteLogOptions): void {
-    const { kind, args, traceId, timestamp } = options;
+    const { kind, args, timestamp } = options;
 
     const value = LOG_LEVELS[kind];
 
@@ -70,7 +72,7 @@ export class LoggerService {
 
     const buffer = this.formatter?.formatLog({
       context,
-      traceId,
+      requestId: this.requestIdGetter(),
       level: {
         kind,
         value,

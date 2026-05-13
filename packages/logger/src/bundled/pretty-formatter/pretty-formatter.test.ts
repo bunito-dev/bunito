@@ -13,7 +13,7 @@ describe('PrettyFormatter', () => {
         value: 30,
       },
       context: 'Context',
-      traceId: 3,
+      requestId: 3,
       message: 'Hello',
       data: ['details', [{ nested: true }], { object: true }],
       timestamp: new Date('2026-05-02T10:20:30.123Z'),
@@ -22,7 +22,7 @@ describe('PrettyFormatter', () => {
 
     expect(output).toContain('INFO');
     expect(output).toContain('[Context]');
-    expect(output).toContain('#3');
+    expect(output).toContain('⌗3');
     expect(output).toContain('Hello');
     expect(output).toContain('+1.530s');
     expect(output).toContain('details');

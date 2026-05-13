@@ -15,7 +15,7 @@ export class BodyParser implements Middleware<BodyParserOptions> {
     try {
       switch (parser) {
         case 'arrayBuffer':
-          context.body = await request.blob();
+          context.body = await request.arrayBuffer();
           break;
 
         case 'blob':

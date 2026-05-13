@@ -35,7 +35,7 @@ class AppModule {}
 ```
 
 Modules are also how feature packages plug into an app. For example, HTTP apps add
-`HTTPModule`; JSON body handling adds `JSONModule`.
+`HTTPModule`, and message-driven apps add `BrokerModule` plus an adapter module.
 
 ## Resolving Providers Manually
 
@@ -85,4 +85,5 @@ in regular methods.
 
 - Use config and logging in [Configuration And Logging](/techniques/configuration-and-logging).
 - Build controllers in [HTTP](/techniques/http).
+- Add message handlers in [Broker](/techniques/broker).
 - Walk through the full first app in [Basics](/tutorials/basics).

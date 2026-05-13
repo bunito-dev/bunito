@@ -18,10 +18,11 @@ export {
   Provider,
   UsePrefix,
 } from './decorators';
-export type { RequestId } from './runtime';
+export type { RequestIdGetter } from './runtime';
 export {
   MODULE_ID,
-  PROVIDER_OPTIONS,
   REQUEST_ID,
+  REQUEST_ID_GETTER,
+  REQUEST_STATE,
 } from './runtime';
 export type { TokenLike } from './utils';

@@ -18,6 +18,8 @@ workspace:
   logger extensions
 - `packages/http`: HTTP module, controllers, routing decorators, injections,
   middleware, JSON support, and HTTP exceptions
+- `packages/broker`: broker module, message decorators, broker injections,
+  request/reply service, local broker transport, and NATS adapter
 - `packages/bun`: Bun-specific integrations, currently including server integration
   and config secrets backed by Bun secrets
 - `packages/common`: shared exceptions, predicates, type helpers, and small utilities
@@ -73,6 +75,11 @@ Current examples and run commands are listed in `examples/README.md`.
   - Uses `zod` as an optional dependency for route input validation
   - Owns `HTTPModule`, controller and route decorators, parameter/body/query/method
     injections, middleware, JSON middleware/module, and HTTP exceptions
+- `@bunito/broker`
+  - Depends on `@bunito/app`, `@bunito/common`, `@bunito/config`,
+    `@bunito/container`, and `@bunito/logger`
+  - Owns `BrokerModule`, `BrokerService`, broker adapters, message decorators,
+    message injections, local broker transport, and NATS integration
 - `@bunito/bun`
   - Depends on `@bunito/app`, `@bunito/common`, `@bunito/config`,
     `@bunito/container`, and `@bunito/logger`
@@ -121,6 +128,7 @@ Run tests for a specific package:
 - `bun test packages/logger/src`
 - `bun test packages/app/src`
 - `bun test packages/http/src`
+- `bun test packages/broker/src`
 - `bun test packages/bun/src`
 
 ## Coding Conventions
@@ -158,7 +166,7 @@ Use this convention consistently:
   `@bunito/container`, `@bunito/config`, `@bunito/logger`, `@bunito/app`,
   `@bunito/http`, and `@bunito/bunito`
 - application examples should normally import from `@bunito/bunito` plus feature
-  packages such as `@bunito/http`
+  packages such as `@bunito/http` or `@bunito/broker`
 - avoid cross-package relative imports
 
 For tests in this repo, the same rule applies:
@@ -203,6 +211,8 @@ Notes:
 - small changes in container behavior can affect every framework package
 - module/provider metadata, exports, scopes, request IDs, and lifecycle hooks are
   especially sensitive
+- request scope is backed by `AsyncLocalStorage`; request-scoped provider changes
+  should verify HTTP, broker, and Bun server entrypoints
 - decorators store metadata consumed later by the compiler/runtime; validate both
   declaration and runtime consumption when changing them
 
@@ -210,9 +220,9 @@ Notes:
 
 Important areas:
 
-- `packages/config/src/config.module.ts`
-- `packages/config/src/config.service.ts`
-- `packages/config/src/config.extension.ts`
+- `packages/config/src/config-module.ts`
+- `packages/config/src/config-service.ts`
+- `packages/config/src/config-reader.ts`
 - `packages/config/src/utils/*`
 - `packages/config/src/types.ts`
 
@@ -228,9 +238,9 @@ Notes:
 Important areas:
 
 - `packages/logger/src/logger.ts`
-- `packages/logger/src/logger.service.ts`
-- `packages/logger/src/logger.module.ts`
-- `packages/logger/src/logger.config.ts`
+- `packages/logger/src/logger-service.ts`
+- `packages/logger/src/logger-module.ts`
+- `packages/logger/src/logger-config.ts`
 - `packages/logger/src/json/*`
 - `packages/logger/src/pretty/*`
 
@@ -246,7 +256,6 @@ Notes:
 Important areas:
 
 - `packages/app/src/app.ts`
-- `packages/app/src/app.exception.ts`
 - `packages/app/src/decorators/*`
 
 Notes:
@@ -259,7 +268,7 @@ Notes:
 
 Important areas:
 
-- `packages/http/src/http.module.ts`
+- `packages/http/src/http-module.ts`
 - `packages/http/src/decorators/*`
 - `packages/http/src/injections/*`
 - `packages/http/src/middleware/*`
@@ -274,6 +283,23 @@ Notes:
   through Zod when schemas are supplied
 - validate routing-related changes against the relevant HTTP example documented in
   `examples/http/README.md`
+
+### `@bunito/broker`
+
+Important areas:
+
+- `packages/broker/src/broker-service.ts`
+- `packages/broker/src/decorators/*`
+- `packages/broker/src/injection/*`
+- `packages/broker/src/bundled/local-broker/*`
+- `packages/broker/src/bundled/nats-broker/*`
+
+Notes:
+
+- broker handlers are discovered from controller metadata
+- request/reply behavior depends on adapter payload shape and context forwarding
+- local broker supports in-memory and filesystem modes; keep both covered
+- validate broker-facing changes against `examples/microservices/README.md`
 
 ### `@bunito/bunito`
 
@@ -349,7 +375,7 @@ Keep tests aligned with the source tree at the file level:
   `packages/container/src/id.test.ts`
 - do not group several implementation files into one broad test file just because
   they belong to one folder; for example, decorators such as
-  `controller.decorator.ts`, `get.decorator.ts`, and `use-prefix.decorator.ts`
+  `controller.ts`, `get.ts`, and `use-prefix.ts`
   each need their own sibling test file
 - do not create tests for `index.ts` barrel files
 - type-only and interface-only files do not need dedicated test files

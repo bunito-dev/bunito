@@ -214,8 +214,6 @@ describe('Container (integration)', () => {
 
   test('keeps scope and lifecycle behavior across imported modules', async () => {
     const events: string[] = [];
-    const firstRequestId = Id.unique('Request');
-    const secondRequestId = Id.unique('Request');
 
     @Provider({
       injects: [MODULE_ID],
@@ -252,7 +250,7 @@ describe('Container (integration)', () => {
 
       readonly id = ++RequestService.instances;
 
-      constructor(readonly requestId: Id | null) {}
+      constructor(readonly requestId: number | null) {}
     }
 
     @Module({
@@ -270,27 +268,25 @@ describe('Container (integration)', () => {
 
     const singleton = await container.resolveProvider(SingletonService);
     const singletonAgain = await container.resolveProvider(SingletonService);
-    const requestA = await container.resolveProvider(RequestService, {
-      requestId: firstRequestId,
-    });
-    const requestB = await container.resolveProvider(RequestService, {
-      requestId: firstRequestId,
-    });
-    const requestC = await container.resolveProvider(RequestService, {
-      requestId: secondRequestId,
-    });
+    const [requestA, requestB] = await container.runInRequestContext(async () => [
+      await container.resolveProvider(RequestService),
+      await container.resolveProvider(RequestService),
+    ]);
+    const requestC = await container.runInRequestContext(() =>
+      container.resolveProvider(RequestService),
+    );
 
     expect(singleton).toBe(singletonAgain);
     expect(singleton.moduleId).toBe(Id.for(FeatureModule));
     expect(requestA).toBe(requestB);
     expect(requestA).not.toBe(requestC);
-    expect(requestA.requestId).toBe(firstRequestId);
-    expect(requestC.requestId).toBe(secondRequestId);
+    expect(requestA.requestId).toBeNumber();
+    expect(requestC.requestId).toBeNumber();
+    expect(requestA.requestId).not.toBe(requestC.requestId);
 
-    await container.destroyRequest(firstRequestId);
-    const requestD = await container.resolveProvider(RequestService, {
-      requestId: firstRequestId,
-    });
+    const requestD = await container.runInRequestContext(() =>
+      container.resolveProvider(RequestService),
+    );
     expect(requestD).not.toBe(requestA);
 
     await container.destroyInstances();

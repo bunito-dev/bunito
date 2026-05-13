@@ -61,7 +61,9 @@ describe('SpawnService', () => {
         args: ['bun', 'admin'],
       });
 
-      const code = await service.startProcesses(true);
+      const code = await service.startProcesses({
+        label: 'full',
+      });
 
       expect(code).toBe(1);
     } finally {
@@ -87,6 +89,6 @@ describe('SpawnService', () => {
   it('returns zero when there are no processes', async () => {
     const service = new SpawnService();
 
-    expect(await service.startProcesses()).toBe(0);
+    expect(await service.startProcesses({})).toBe(0);
   });
 });

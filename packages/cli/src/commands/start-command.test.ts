@@ -45,7 +45,7 @@ describe('StartCommand', () => {
 
   it('starts selected apps through the spawn service', async () => {
     const processes: unknown[] = [];
-    let pad: boolean | undefined;
+    let startOptions: unknown;
     let exitCode: number | string | null | undefined;
     const context = {
       project: {
@@ -63,8 +63,8 @@ describe('StartCommand', () => {
       },
       spawn: {
         addProcess: (options: unknown) => processes.push(options),
-        startProcesses: async (value?: boolean) => {
-          pad = value;
+        startProcesses: async (value?: unknown) => {
+          startOptions = value;
           return 7;
         },
       },
@@ -80,7 +80,7 @@ describe('StartCommand', () => {
           apps: new Set(['api']),
           watch: true,
           prod: true,
-          pad: true,
+          label: 'full',
         },
         context,
       ).run();
@@ -104,7 +104,9 @@ describe('StartCommand', () => {
         },
       },
     ]);
-    expect(pad).toBeTrue();
+    expect(startOptions).toEqual({
+      label: 'full',
+    });
     expect(exitCode).toBe(7);
   });
 

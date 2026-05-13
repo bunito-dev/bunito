@@ -12,8 +12,9 @@ import { Id } from '../utils';
 import {
   MODULE_ID,
   PARENT_MODULE_IDS,
-  PROVIDER_OPTIONS,
   REQUEST_ID,
+  REQUEST_ID_GETTER,
+  REQUEST_STATE,
   ROOT_MODULE_ID,
 } from './constants';
 import { ContainerRuntime } from './container-runtime';
@@ -25,7 +26,6 @@ function Plugin(options?: Parameters<typeof createExtensionDecorator>[1]) {
 describe('ContainerRuntime', () => {
   it('resolves values, classes, factories, injections, indexed providers, and lifecycle hooks', async () => {
     const fallbackToken = Symbol('fallback');
-    const requestId = Id.unique('Request');
     const events: string[] = [];
 
     @Plugin()
@@ -66,8 +66,9 @@ describe('ContainerRuntime', () => {
         ROOT_MODULE_ID,
         PARENT_MODULE_IDS,
         REQUEST_ID,
-        PROVIDER_OPTIONS,
         'literal',
+        REQUEST_ID_GETTER,
+        REQUEST_STATE,
         { useToken: 'value-token' },
         { useToken: 'missing', optional: true },
         { useToken: fallbackToken, options: { from: 'provider' } },
@@ -92,8 +93,9 @@ describe('ContainerRuntime', () => {
         readonly rootModuleId: Id,
         readonly parentModuleIds: Set<Id>,
         readonly requestId: Id | null,
-        readonly providerOptions: unknown,
         readonly literal: string,
+        readonly requestIdGetter: () => number | undefined,
+        readonly requestState: Map<unknown, unknown> | null,
         readonly value: number,
         readonly optional: null,
         readonly fallback: string,
@@ -173,32 +175,33 @@ describe('ContainerRuntime', () => {
     const runtime = new ContainerRuntime(compiler);
     const childModuleId = Id.for(ChildModule);
 
-    const consumer = await runtime.resolveProvider<Consumer>(Id.for(Consumer), {
-      moduleId: childModuleId,
-      requestId,
-      providerOptions: { from: 'caller' },
-      injectionResolver: (token, options) => {
-        if (Id.for(token).toString() === Id.for(fallbackToken).toString()) {
-          expect(options).toEqual({ from: 'provider' });
-          return 'resolved-by-callback';
-        }
-      },
-    });
+    const consumer = await runtime.runInRequestContext(() =>
+      runtime.resolveProvider<Consumer>(Id.for(Consumer), {
+        moduleId: childModuleId,
+        injectionResolver: (token, options) => {
+          if (Id.for(token).toString() === Id.for(fallbackToken).toString()) {
+            expect(options).toEqual({ from: 'provider' });
+            return 'resolved-by-callback';
+          }
+        },
+      }),
+    );
 
     expect(consumer).toBeInstanceOf(Consumer);
     expect(consumer?.moduleId).toBe(childModuleId);
     expect(consumer?.rootModuleId).toBe(Id.for(RootModule));
     expect(consumer?.parentModuleIds).toEqual(new Set([Id.for(RootModule)]));
-    expect(consumer?.requestId).toBeNull();
-    expect(consumer?.providerOptions).toEqual({ from: 'caller' });
+    expect(consumer?.requestId).toBeNumber();
     expect(consumer?.literal).toBe('literal');
+    expect(consumer?.requestIdGetter()).toBeUndefined();
+    expect(consumer?.requestState).toBeInstanceOf(Map);
     expect(consumer?.value).toBe(42);
     expect(consumer?.optional).toBeNull();
     expect(consumer?.fallback).toBe('resolved-by-callback');
     expect(consumer?.inlineValue).toBe('inline-value');
     expect(consumer?.builtValue).toEqual({ built: 'builder' });
     expect(consumer?.plugins).toEqual([expect.any(ClassPlugin)]);
-    expect(consumer?.requestScoped.requestId).toBeNull();
+    expect(consumer?.requestScoped.requestId).toBe(consumer?.requestId);
     expect(Consumer.initCount).toBe(1);
     expect(Consumer.resolveCount).toBe(0);
 
@@ -208,12 +211,10 @@ describe('ContainerRuntime', () => {
     expect(consumerAgain).toBe(consumer);
     expect(Consumer.resolveCount).toBe(1);
 
-    const otherRequestScoped = await runtime.resolveProvider<RequestScopedProvider>(
-      Id.for(RequestScopedProvider),
-      {
+    const otherRequestScoped = await runtime.runInRequestContext(() =>
+      runtime.resolveProvider<RequestScopedProvider>(Id.for(RequestScopedProvider), {
         moduleId: childModuleId,
-        requestId: Id.unique('Request'),
-      },
+      }),
     );
     expect(otherRequestScoped).not.toBe(consumer?.requestScoped);
     expect(otherRequestScoped?.requestId).toBeDefined();
@@ -271,12 +272,11 @@ describe('ContainerRuntime', () => {
     expect(missingInjectionError).toBeInstanceOf(Error);
     expect((missingInjectionError as Error).message).toContain('could not be resolved');
 
-    const manualScope = Id.unique('ManualScope');
     runtime.setInstance(
       Id.for('manual'),
       { ok: true },
       {
-        scopeId: manualScope,
+        moduleId: childModuleId,
         onResolve: async () => {
           events.push('manual-resolve');
         },
@@ -286,20 +286,13 @@ describe('ContainerRuntime', () => {
       },
     );
     const manual = await runtime.getInstance<{ ok: boolean }>(Id.for('manual'), {
-      scopeId: manualScope,
+      moduleId: childModuleId,
     });
-    const destroyedManualProviders = await runtime.destroyInstances(manualScope);
-    const destroyedMissingScopeProviders = await runtime.destroyInstances(
-      Id.unique('missing-scope'),
-    );
 
     expect(manual).toEqual({
       ok: true,
     });
-    expect(destroyedManualProviders).toBe(1);
-    expect(destroyedMissingScopeProviders).toBe(0);
 
-    await runtime.destroyInstances(requestId);
     await runtime.destroyInstances();
 
     expect(Consumer.destroyCount).toBe(1);
@@ -402,15 +395,14 @@ describe('ContainerRuntime', () => {
     const providerId = Id.for('value-with-hooks');
     const resolvedA = await runtime.resolveProvider(providerId);
     const resolvedB = await runtime.resolveProvider(providerId);
-    const destroyed = await runtime.destroyInstances();
+    await runtime.destroyInstances();
 
     expect(resolvedA).toBe(value);
     expect(resolvedB).toBe(value);
-    expect(destroyed).toBe(0);
     expect(calls).toEqual([]);
   });
 
-  it('treats request-scoped providers without request ids as transient', async () => {
+  it('rejects request-scoped providers outside a request context', async () => {
     @Provider({
       scope: 'request',
       injects: [REQUEST_ID],
@@ -420,7 +412,7 @@ describe('ContainerRuntime', () => {
 
       readonly id = ++RequestScopedProvider.instances;
 
-      constructor(readonly requestId: Id | null) {}
+      constructor(readonly requestId: number | null) {}
     }
 
     @Module({
@@ -430,13 +422,14 @@ describe('ContainerRuntime', () => {
 
     const runtime = new ContainerRuntime(new ContainerCompiler(RootModule));
     const providerId = Id.for(RequestScopedProvider);
-    const resolvedA = await runtime.resolveProvider<RequestScopedProvider>(providerId);
-    const resolvedB = await runtime.resolveProvider<RequestScopedProvider>(providerId);
+    let error: unknown;
+    try {
+      await runtime.resolveProvider<RequestScopedProvider>(providerId);
+    } catch (err) {
+      error = err;
+    }
 
-    expect(resolvedA).toBeInstanceOf(RequestScopedProvider);
-    expect(resolvedB).toBeInstanceOf(RequestScopedProvider);
-    expect(resolvedA).not.toBe(resolvedB);
-    expect(resolvedA?.requestId).toBeNull();
-    expect(resolvedB?.requestId).toBeNull();
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain('outside request scope');
   });
 });

@@ -5,7 +5,6 @@ import { InternalException, isFn, isObject } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import { Container } from '@bunito/container';
 import type { MatchedControllers } from '@bunito/container/internals';
-import { Id } from '@bunito/container/internals';
 import { Logger } from '@bunito/logger';
 import type { ZodType } from 'zod';
 import { HTTP_CONTROLLER_KEY } from './constants';
@@ -46,7 +45,7 @@ import { normalizePath, normalizeQuery } from './utils';
     },
   ],
 })
-export class HTTPServerRouter implements ServerRouter {
+export class HTTPRouter implements ServerRouter {
   private readonly routes = new Map<string, Map<RouteMethod, RouteDefinition>>();
 
   private readonly middleware = new Map<Class, Middleware>();
@@ -112,15 +111,9 @@ export class HTTPServerRouter implements ServerRouter {
       return new NotImplementedException().toResponse(defaultResponseContentType);
     }
 
-    const requestId = Id.unique('HTTPRequest');
+    const logger = await this.container.tryResolveProvider(Logger);
 
-    const logger = await this.container.tryResolveProvider(Logger, {
-      requestId,
-    });
-
-    logger?.setContext(requestId);
-
-    const trace = logger?.track();
+    logger?.setContext(HTTPRouter);
 
     const {
       controller: { providerId, moduleId, middleware },
@@ -165,14 +158,12 @@ export class HTTPServerRouter implements ServerRouter {
         const controller = await this.container.resolveProvider<
           CallableInstance<MaybePromise<unknown>>
         >(providerId, {
-          requestId,
           moduleId,
         });
 
         if (controller[propKey]) {
           const args = injects
             ? await this.container.resolveInjections(injects, {
-                requestId,
                 moduleId,
                 injectionResolver: async (token, options) => {
                   let result: unknown = null;
@@ -270,7 +261,7 @@ export class HTTPServerRouter implements ServerRouter {
 
     if (exception) {
       if (exception.cause) {
-        trace?.warn(exception.cause);
+        logger?.warn(exception.cause);
       }
 
       try {
@@ -293,7 +284,7 @@ export class HTTPServerRouter implements ServerRouter {
         );
 
         if (exception.cause) {
-          trace?.warn(exception.cause);
+          logger?.warn(exception.cause);
         }
       }
     }
@@ -301,15 +292,6 @@ export class HTTPServerRouter implements ServerRouter {
     if (exception) {
       response = exception.toResponse(defaultResponseContentType);
     }
-
-    const status = response?.status;
-
-    trace?.debug(`${method} ${path}${status ? ` ${status}` : ''}`, {
-      params,
-      query,
-    });
-
-    await this.container.destroyRequest(requestId);
 
     return response;
   }

@@ -130,15 +130,16 @@ Important injections:
 
 ## JSON Middleware
 
-Use `JSONModule` and `JSONMiddleware` to work with plain object responses and JSON
-bodies:
+Use `JSONSerializer` and `BodyParser` to work with plain object responses and JSON
+bodies. `HTTPModule` imports the bundled parser and serializer providers:
 
 ```ts
+import { LoggerModule, Module } from '@bunito/bunito';
 import {
   Body,
+  BodyParser,
   Controller,
-  JSONMiddleware,
-  JSONModule,
+  JSONSerializer,
   Post,
   UseMiddleware,
 } from '@bunito/http';
@@ -149,7 +150,8 @@ const BodySchema = z.object({
 });
 
 @Controller('/users')
-@UseMiddleware(JSONMiddleware)
+@UseMiddleware(JSONSerializer)
+@UseMiddleware(BodyParser, { parser: 'json' })
 class UsersController {
   @Post('/', {
     injects: [Body(BodySchema)],
@@ -163,26 +165,29 @@ class UsersController {
 }
 
 @Module({
-  imports: [LoggerModule, HTTPModule, JSONModule],
+  imports: [LoggerModule, HTTPModule],
   controllers: [UsersController],
 })
 class AppModule {}
 ```
+
+`UseMiddleware` accepts one middleware class and optional middleware options. Apply
+the decorator more than once when a controller or module needs several middleware.
 
 ## Prefixes And Middleware
 
 `UsePrefix` and `UseMiddleware` can be applied at module level:
 
 ```ts
-import { Module } from '@bunito/bunito';
-import { JSONMiddleware, JSONModule, UseMiddleware, UsePrefix } from '@bunito/http';
+import { Module, UsePrefix } from '@bunito/bunito';
+import { HTTPModule, JSONSerializer, UseMiddleware } from '@bunito/http';
 
 @Module({
-  imports: [JSONModule],
+  imports: [HTTPModule],
   controllers: [UsersController],
 })
 @UsePrefix('/api')
-@UseMiddleware(JSONMiddleware)
+@UseMiddleware(JSONSerializer)
 class ApiModule {}
 ```
 

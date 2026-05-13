@@ -28,6 +28,8 @@ Framework packages live in `packages/*`:
 - `@bunito/logger`: logger module, logger service, and JSON/pretty extensions
 - `@bunito/http`: HTTP module, controllers, routes, injections, middleware, JSON
   support, and HTTP exceptions
+- `@bunito/broker`: broker module, message handlers, broker injections, local and
+  NATS adapters
 - `@bunito/bun`: Bun-specific server and secret integrations
 - `@bunito/common`: framework-agnostic exceptions, predicates, types, and utilities
 - `@bunito/cli`: `bunito` command-line entrypoint
@@ -63,6 +65,7 @@ bun test packages/config/src
 bun test packages/logger/src
 bun test packages/app/src
 bun test packages/http/src
+bun test packages/broker/src
 bun test packages/bun/src
 ```
 
@@ -95,10 +98,10 @@ For imports:
 
 - inside the same package, prefer relative imports
 - across packages, use package names such as `@bunito/common`, `@bunito/container`,
-  `@bunito/config`, `@bunito/logger`, `@bunito/app`, `@bunito/http`, and
-  `@bunito/bunito`
+  `@bunito/config`, `@bunito/logger`, `@bunito/app`, `@bunito/http`,
+  `@bunito/broker`, and `@bunito/bunito`
 - examples should usually import from `@bunito/bunito` plus feature packages such as
-  `@bunito/http`
+  `@bunito/http` or `@bunito/broker`
 - avoid cross-package relative imports and direct imports from another package's
   source path
 
@@ -163,6 +166,8 @@ useful draft content or remove it from the navigation.
   integrations.
 - `@bunito/http`: check both decorator declaration and runtime consumption when
   changing routing, injections, middleware, or validation.
+- `@bunito/broker`: check handler metadata, adapter selection, local transport,
+  request/reply behavior, and NATS payload mapping.
 - `@bunito/cli`: validate at least one `examples` start command when CLI project
   discovery or command behavior changes.
 

@@ -42,20 +42,32 @@ function createServeCapture(): CapturedServe & {
 function createLogger() {
   const logs: string[] = [];
   const errors: unknown[] = [];
+  const logger = {
+    setContext: (context: unknown) => {
+      logs.push(`context:${String(context)}`);
+      return logger;
+    },
+    startTracking: () => logger,
+    warn: (message: string) => logs.push(`warn:${message}`),
+    debug: (message: string) => logs.push(`debug:${message}`),
+    fatal: (message: string, error?: unknown) => {
+      logs.push(`fatal:${message}`);
+      errors.push(error);
+    },
+  } as unknown as Logger;
 
   return {
     logs,
     errors,
-    logger: {
-      setContext: (context: unknown) => logs.push(`context:${String(context)}`),
-      warn: (message: string) => logs.push(`warn:${message}`),
-      debug: (message: string) => logs.push(`debug:${message}`),
-      fatal: (message: string, error?: unknown) => {
-        logs.push(`fatal:${message}`);
-        errors.push(error);
-      },
-    } as unknown as Logger,
+    logger,
   };
+}
+
+function createContainer(logger?: Logger | null) {
+  return {
+    runInRequestContext: (handler: () => Promise<unknown>) => handler(),
+    tryResolveProvider: () => logger ?? undefined,
+  } as never;
 }
 
 async function read(response: Response | undefined): Promise<{
@@ -81,6 +93,7 @@ describe('ServerService', () => {
           hostname: '127.0.0.1',
         },
         null,
+        createContainer(),
         [],
       );
     }).toThrow('No server routers found');
@@ -91,6 +104,7 @@ describe('ServerService', () => {
         hostname: '127.0.0.1',
       },
       logger,
+      createContainer(logger),
       [
         {
           processRequest: () => undefined,
@@ -133,6 +147,7 @@ describe('ServerService', () => {
         hostname: '127.0.0.1',
       },
       logger,
+      createContainer(logger),
       [routeRouter],
       capture.factory,
     );
@@ -171,9 +186,7 @@ describe('ServerService', () => {
       body: 'Not Found',
     });
     expect(logs).toContain('warn:Server already started');
-    expect(logs).toContain(
-      'warn:No matching router found for POST http://localhost/missing',
-    );
+    expect(logs).toContain('debug:POST http://localhost/missing 404');
 
     await service.stopServer();
     await service.stopServer();
@@ -192,6 +205,7 @@ describe('ServerService', () => {
         hostname: '127.0.0.1',
       },
       logger,
+      createContainer(logger),
       [
         {
           processRequest: () => new Response('ok'),
@@ -223,6 +237,7 @@ describe('ServerService', () => {
         hostname: '127.0.0.1',
       },
       null,
+      createContainer(),
       [
         {
           processRequest: () => 'invalid' as never,
@@ -251,6 +266,7 @@ describe('ServerService', () => {
         hostname: '127.0.0.1',
       },
       null,
+      createContainer(),
       [
         {
           processRequest: (_request: Request, context: RequestContext) => {
@@ -338,6 +354,7 @@ describe('ServerService', () => {
         hostname: '127.0.0.1',
       },
       null,
+      createContainer(),
       [routeRouter, firstWebSocketRouter, secondWebSocketRouter],
       ((options: ServerOptions) => {
         capture.options = options;

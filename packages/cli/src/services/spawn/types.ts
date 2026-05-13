@@ -1,5 +1,9 @@
 import type { RawObject } from '@bunito/common';
 
+export type StartProcessOptions = {
+  label?: 'name' | 'pid' | 'full';
+};
+
 export type ProcessOptions = {
   name: string;
   args: string[];

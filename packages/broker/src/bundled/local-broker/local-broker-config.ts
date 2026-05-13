@@ -18,6 +18,7 @@ export const LocalBrokerConfig = defineConfig(function LocalBroker({ getEnv }) {
   return {
     mode,
     uid: getEnv('LOCAL_BROKER_UID') ?? process.pid.toString(10),
+    timeout: getEnv('LOCAL_BROKER_TIMEOUT', 'integer') ?? 250,
     dataDir: getEnv('LOCAL_BROKER_DATA_DIR') ?? join(process.cwd(), '.cache', 'broker'),
   };
 });

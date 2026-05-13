@@ -6,8 +6,8 @@ split an app into feature modules with their own prefixes and middleware.
 ## Create A Feature Module
 
 ```ts
-import { Logger, Module } from '@bunito/bunito';
-import { Controller, Get, Params, UsePrefix } from '@bunito/http';
+import { Logger, Module, UsePrefix } from '@bunito/bunito';
+import { Controller, Get, Params } from '@bunito/http';
 import { z } from 'zod';
 
 const FooParams = z.object({
@@ -45,8 +45,7 @@ Every route in `FooModule` is mounted under `/foo`.
 ```ts
 import type { RawObject } from '@bunito/bunito';
 import {
-  JSONMiddleware,
-  JSONModule,
+  JSONSerializer,
   NotFoundException,
   UseMiddleware,
 } from '@bunito/http';
@@ -82,11 +81,10 @@ class BarController {
 }
 
 @Module({
-  imports: [JSONModule],
   controllers: [BarController],
 })
 @UsePrefix('/bar')
-@UseMiddleware(JSONMiddleware)
+@UseMiddleware(JSONSerializer)
 class BarModule {}
 ```
 

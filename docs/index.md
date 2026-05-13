@@ -45,7 +45,7 @@ Configure TypeScript by extending the bunito config:
 }
 ```
 
-Create `src/app.module.ts`:
+Create `src/app-module.ts`:
 
 ```ts
 import { Logger, LoggerModule, Module, Provider } from '@bunito/bunito';
@@ -76,7 +76,7 @@ Create `src/main.ts`:
 
 ```ts
 import { App } from '@bunito/bunito';
-import { AppModule } from './app.module';
+import { AppModule } from './app-module';
 
 await App.start(AppModule);
 ```

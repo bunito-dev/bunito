@@ -1,5 +1,5 @@
 import { Module, UsePrefix } from '@bunito/bunito';
-import { FooController } from './foo.controller';
+import { FooController } from './foo-controller';
 
 @Module({
   controllers: [FooController],

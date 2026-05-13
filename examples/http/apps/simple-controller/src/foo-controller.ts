@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@bunito/bunito';
 import { Get, Params, Post, Query } from '@bunito/http';
-import { FooService } from './foo.service';
+import { FooService } from './foo-service';
 import { BarParams, BarQuery } from './schemas';
 
 @Controller('/foo', {

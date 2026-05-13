@@ -2,7 +2,7 @@ import { Buffer } from 'node:buffer';
 import { OnAppShutdown, OnAppStart } from '@bunito/app';
 import { InternalException, isFn } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
-import { Provider } from '@bunito/container';
+import { Container, Provider } from '@bunito/container';
 import { Logger } from '@bunito/logger';
 import { SERVER_FACTORY_ID } from './constants';
 import { ServerConfig } from './server-config';
@@ -23,6 +23,7 @@ import type {
       useToken: Logger,
       optional: true,
     },
+    Container,
     {
       useToken: ServerRouter,
       optional: true,
@@ -44,6 +45,7 @@ export class ServerService {
   constructor(
     private readonly config: ResolveConfig<typeof ServerConfig>,
     private readonly logger: Logger | null,
+    private readonly container: Container,
     private readonly routers: ServerRouter[],
     private readonly serverFactory: typeof Bun.serve | null = null,
   ) {
@@ -129,32 +131,52 @@ export class ServerService {
   ): Promise<Response | undefined> {
     const routers = routePath ? this.routerRoles.route?.get(routePath) : this.routers;
 
-    let response: Response | undefined | null;
+    if (!routers?.length) {
+      this.logger?.warn(`No matching router found for ${request.method} ${request.url}`);
 
-    if (routers) {
-      const context: RequestContext = {
-        route: routePath
-          ? {
-              path: routePath,
-              method: request.method as HTTPMethod,
-              params: request.params ?? {},
-            }
-          : undefined,
-        upgrade: (options?) => {
-          const { headers, ...data } = options ?? {};
+      return new Response('Not Found', {
+        status: 404,
+      });
+    }
 
-          if (!this.routerRoles.websocket) {
-            return InternalException.throw`Upgrade not supported`;
+    let upgraded = false;
+
+    const context: RequestContext = {
+      route: routePath
+        ? {
+            path: routePath,
+            method: request.method as HTTPMethod,
+            params: request.params ?? {},
           }
+        : undefined,
+      upgrade: (options?) => {
+        const { headers, ...data } = options ?? {};
 
-          response = null;
+        if (upgraded) {
+          return InternalException.throw`Already upgraded`;
+        }
 
-          return server.upgrade(request, {
-            data,
-            headers,
-          });
-        },
-      };
+        if (!this.routerRoles.websocket) {
+          return InternalException.throw`Upgrade not supported`;
+        }
+
+        upgraded = server.upgrade(request, {
+          data,
+          headers,
+        });
+
+        return upgraded;
+      },
+    };
+
+    return await this.container.runInRequestContext(async () => {
+      let response: Response | undefined;
+
+      const logger = await this.container.tryResolveProvider(Logger);
+
+      logger?.setContext(ServerService)?.startTracking();
+
+      const logPrefix = `${request.method} ${request.url}`;
 
       for (const router of routers) {
         if (!isFn(router.processRequest)) {
@@ -164,28 +186,30 @@ export class ServerService {
         const output = await router.processRequest(request, context);
 
         if (output instanceof Response) {
-          return output;
-        }
-
-        if (response === null) {
+          response = output;
           break;
         }
 
         if (output !== undefined) {
           return InternalException.throw`Router ${router} returned invalid response`;
         }
+
+        if (upgraded) {
+          logger?.debug(`${logPrefix} UPGRADED`);
+          return;
+        }
       }
-    }
 
-    if (response === undefined) {
-      this.logger?.warn(`No matching router found for ${request.method} ${request.url}`);
+      if (!response) {
+        response = new Response('Not Found', {
+          status: 404,
+        });
+      }
 
-      return new Response('Not Found', {
-        status: 404,
-      });
-    }
+      logger?.debug(`${logPrefix} ${response.status}`);
 
-    return response ?? undefined;
+      return response;
+    });
   }
 
   private async processWebSocketEvent(
@@ -196,17 +220,25 @@ export class ServerService {
       return;
     }
 
-    for (const router of this.routerRoles.websocket) {
-      if (!isFn(router.processWebSocketEvent)) {
-        continue;
+    const routers = this.routerRoles.websocket;
+
+    await this.container.runInRequestContext(async () => {
+      const logger = await this.container.tryResolveProvider(Logger);
+
+      for (const router of routers) {
+        if (!isFn(router.processWebSocketEvent)) {
+          continue;
+        }
+
+        const output = await router.processWebSocketEvent(event, socket);
+
+        if (output !== undefined) {
+          break;
+        }
       }
 
-      const output = await router.processWebSocketEvent(event, socket);
-
-      if (output !== undefined) {
-        break;
-      }
-    }
+      logger?.debug(`WebSocket ${event.name} event processed`);
+    });
   }
 
   private createWebSocketOption(): ServerOptions['websocket'] {

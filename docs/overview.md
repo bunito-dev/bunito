@@ -20,8 +20,8 @@ call lifecycle hooks.
 
 The main package, `@bunito/bunito`, gives you the application and container APIs.
 Feature packages add focused capabilities. For example, `@bunito/http` adds
-controllers and routing, while `@bunito/config` and `@bunito/logger` handle common
-application concerns.
+controllers and routing, `@bunito/broker` adds message handlers, and
+`@bunito/config` plus `@bunito/logger` handle common application concerns.
 
 ## Modules
 
@@ -68,8 +68,10 @@ Providers can live in different scopes:
 - `request`: one instance for a request context
 - `transient`: a new instance whenever it is resolved
 
-Most application services can stay in the default scope. Request scope is useful
-when a provider depends on request-specific data.
+Most application services can stay in the default scope. Request scope is backed by
+the container request context. HTTP requests, broker messages, and server websocket
+events enter that context automatically, so request-scoped providers and log
+correlation stay isolated per request.
 
 ## Lifecycle
 
@@ -101,6 +103,7 @@ The framework is split into packages so applications can stay small:
 - `@bunito/bunito`: app, modules, providers, config and logger re-exports
 - `@bunito/app`: app bootstrap and app lifecycle primitives
 - `@bunito/http`: controllers, routes, middleware, injections, and HTTP exceptions
+- `@bunito/broker`: message handlers, local/NATS adapters, and request/reply APIs
 - `@bunito/config`: config factories, environment values, and secrets
 - `@bunito/logger`: injectable logger and output extensions
 - `@bunito/bun`: Bun-specific integrations
@@ -111,9 +114,10 @@ Runnable examples live in separate workspaces under `examples/`:
 
 - `examples/basics`: one standard app
 - `examples/http`: three HTTP apps discovered from `apps/*/src/main.ts`
+- `examples/microservices`: broker apps that call each other through messages
 - `examples/monorepo`: several apps plus a shared library
 
-HTTP examples use app-local `.env` files for ports.
+Multi-app examples use app-local `.env` files for ports and broker settings.
 
 Continue with [Modules And Providers](/techniques/modules-and-providers) or jump
-straight into [HTTP](/techniques/http).
+straight into [HTTP](/techniques/http) or [Broker](/techniques/broker).

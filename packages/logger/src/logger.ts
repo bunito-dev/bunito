@@ -1,35 +1,42 @@
-import type { RequestId } from '@bunito/container';
-import { Provider, REQUEST_ID } from '@bunito/container';
+import { Provider } from '@bunito/container';
 import { LoggerService } from './logger-service';
 import type { LogArg, LogArgs, LoggerSettings, LogLevelKind } from './types';
 import { resolveContext } from './utils';
 
 @Provider({
-  scope: 'request',
+  scope: 'transient',
   global: true,
-  injects: [
-    LoggerService,
-    {
-      optional: true,
-      token: REQUEST_ID,
-    },
-  ],
+  injects: [LoggerService],
 })
 export class Logger {
   constructor(
     private readonly loggerService: LoggerService,
-    requestId: RequestId | null = null,
     private readonly settings: LoggerSettings = {},
-  ) {
-    if (requestId) {
-      settings.traceId = requestId.index;
-    }
-  }
+  ) {}
 
   setContext(...contextLike: unknown[]): this {
     this.settings.context = resolveContext(contextLike);
 
     return this;
+  }
+
+  startTracking(): this {
+    this.settings.timestamp = new Date();
+    return this;
+  }
+
+  stopTracking(): this {
+    this.settings.timestamp = undefined;
+    return this;
+  }
+
+  clone(...contextLike: unknown[]): Logger {
+    const { context, timestamp } = this.settings;
+
+    return new Logger(this.loggerService, {
+      context: resolveContext(contextLike) ?? context,
+      timestamp,
+    });
   }
 
   fatal(...args: LogArgs): void {
@@ -62,13 +69,11 @@ export class Logger {
   }
 
   track(...contextLike: unknown[]): Logger {
-    const { context, traceId } = this.settings;
+    const { context } = this.settings;
 
-    return new Logger(this.loggerService, null, {
+    return new Logger(this.loggerService, {
       context: resolveContext(contextLike) ?? context,
-      traceId,
-      timestamp: new Date(),
-    });
+    }).startTracking();
   }
 
   protected writeLog(kind: LogLevelKind, args: LogArg[]): void {

@@ -18,7 +18,6 @@ export function setProviderMetadataOptions(
     } else {
       InternalException.throw`@${decorator}() decorator can only be applied once`;
     }
-    return;
   }
 
   metadata.decorator = decorator;

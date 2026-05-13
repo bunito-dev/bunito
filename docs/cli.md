@@ -50,7 +50,7 @@ Useful start flags:
 ```bash
 bunito start --watch
 bunito start --prod
-bunito start --pad
+bunito start --label name
 ```
 
 Build apps into `out/`:
@@ -129,6 +129,17 @@ examples/
       simple-controller/
         .env
         src/main.ts
+  microservices/
+    apps/
+      foo/
+        .env
+        src/main.ts
+      bar/
+        .env
+        src/main.ts
+      mono/
+        .env
+        src/main.ts
   monorepo/
     apps/
       first/
@@ -151,4 +162,5 @@ The tutorials explain those apps step by step:
 - [Simple Controller](/tutorials/simple-controller)
 - [JSON Middleware](/tutorials/json-middleware)
 - [Multiple APIs](/tutorials/multiple-apis)
+- [Microservices](/tutorials/microservices)
 - [Monorepo](/tutorials/monorepo)

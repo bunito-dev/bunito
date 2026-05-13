@@ -1,21 +1,34 @@
 import { describe, expect, it } from 'bun:test';
 import { Container } from './container';
-import type { ClassDecorator } from './decorators';
-import { createComponentDecorator, Module } from './decorators';
+import type { ClassMethodDecorator } from './decorators';
+import { Controller, createClassPropDecorator, Module, UsePrefix } from './decorators';
 import { Id } from './utils';
 
-function Component(options?: unknown): ClassDecorator {
-  return createComponentDecorator(Component, options);
-}
-
 describe('Container', () => {
-  it('locates components through the compiled module graph', () => {
-    @Component({ tag: 'child' })
+  it('locates controller props through the compiled module graph', () => {
+    const customControllerKey = Symbol('custom');
+
+    function CustomHandler(): ClassMethodDecorator {
+      return createClassPropDecorator(customControllerKey, {
+        kind: 'custom-handler',
+      });
+    }
+
+    @Controller('/items')
+    @UsePrefix('/child')
+    class ChildController {
+      @CustomHandler()
+      handle(): void {
+        //
+      }
+    }
+
     @Module({
-      imports: [],
+      providers: [ChildController],
     })
     class ChildModule {}
 
+    @UsePrefix('/root')
     @Module({
       imports: [ChildModule],
     })
@@ -23,19 +36,42 @@ describe('Container', () => {
 
     const container = new Container(RootModule);
 
-    expect(container.locateComponents(Component)).toEqual({
+    expect(container.locateComponents(customControllerKey)).toEqual({
       moduleId: Id.for(RootModule),
+      props: [
+        {
+          propKind: 'class',
+          options: {
+            kind: 'prefix',
+            prefix: '/root',
+          },
+        },
+      ],
       children: [
         {
           moduleId: Id.for(ChildModule),
-          components: [
+          controllers: [
             {
-              useClass: ChildModule,
+              providerId: Id.for(ChildController),
               options: {
-                value: {
-                  tag: 'child',
-                },
+                prefix: '/items',
               },
+              props: [
+                {
+                  propKind: 'class',
+                  options: {
+                    kind: 'prefix',
+                    prefix: '/child',
+                  },
+                },
+                {
+                  propKind: 'method',
+                  propKey: 'handle',
+                  options: {
+                    kind: 'custom-handler',
+                  },
+                },
+              ],
             },
           ],
         },

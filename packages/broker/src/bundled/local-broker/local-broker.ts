@@ -39,21 +39,7 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
 
     await this.clearData();
 
-    this.watcher = watch(dataDir, { recursive: true }, (event, relativePath) => {
-      if (event !== 'rename' || !relativePath) {
-        return;
-      }
-
-      (async () => {
-        const payload = await this.readMessage(Bun.file(join(dataDir, relativePath)));
-
-        if (!payload) {
-          return;
-        }
-
-        this.processMessage(payload);
-      })().catch(() => null);
-    });
+    this.watcher = watch(dataDir, { recursive: true }, this.processFileEvent);
   }
 
   async disconnect(): Promise<void> {
@@ -87,7 +73,7 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
         resolve(data);
       };
 
-      timeout = setTimeout(() => callback(new Error('Request timed out')), 1000);
+      timeout = setTimeout(callback, this.config.timeout, new Error('Request timed out'));
 
       this.requests.set(id, callback);
 
@@ -98,13 +84,13 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
         context: {
           id,
         },
-      }).catch((err) => callback(err));
+      }).catch(callback);
     });
   }
 
   async sendEvent(topic: string, data: unknown): Promise<boolean> {
     await this.publishMessage({
-      kind: 'request',
+      kind: 'event',
       data,
       topic,
       context: {
@@ -139,6 +125,29 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
       }))
       .matched.push(handler);
   }
+
+  private readonly processFileEvent = async (
+    event: string,
+    relativePath: string | null,
+  ): Promise<void> => {
+    if (event !== 'rename' || !relativePath) {
+      return;
+    }
+
+    try {
+      const payload = await this.readMessage(
+        Bun.file(join(this.config.dataDir, relativePath)),
+      );
+
+      if (!payload) {
+        return;
+      }
+
+      this.processMessage(payload);
+    } catch {
+      return;
+    }
+  };
 
   private async publishMessage(
     payload: MessagePayload<LocalBrokerContext>,
@@ -180,14 +189,15 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
   private async readMessage(
     file: Bun.BunFile,
   ): Promise<MessagePayload<LocalBrokerContext> | undefined> {
-    if (
-      !file.name ||
-      !(await file.exists()) ||
-      !(await file
-        .stat()
-        .then((stat) => stat.isFile())
-        .catch(() => false))
-    ) {
+    let isFile = false;
+
+    try {
+      isFile = (await file.stat()).isFile();
+    } catch {
+      //
+    }
+
+    if (!file.name || !(await file.exists()) || !isFile) {
       return;
     }
 
@@ -226,10 +236,14 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
         continue;
       }
 
-      await rm(join(dir.parentPath, dir.name), {
-        recursive: true,
-        force: true,
-      }).catch(() => null);
+      try {
+        await rm(join(dir.parentPath, dir.name), {
+          recursive: true,
+          force: true,
+        });
+      } catch {
+        //
+      }
     }
   }
 }

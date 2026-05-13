@@ -9,7 +9,7 @@ The shared library exports a module and provider:
 
 ```ts
 import { Module } from '@bunito/bunito';
-import { ExampleService } from './example.service';
+import { ExampleService } from './example-service';
 
 @Module({
   providers: [ExampleService],
@@ -28,7 +28,7 @@ The `first` and `second` apps import the shared module:
 ```ts
 import { LoggerModule, Module } from '@bunito/bunito';
 import { ExampleModule } from '@libs/example';
-import { FirstService } from './first.service';
+import { FirstService } from './first-service';
 
 @Module({
   imports: [LoggerModule, ExampleModule],

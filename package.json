@@ -9,6 +9,7 @@
     "docs:preview": "vitepress preview docs",
     "test": "bun test",
     "coverage": "bun test --coverage",
+    "coverage:html": "bun run coverage --coverage-reporter=lcov",
     "lint": "biome check",
     "format": "biome format",
     "typecheck": "tsc --noEmit",

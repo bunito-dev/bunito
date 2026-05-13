@@ -37,7 +37,7 @@ describe('CLIService', () => {
     const ensured: string[] = [];
     const written: string[] = [];
     const processes: unknown[] = [];
-    let pad: boolean | undefined;
+    let startOptions: unknown;
     const settings = {
       mode: 'unknown',
       name: 'demo',
@@ -90,8 +90,8 @@ describe('CLIService', () => {
       logger,
       spawn: {
         addProcess: (options: unknown) => processes.push(options),
-        startProcesses: async (value?: boolean) => {
-          pad = value;
+        startProcesses: async (value?: unknown) => {
+          startOptions = value;
           return 0;
         },
       },
@@ -118,7 +118,7 @@ describe('CLIService', () => {
       settings.mode = 'monorepo';
       await cli.runCommand(['generate', 'app', 'admin']);
       await cli.runCommand(['build', 'api', '--minify', '--sourcemap']);
-      await cli.runCommand(['start', 'api', '--watch', '--prod', '--pad']);
+      await cli.runCommand(['start', 'api', '--watch', '--prod', '--label', 'full']);
     } finally {
       build.mockRestore();
       exit.mockRestore();
@@ -150,7 +150,9 @@ describe('CLIService', () => {
         },
       },
     ]);
-    expect(pad).toBeTrue();
+    expect(startOptions).toEqual({
+      label: 'full',
+    });
   });
 
   it('prints CLI failures and exits with code 2', async () => {

@@ -1,11 +1,13 @@
 {
   "name": "@bunito/broker",
   "version": "0.0.10",
-  "description": "Message broker for Bunito",
+  "description": "Message broker module, adapters, and decorators for Bunito",
   "keywords": [
+    "bunito",
+    "broker",
+    "messages",
     "microservices",
-    "message broker",
-    "bunito"
+    "nats"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",

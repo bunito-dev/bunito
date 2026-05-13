@@ -10,7 +10,7 @@ export class JSONFormatter implements LoggerFormatter {
   formatLog(options: LogRecord): string {
     const {
       context,
-      traceId,
+      requestId,
       level,
       error: err,
       message = err?.message,
@@ -23,7 +23,7 @@ export class JSONFormatter implements LoggerFormatter {
       id: JSONFormatter.nextId++,
       level: level.value,
       context,
-      traceId,
+      requestId,
       message,
       error: err
         ? {

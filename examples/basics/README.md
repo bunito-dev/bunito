@@ -18,8 +18,8 @@ bun run build
 
 ## What To Read
 
-- `src/app.module.ts`: imports `LoggerModule` and registers providers.
-- `src/foo.service.ts`: uses object-based dependency injection.
-- `src/bar.service.ts`: shows provider lifecycle hooks.
+- `src/app-module.ts`: imports `LoggerModule` and registers providers.
+- `src/foo-service.ts`: uses object-based dependency injection.
+- `src/bar-service.ts`: shows provider lifecycle hooks.
 - `src/main.ts`: creates the app, resolves providers manually, starts it, and
   shuts it down.

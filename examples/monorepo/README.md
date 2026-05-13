@@ -34,6 +34,6 @@ bun run build
 ## What To Read
 
 - `libs/example`: shared module and provider exported for apps.
-- `apps/first/src/app.module.ts`: imports the shared library.
-- `apps/second/src/app.module.ts`: imports the shared library independently.
-- `apps/mono/src/app.module.ts`: imports app modules from `first` and `second`.
+- `apps/first/src/first-module.ts`: imports the shared library.
+- `apps/second/src/second-module.ts`: imports the shared library independently.
+- `apps/mono/src/app-module.ts`: imports app modules from `first` and `second`.

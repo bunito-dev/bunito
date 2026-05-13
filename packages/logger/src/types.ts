@@ -3,7 +3,6 @@ import type { LOG_LEVELS } from './constants';
 
 export type LoggerSettings = {
   context?: string;
-  traceId?: number;
   timestamp?: Date;
 };
 
@@ -23,6 +22,7 @@ export type WriteLogOptions = LoggerSettings & {
 
 export type LogRecord = Mandatory<LoggerSettings, 'timestamp'> & {
   level: LogLevel;
+  requestId?: number;
   message?: string;
   data?: unknown[];
   error?: Error;

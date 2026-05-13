@@ -1,18 +1,10 @@
 import { afterEach, describe, expect, it } from 'bun:test';
+import { restoreEnvs, setEnv } from '@bunito/common/testing';
 import { ConfigService } from '@bunito/config/internals';
 import { HTTPConfig } from './http-config';
 
-const originalEnv = { ...process.env };
-
 afterEach(() => {
-  const value = originalEnv.RESPONSE_CONTENT_TYPE;
-
-  if (value === undefined) {
-    delete process.env.RESPONSE_CONTENT_TYPE;
-    return;
-  }
-
-  process.env.RESPONSE_CONTENT_TYPE = value;
+  restoreEnvs('DEFAULT_RESPONSE_CONTENT_TYPE');
 });
 
 describe('HTTPRouterConfig', () => {
@@ -21,7 +13,7 @@ describe('HTTPRouterConfig', () => {
       throw new Error('Expected HTTPRouterConfig factory provider');
     }
 
-    process.env.RESPONSE_CONTENT_TYPE = 'TEXT/PLAIN';
+    setEnv('DEFAULT_RESPONSE_CONTENT_TYPE', 'TEXT/PLAIN');
 
     const config = await HTTPConfig.useFactory(new ConfigService());
 
@@ -35,7 +27,7 @@ describe('HTTPRouterConfig', () => {
       throw new Error('Expected HTTPRouterConfig factory provider');
     }
 
-    delete process.env.RESPONSE_CONTENT_TYPE;
+    restoreEnvs('DEFAULT_RESPONSE_CONTENT_TYPE');
 
     const config = await HTTPConfig.useFactory(new ConfigService());
 

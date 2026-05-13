@@ -31,7 +31,7 @@ describe('App', () => {
       setContext: (target: unknown) => {
         contexts.push(target);
       },
-      trace: () => ({
+      track: () => ({
         fatal: () => undefined,
         error: () => undefined,
         warn: () => undefined,
@@ -89,7 +89,7 @@ describe('App', () => {
         resolveProvider: async () => undefined,
       } as never,
       {
-        trace: () => ({
+        track: () => ({
           fatal: (message: string) => {
             failures.push(message);
           },

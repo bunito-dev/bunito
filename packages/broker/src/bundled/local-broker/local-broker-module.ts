@@ -4,7 +4,7 @@ import { LocalBroker } from './local-broker';
 import { LocalBrokerConfig } from './local-broker-config';
 
 @Module({
-  injects: [ConfigModule],
+  imports: [ConfigModule],
   configs: [LocalBrokerConfig],
   extensions: [LocalBroker],
 })
