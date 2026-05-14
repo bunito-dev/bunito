@@ -5,7 +5,7 @@ controllers, params, query values, and validation.
 
 ## Install HTTP
 
-Start with the CLI and core package from [Getting Started](/). Then add HTTP:
+Start with the CLI and core package from [Getting Started](../index.md). Then add HTTP:
 
 ```bash
 bun add @bunito/http
