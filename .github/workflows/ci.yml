@@ -65,6 +65,7 @@ jobs:
         uses: mikepenz/action-junit-report@v6
         with:
           report_paths: 'artifacts/test-results.xml'
+          include_passed: true
 
       - name: Enforce coverage
         run: |
