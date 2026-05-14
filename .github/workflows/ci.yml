@@ -62,7 +62,7 @@ jobs:
 
       - name: Publish test report
         if: always()
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@v6
         with:
           report_paths: 'artifacts/test-results.xml'
 
@@ -74,6 +74,14 @@ jobs:
           --coverage-reporter=lcov \
           --coverage-dir=artifacts/coverage-report
 
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-results
+          path: artifacts/test-results.xml
+          if-no-files-found: error
+
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v6
@@ -82,10 +90,3 @@ jobs:
           path: artifacts/coverage-report
           if-no-files-found: error
 
-      - name: Upload JUnit report
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: test-results
-          path: artifacts/test-results.xml
-          if-no-files-found: error
