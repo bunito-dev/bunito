@@ -1,5 +1,5 @@
 import type { RawObject } from '@bunito/common';
-import type { InjectionTokenOptions } from '@bunito/container/internals';
+import type { InjectionTokenOptions } from '@bunito/container';
 import type { ZodObject, z } from 'zod';
 
 export type Params<TOptions extends RawObject<string> | ZodObject = RawObject<string>> =

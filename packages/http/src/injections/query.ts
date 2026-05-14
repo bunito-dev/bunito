@@ -1,4 +1,4 @@
-import type { InjectionTokenOptions } from '@bunito/container/internals';
+import type { InjectionTokenOptions } from '@bunito/container';
 import type { ZodObject, z } from 'zod';
 import type { HTTPQuery } from '../types';
 

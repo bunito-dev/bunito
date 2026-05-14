@@ -1,6 +1,6 @@
 import { InternalException } from '@bunito/common';
+import type { ModuleLike, ResolveToken, Token } from '@bunito/container';
 import { Container } from '@bunito/container';
-import type { ModuleLike, ResolveToken, Token } from '@bunito/container/internals';
 import { Logger } from '@bunito/logger';
 import { OnAppShutdown, OnAppStart } from './decorators';
 

@@ -1,8 +1,5 @@
-import type {
-  ExtensionDecorator,
-  ProviderDecoratorOptions,
-} from '@bunito/container/internals';
-import { createExtensionDecorator } from '@bunito/container/internals';
+import type { ExtensionDecorator, ProviderDecoratorOptions } from '@bunito/container';
+import { createExtensionDecorator } from '@bunito/container';
 import type { LogRecord } from './types';
 
 export interface LoggerFormatter {

@@ -1,9 +1,6 @@
 import type { EmptyObject, MaybePromise, RawObject } from '@bunito/common';
-import type {
-  ExtensionDecorator,
-  ProviderDecoratorOptions,
-} from '@bunito/container/internals';
-import { createExtensionDecorator } from '@bunito/container/internals';
+import type { ExtensionDecorator, ProviderDecoratorOptions } from '@bunito/container';
+import { createExtensionDecorator } from '@bunito/container';
 import type { HTTPException } from '../http-exception';
 import type { MiddlewareContext } from './types';
 

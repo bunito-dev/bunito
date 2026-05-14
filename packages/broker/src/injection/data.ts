@@ -1,4 +1,4 @@
-import type { InjectionTokenOptions } from '@bunito/container/internals';
+import type { InjectionTokenOptions } from '@bunito/container';
 
 export type Data<TData = unknown> = TData;
 

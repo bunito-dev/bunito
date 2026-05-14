@@ -1,6 +1,6 @@
 import type { Class } from '@bunito/common';
-import type { ClassDecorator } from '@bunito/container/internals';
-import { createClassPropDecorator } from '@bunito/container/internals';
+import type { ClassDecorator } from '@bunito/container';
+import { createClassPropDecorator } from '@bunito/container';
 import { HTTP_CONTROLLER_KEY } from '../constants';
 import type { Middleware, ResolveMiddlewareOptions } from '../middleware';
 import type { ControllerClassOptions } from '../types';

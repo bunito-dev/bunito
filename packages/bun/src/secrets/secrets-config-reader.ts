@@ -1,4 +1,4 @@
-import { ConfigReader } from '@bunito/config/internals';
+import { ConfigReader } from '@bunito/config';
 import { SecretsService } from './secrets-service';
 import type { SecretKey } from './types';
 

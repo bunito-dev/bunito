@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { getControllerProps } from '@bunito/container/internals';
+import { getControllerProps } from '@bunito/container';
 import { HTTP_CONTROLLER_KEY } from '../constants';
 import { OnRequest } from './on-request';
 

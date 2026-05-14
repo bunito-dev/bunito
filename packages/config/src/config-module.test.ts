@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { getClassMetadata } from '@bunito/container/internals';
+import { getClassMetadata } from '@bunito/container';
 import { ConfigModule } from './config-module';
 import { ConfigService } from './config-service';
 

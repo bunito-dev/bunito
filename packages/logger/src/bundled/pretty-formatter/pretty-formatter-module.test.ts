@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@bunito/config';
-import { getClassMetadata } from '@bunito/container/internals';
+import { getClassMetadata } from '@bunito/container';
 import { PrettyFormatter } from './pretty-formatter';
 import { PrettyFormatterConfig } from './pretty-formatter-config';
 import { PrettyFormatterModule } from './pretty-formatter-module';

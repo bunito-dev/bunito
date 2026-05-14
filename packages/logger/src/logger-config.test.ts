@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { ConfigService } from '@bunito/config/internals';
+import { ConfigService } from '@bunito/config';
 import { LoggerConfig } from './logger-config';
 
 const originalEnv = { ...process.env };

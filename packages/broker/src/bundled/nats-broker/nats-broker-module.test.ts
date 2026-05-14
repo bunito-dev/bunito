@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@bunito/config';
-import { getClassMetadata } from '@bunito/container/internals';
+import { getClassMetadata } from '@bunito/container';
 import { NatsBroker } from './nats-broker';
 import { NatsBrokerConfig } from './nats-broker-config';
 import { NatsBrokerModule } from './nats-broker-module';

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { ServerRouter } from '@bunito/bun/internals';
-import { Container } from '@bunito/container';
-import { getClassMetadata, Id } from '@bunito/container/internals';
+import { Container, getClassMetadata, Id } from '@bunito/container';
 import { Logger } from '@bunito/logger';
 import { z } from 'zod';
 import { HTTPConfig } from './http-config';

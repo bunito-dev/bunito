@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@bunito/config';
-import { getClassMetadata } from '@bunito/container/internals';
+import { getClassMetadata } from '@bunito/container';
 import { LocalBroker } from './local-broker';
 import { LocalBrokerConfig } from './local-broker-config';
 import { LocalBrokerModule } from './local-broker-module';

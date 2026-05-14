@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Id } from '@bunito/container/internals';
+import { Id } from '@bunito/container';
 import type { BrokerAdapter } from './broker-adapter';
 import { BrokerService } from './broker-service';
 import { Context, Data, Subject, Topic } from './injection';

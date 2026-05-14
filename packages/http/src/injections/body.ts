@@ -1,4 +1,4 @@
-import type { InjectionTokenOptions } from '@bunito/container/internals';
+import type { InjectionTokenOptions } from '@bunito/container';
 import type { ZodType, z } from 'zod';
 
 export type Body<TOptions = unknown> = TOptions extends ZodType

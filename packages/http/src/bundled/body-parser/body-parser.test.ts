@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { getClassMetadata } from '@bunito/container/internals';
+import { getClassMetadata } from '@bunito/container';
 import { BadRequestException } from '../../exceptions';
 import { Middleware } from '../../middleware';
 import { BodyParser } from './body-parser';

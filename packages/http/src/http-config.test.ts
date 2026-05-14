@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'bun:test';
 import { restoreEnvs, setEnv } from '@bunito/common/testing';
-import { ConfigService } from '@bunito/config/internals';
+import { ConfigService } from '@bunito/config';
 import { HTTPConfig } from './http-config';
 
 afterEach(() => {

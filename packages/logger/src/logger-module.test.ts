@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@bunito/config';
-import { getClassMetadata } from '@bunito/container/internals';
+import { getClassMetadata } from '@bunito/container';
 import { JSONFormatterModule, PrettyFormatterModule } from './bundled';
 import { Logger } from './logger';
 import { LoggerConfig } from './logger-config';

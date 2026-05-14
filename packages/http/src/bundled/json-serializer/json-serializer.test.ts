@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { getClassMetadata } from '@bunito/container/internals';
+import { getClassMetadata } from '@bunito/container';
 import { NotFoundException } from '../../exceptions';
 import { Middleware } from '../../middleware';
 import { JSONSerializer } from './json-serializer';

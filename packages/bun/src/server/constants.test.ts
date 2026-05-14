@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Id } from '@bunito/container/internals';
+import { Id } from '@bunito/container';
 import { HTTP_METHODS, SERVER_FACTORY_ID } from './constants';
 
 describe('server constants', () => {

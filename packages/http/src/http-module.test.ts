@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { ServerModule } from '@bunito/bun';
-import { getClassMetadata } from '@bunito/container/internals';
+import { getClassMetadata } from '@bunito/container';
 import { BodyParserModule, JSONSerializerModule } from './bundled';
 import { HTTPConfig } from './http-config';
 import { HTTPModule } from './http-module';

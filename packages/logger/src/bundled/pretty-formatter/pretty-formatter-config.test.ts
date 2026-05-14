@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { ConfigService } from '@bunito/config/internals';
+import { ConfigService } from '@bunito/config';
 import { PrettyFormatterConfig } from './pretty-formatter-config';
 
 const originalEnv = { ...process.env };

@@ -1,6 +1,6 @@
 import { isString } from '@bunito/common';
-import type { ClassMethodDecorator } from '@bunito/container/internals';
-import { createClassPropDecorator } from '@bunito/container/internals';
+import type { ClassMethodDecorator } from '@bunito/container';
+import { createClassPropDecorator } from '@bunito/container';
 import { BROKER_CONTROLLER_KEY } from '../constants';
 import type { ControllerMethodOptions, HandlerOptions } from '../types';
 import type { HandlerDecorator } from './types';

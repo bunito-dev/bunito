@@ -1,5 +1,5 @@
 import type { Fn, MaybePromise, Optional } from '@bunito/common';
-import type { ClassMethodDecorator } from '@bunito/container/internals';
+import type { ClassMethodDecorator } from '@bunito/container';
 import type { RouteOptions } from '../types';
 
 export type RouteDecorator = ClassMethodDecorator<Fn<MaybePromise>>;

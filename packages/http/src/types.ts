@@ -1,7 +1,6 @@
 import type { HTTPMethod } from '@bunito/bun';
 import type { Class, RawObject } from '@bunito/common';
-import type { ModuleId, ProviderId } from '@bunito/container';
-import type { WithInjections } from '@bunito/container/internals';
+import type { ModuleId, ProviderId, WithInjections } from '@bunito/container';
 import type { HTTP_CONTENT_TYPES, HTTP_ERROR_STATUS_CODES } from './constants';
 import type { MiddlewareHandlers } from './middleware';
 

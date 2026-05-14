@@ -1,5 +1,5 @@
 import type { HTTPMethod } from '@bunito/bun';
-import type { InjectionTokenOptions } from '@bunito/container/internals';
+import type { InjectionTokenOptions } from '@bunito/container';
 
 export type Method = HTTPMethod;
 

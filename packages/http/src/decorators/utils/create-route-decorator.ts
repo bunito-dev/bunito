@@ -1,5 +1,5 @@
 import { isObject, isString } from '@bunito/common';
-import { createClassPropDecorator } from '@bunito/container/internals';
+import { createClassPropDecorator } from '@bunito/container';
 import { HTTP_CONTROLLER_KEY } from '../../constants';
 import type {
   ControllerMethodOptions,

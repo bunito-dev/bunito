@@ -11,7 +11,7 @@ import {
   OnResolve,
   Provider,
   REQUEST_ID,
-} from '#internals';
+} from '../src';
 
 describe('Container (integration)', () => {
   test('resolves providers exported by imported modules from the root module', async () => {
@@ -280,9 +280,9 @@ describe('Container (integration)', () => {
     expect(singleton.moduleId).toBe(Id.for(FeatureModule));
     expect(requestA).toBe(requestB);
     expect(requestA).not.toBe(requestC);
-    expect(requestA.requestId).toBeNumber();
+    expect(requestA?.requestId).toBeNumber();
     expect(requestC.requestId).toBeNumber();
-    expect(requestA.requestId).not.toBe(requestC.requestId);
+    expect(requestA?.requestId).not.toBe(requestC.requestId);
 
     const requestD = await container.runInRequestContext(() =>
       container.resolveProvider(RequestService),

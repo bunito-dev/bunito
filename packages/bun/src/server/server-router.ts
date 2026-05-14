@@ -1,9 +1,6 @@
 import type { MaybePromise } from '@bunito/common';
-import type {
-  ExtensionDecorator,
-  ProviderDecoratorOptions,
-} from '@bunito/container/internals';
-import { createExtensionDecorator } from '@bunito/container/internals';
+import type { ExtensionDecorator, ProviderDecoratorOptions } from '@bunito/container';
+import { createExtensionDecorator } from '@bunito/container';
 import type { RequestContext, ServerWebSocket, WebSocketEvent } from './types';
 
 export interface ServerRouter {
