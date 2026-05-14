@@ -67,7 +67,7 @@ jobs:
         with:
           name: Bun Tests
           path: artifacts/test-results.xml
-          reporter: jest-junit.xml
+          reporter: jest-junit
 
       - name: Enforce coverage
         run: |
