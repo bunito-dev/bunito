@@ -1,7 +1,7 @@
 # `@bunito/app`
 
 [![NPM Version][npm-img]][npm-url]
-![License MIT][license-img]
+[![License MIT][license-img]][license-url]
 
 Application bootstrap and lifecycle utilities for bunito.
 
@@ -36,3 +36,4 @@ MIT
 [npm-img]: https://img.shields.io/npm/v/%40bunito%2Fapp
 [npm-url]: https://www.npmjs.com/package/@bunito/app
 [license-img]: https://img.shields.io/badge/license-MIT-green.svg
+[license-url]: https://github.com/bunito-dev/bunito?tab=License-1-ov-file#readme

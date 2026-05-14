@@ -1,7 +1,7 @@
 # `@bunito/broker`
 
 [![NPM Version][npm-img]][npm-url]
-![License MIT][license-img]
+[![License MIT][license-img]][license-url]
 
 Broker support for bunito applications. The package provides a `BrokerModule`,
 message-handler decorators, request/event publishing through `BrokerService`, and
@@ -59,3 +59,4 @@ MIT
 [npm-img]: https://img.shields.io/npm/v/%40bunito%2Fbroker
 [npm-url]: https://www.npmjs.com/package/@bunito/broker
 [license-img]: https://img.shields.io/badge/license-MIT-green.svg
+[license-url]: https://github.com/bunito-dev/bunito?tab=License-1-ov-file#readme

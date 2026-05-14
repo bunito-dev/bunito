@@ -1,8 +1,8 @@
 # `bunito`
 
 [![CI][ci-img]][ci-url]
-![NPM Version][npm-img]
-![License MIT][license-img]
+[![NPM Version][npm-img]][npm-url]
+[![License MIT][license-img]][license-url]
 
 `bunito` is a small Bun-first TypeScript framework for building applications with
 modules, dependency injection, lifecycle hooks, configuration, logging, HTTP
@@ -46,6 +46,8 @@ For contribution notes, see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 MIT
 
 [npm-img]: https://img.shields.io/npm/v/%40bunito%2Fbunito
+[npm-url]: https://www.npmjs.com/package/@bunito/bunito
 [ci-img]: https://github.com/bunito-dev/bunito/actions/workflows/ci.yml/badge.svg?branch=master
 [ci-url]: https://github.com/bunito-dev/bunito/actions/workflows/ci.yml
 [license-img]: https://img.shields.io/badge/license-MIT-green.svg
+[license-url]: https://github.com/bunito-dev/bunito?tab=License-1-ov-file#readme
