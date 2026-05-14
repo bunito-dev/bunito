@@ -24,7 +24,6 @@ workspace:
   and config secrets backed by Bun secrets
 - `packages/common`: shared exceptions, predicates, type helpers, and small utilities
 - `packages/cli`: `bunito` command-line entrypoint used by the example workspace
-- `packages/biome`: shared Biome configuration published as `@bunito/biome`
 - `examples`: private workspaces with runnable applications showing the current API
 
 The repository uses Bun workspaces, Bun's built-in test runner, strict TypeScript,
@@ -90,8 +89,6 @@ Current examples and run commands are listed in `examples/README.md`.
 - `@bunito/cli`
   - Depends on `@bunito/common`, `@inquirer/prompts`, `yargs`, and `zod`
   - Exposes the `bunito` binary used by the example workspace package scripts
-- `@bunito/biome`
-  - Publishes the shared `biome.base.json` config
 - `examples`
   - Private workspaces used for runnable examples
   - Depends on `@bunito/bunito`, `@bunito/http`, `@bunito/cli`, and `zod`

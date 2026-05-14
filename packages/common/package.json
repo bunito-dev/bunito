@@ -27,7 +27,7 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
-    "./testing": "./src/testing/index.ts",
+    "./biome.json": "./biome.base.json",
     "./tsconfig.json": "./tsconfig.base.json"
   },
   "files": [

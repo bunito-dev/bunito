@@ -25,11 +25,10 @@ Start with the examples guide: [`examples/`](./examples/README.md).
   - [`@bunito/container`](./packages/container/README.md): dependency injection, modules, providers, and lifecycle
   - [`@bunito/config`](./packages/config/README.md): configuration and secrets
   - [`@bunito/logger`](./packages/logger/README.md): logging and logger output extensions
-  - [`@bunito/bun`](./packages/bun/README.md): Bun-specific server and secret integrations
   - [`@bunito/common`](./packages/common/README.md): shared exceptions, predicates, types, and utilities
-  - [`@bunito/biome`](./packages/biome/README.md): shared Biome configuration
-- [`@bunito/http`](./packages/http/README.md): HTTP controllers, routing, middleware, and exceptions
 - [`@bunito/broker`](./packages/broker/README.md): message handlers, broker adapters, and request/reply messaging
+- [`@bunito/bun`](./packages/bun/README.md): Bun-specific server and secret integrations
+- [`@bunito/http`](./packages/http/README.md): HTTP controllers, routing, middleware, and exceptions
 
 ## Development 🛠️
 

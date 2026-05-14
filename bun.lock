@@ -61,10 +61,6 @@
         "@bunito/logger": "workspace:0.0.10",
       },
     },
-    "packages/biome": {
-      "name": "@bunito/biome",
-      "version": "0.0.10",
-    },
     "packages/broker": {
       "name": "@bunito/broker",
       "version": "0.0.10",
@@ -247,8 +243,6 @@
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.4.13", "", { "os": "win32", "cpu": "x64" }, "sha512-tTcMkXyBrmHi9BfrD2VNHs/5rYIUKETqsBlYOvSAABwBkJhSDVb5e7wPukftsQbO3WzQkXe6kaztC6WtUOXSoQ=="],
 
     "@bunito/app": ["@bunito/app@workspace:packages/app"],
-
-    "@bunito/biome": ["@bunito/biome@workspace:packages/biome"],
 
     "@bunito/broker": ["@bunito/broker@workspace:packages/broker"],
 

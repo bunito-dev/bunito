@@ -33,7 +33,6 @@ Framework packages live in `packages/*`:
 - `@bunito/bun`: Bun-specific server and secret integrations
 - `@bunito/common`: framework-agnostic exceptions, predicates, types, and utilities
 - `@bunito/cli`: `bunito` command-line entrypoint
-- `@bunito/biome`: shared Biome configuration
 
 Runnable example workspaces live in `examples/*` and are documented in
 [`examples/`](./examples/README.md). Documentation lives in `docs/` and is built

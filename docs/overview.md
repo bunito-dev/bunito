@@ -133,10 +133,10 @@ The framework is split into packages so applications can stay small:
   - `@bunito/container`: dependency injection, modules, providers, scopes, and controllers
   - `@bunito/config`: config factories, environment values, and secrets
   - `@bunito/logger`: injectable logger and output extensions
-  - `@bunito/bun`: Bun-specific integrations
   - `@bunito/common`: shared exceptions, predicates, types, and utilities
-- `@bunito/http`: routes, middleware, request injections, and HTTP exceptions
 - `@bunito/broker`: message handlers, local/NATS adapters, and request/reply APIs
+- `@bunito/bun`: Bun-specific integrations
+- `@bunito/http`: routes, middleware, request injections, and HTTP exceptions
 
 ## Examples
 
