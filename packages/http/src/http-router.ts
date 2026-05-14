@@ -1,13 +1,17 @@
-import type { RequestContext } from '@bunito/bun/internals';
+import type { HTTPMethod, RequestContext } from '@bunito/bun/internals';
 import { ServerRouter } from '@bunito/bun/internals';
 import type { CallableInstance, Class, MaybePromise, RawObject } from '@bunito/common';
-import { InternalException, isFn, isObject } from '@bunito/common';
+import { InternalException, isFn, isNumber, isObject } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import type { MatchedControllers } from '@bunito/container';
 import { Container } from '@bunito/container';
 import { Logger } from '@bunito/logger';
 import type { ZodType } from 'zod';
-import { HTTP_CONTROLLER_KEY } from './constants';
+import {
+  HTTP_ALL_METHODS,
+  HTTP_CONTROLLER_KEY,
+  HTTP_SUCCESS_STATUS_CODES,
+} from './constants';
 import {
   BadRequestException,
   InternalServerErrorException,
@@ -19,21 +23,25 @@ import { HTTPConfig } from './http-config';
 import type { HTTPException } from './http-exception';
 import { Body, Context, Method, Params, Query } from './injections';
 import type { MiddlewareContext, MiddlewareHandlers } from './middleware';
-import {
-  cloneMiddlewareHandlers,
-  Middleware,
-  pushMiddlewareHandlers,
-} from './middleware';
+import { Middleware } from './middleware';
 import type {
+  CORSOptions,
   ControllerClassOptions,
   ControllerDefinition,
   ControllerMethodOptions,
   HTTPContext,
+  HTTPHeaders,
   HTTPPath,
   RouteDefinition,
   RouteMethod,
 } from './types';
-import { normalizePath, normalizeQuery } from './utils';
+import {
+  cloneMiddlewareHandlers,
+  mergeCorsOptions,
+  normalizePath,
+  normalizeQuery,
+  pushMiddlewareHandlers,
+} from './utils';
 
 @ServerRouter({
   injects: [
@@ -46,7 +54,14 @@ import { normalizePath, normalizeQuery } from './utils';
   ],
 })
 export class HTTPRouter implements ServerRouter {
-  private readonly routes = new Map<string, Map<RouteMethod, RouteDefinition>>();
+  private readonly routes = new Map<
+    string,
+    {
+      cors?: CORSOptions;
+      headers: Headers;
+      methods: Map<RouteMethod, RouteDefinition>;
+    }
+  >();
 
   private readonly middleware = new Map<Class, Middleware>();
 
@@ -84,6 +99,7 @@ export class HTTPRouter implements ServerRouter {
     }
 
     this.buildRoutes(container.locateComponents(HTTP_CONTROLLER_KEY));
+    this.prepareRouteHeaders();
   }
 
   getRoutePaths(): string[] {
@@ -97,15 +113,24 @@ export class HTTPRouter implements ServerRouter {
     const { defaultResponseContentType } = this.config;
     const { route: requestRoute } = requestContext;
 
-    if (!requestRoute) {
+    const routes = requestRoute ? this.routes.get(requestRoute.path) : undefined;
+
+    if (!routes || !requestRoute) {
       return new NotFoundException().toResponse(defaultResponseContentType);
     }
 
-    const { path, method, params } = requestRoute;
+    const { method, params } = requestRoute;
 
-    const routes = this.routes.get(path);
+    if (method === 'OPTIONS') {
+      const { headers } = routes;
 
-    const route = routes?.get(method) ?? routes?.get('ALL');
+      return new Response(null, {
+        status: HTTP_SUCCESS_STATUS_CODES.NO_CONTENT,
+        headers,
+      });
+    }
+
+    const route = routes?.methods?.get(method) ?? routes?.methods?.get('ALL');
 
     if (!route) {
       return new NotImplementedException().toResponse(defaultResponseContentType);
@@ -293,6 +318,12 @@ export class HTTPRouter implements ServerRouter {
       response = exception.toResponse(defaultResponseContentType);
     }
 
+    if (response && route.headers) {
+      for (const [key, value] of route.headers) {
+        response.headers.append(key, value);
+      }
+    }
+
     return response;
   }
 
@@ -301,6 +332,8 @@ export class HTTPRouter implements ServerRouter {
       | MatchedControllers<ControllerClassOptions, ControllerMethodOptions>
       | undefined,
     parentPrefix?: HTTPPath,
+    parentCORS?: CORSOptions,
+    parentHeaders?: HTTPHeaders,
     parentMiddleware?: MiddlewareHandlers,
   ) {
     if (!matchedControllers) {
@@ -310,6 +343,8 @@ export class HTTPRouter implements ServerRouter {
     const { moduleId, controllers, props, children } = matchedControllers;
 
     let rootPrefix = parentPrefix;
+    let rootCORS = parentCORS;
+    let rootHeaders = parentHeaders;
 
     const rootMiddleware = cloneMiddlewareHandlers(parentMiddleware);
 
@@ -321,18 +356,34 @@ export class HTTPRouter implements ServerRouter {
 
         const { options } = prop;
 
-        if (options.kind === 'prefix') {
-          rootPrefix = normalizePath(rootPrefix, options.prefix);
-        } else if (options.kind === 'middleware') {
-          const { options: opts, middleware } = options;
+        switch (options.kind) {
+          case 'prefix':
+            rootPrefix = normalizePath(rootPrefix, options.prefix);
+            break;
 
-          const instance = this.middleware.get(middleware);
+          case 'cors':
+            rootCORS = mergeCorsOptions(rootCORS, options.options);
+            break;
 
-          if (!instance) {
-            return InternalException.throw`Middleware ${middleware} is not available in the container`;
+          case 'headers':
+            rootHeaders = {
+              ...(rootHeaders ?? {}),
+              ...options.headers,
+            };
+            break;
+
+          case 'middleware': {
+            const { options: opts, middleware } = options;
+
+            const instance = this.middleware.get(middleware);
+
+            if (!instance) {
+              return InternalException.throw`Middleware ${middleware} is not available in the container`;
+            }
+
+            pushMiddlewareHandlers(rootMiddleware, instance, opts);
+            break;
           }
-
-          pushMiddlewareHandlers(rootMiddleware, instance, opts);
         }
       }
     }
@@ -342,6 +393,8 @@ export class HTTPRouter implements ServerRouter {
         let prefix = options.prefix
           ? normalizePath(rootPrefix, `/${options.prefix}`)
           : rootPrefix;
+        let cors = rootCORS;
+        let headers = rootHeaders;
 
         const controller: ControllerDefinition = {
           moduleId,
@@ -350,24 +403,55 @@ export class HTTPRouter implements ServerRouter {
         };
 
         for (const prop of props) {
-          if (prop.propKind !== 'class') {
-            continue;
-          }
+          switch (prop.propKind) {
+            case 'class': {
+              const { options } = prop;
 
-          const { options } = prop;
+              switch (options.kind) {
+                case 'prefix':
+                  prefix = normalizePath(prefix, options.prefix);
+                  break;
 
-          if (options.kind === 'prefix') {
-            prefix = normalizePath(prefix, options.prefix);
-          } else if (options.kind === 'middleware') {
-            const { options: opts, middleware } = options;
+                case 'cors':
+                  cors = mergeCorsOptions(cors, options.options);
+                  break;
 
-            const instance = this.middleware.get(middleware);
+                case 'headers':
+                  headers = {
+                    ...(headers ?? {}),
+                    ...options.headers,
+                  };
+                  break;
 
-            if (!instance) {
-              return InternalException.throw`Middleware ${middleware} is not available in the container`;
+                case 'middleware': {
+                  const { options: opts, middleware } = options;
+
+                  const instance = this.middleware.get(middleware);
+
+                  if (!instance) {
+                    return InternalException.throw`Middleware ${middleware} is not available in the container`;
+                  }
+
+                  pushMiddlewareHandlers(controller.middleware, instance, opts);
+                  break;
+                }
+              }
+              break;
             }
 
-            pushMiddlewareHandlers(controller.middleware, instance, opts);
+            case 'method': {
+              const { options } = prop;
+
+              switch (options.kind) {
+                case 'headers':
+                  headers = {
+                    ...(headers ?? {}),
+                    ...options.headers,
+                  };
+                  break;
+              }
+              break;
+            }
           }
         }
 
@@ -383,17 +467,22 @@ export class HTTPRouter implements ServerRouter {
           const { options } = prop.options;
           const { propKey } = prop;
           const { method, injects } = options;
+
           const path = normalizePath(prefix, options.path);
+          const routes = this.routes.getOrInsertComputed(path, () => ({
+            headers: new Headers(),
+            methods: new Map(),
+          }));
 
-          const routes = this.routes.getOrInsertComputed(path, () => new Map());
-
-          if (routes.has(method)) {
+          if (routes.methods.has(method)) {
             return InternalException.throw`Duplicate route ${method} ${path} detected in ${providerId}#${propKey}`;
           }
 
-          routes.set(method, {
+          routes.cors = mergeCorsOptions(routes.cors, cors);
+          routes.methods.set(method, {
             controller,
             propKey,
+            headers: headers ? new Headers(headers as HeadersInit) : undefined,
             injects,
           });
         }
@@ -406,7 +495,70 @@ export class HTTPRouter implements ServerRouter {
 
     if (children) {
       for (const child of children) {
-        this.buildRoutes(child, rootPrefix, rootMiddleware);
+        this.buildRoutes(child, rootPrefix, rootCORS, rootHeaders, rootMiddleware);
+      }
+    }
+  }
+
+  private prepareRouteHeaders(): void {
+    for (const { headers, methods, cors } of this.routes.values()) {
+      const commonHeaders = new Headers();
+
+      const allowedMethods = new Set(
+        methods.has('ALL') ? HTTP_ALL_METHODS : ([...methods.keys()] as HTTPMethod[]),
+      );
+
+      headers.set('Accept', [...allowedMethods].join(', '));
+
+      if (cors) {
+        const corsMethods = cors.methods?.length
+          ? [...new Set(cors.methods.filter((method) => allowedMethods.has(method)))]
+          : [...allowedMethods];
+
+        if (corsMethods.length) {
+          commonHeaders.set('Access-Control-Allow-Origin', cors.origin ?? '*');
+          commonHeaders.set(
+            'Access-Control-Allow-Credentials',
+            cors.credentials === false ? 'false' : 'true',
+          );
+          commonHeaders.set('Vary', 'Origin');
+
+          headers.set('Access-Control-Allow-Methods', corsMethods.join(', '));
+          headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+          for (const [key, value] of commonHeaders) {
+            headers.set(key, value);
+          }
+
+          if (cors.allowedHeaders?.length) {
+            headers.append(
+              'Access-Control-Allow-Headers',
+              cors.allowedHeaders.join(', '),
+            );
+          }
+
+          if (isNumber(cors.maxAge)) {
+            headers.set('Access-Control-Max-Age', cors.maxAge.toString(10));
+          }
+        }
+      }
+
+      for (const [key, value] of commonHeaders) {
+        headers.set(key, value);
+      }
+
+      if (!commonHeaders.count) {
+        continue;
+      }
+
+      for (const route of methods.values()) {
+        if (route.headers) {
+          for (const [key, value] of commonHeaders) {
+            route.headers.set(key, value);
+          }
+        } else {
+          route.headers = commonHeaders;
+        }
       }
     }
   }

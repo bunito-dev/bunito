@@ -1,4 +1,4 @@
-import type { MiddlewareHandlers } from '../types';
+import type { MiddlewareHandlers } from '../middleware';
 
 export function cloneMiddlewareHandlers(
   handlers: MiddlewareHandlers | undefined,

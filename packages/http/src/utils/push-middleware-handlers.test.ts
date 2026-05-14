@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import type { Middleware } from '../middleware';
-import type { MiddlewareHandlers } from '../types';
+import type { Middleware, MiddlewareHandlers } from '../middleware';
 import { cloneMiddlewareHandlers } from './clone-middleware-handlers';
 import { pushMiddlewareHandlers } from './push-middleware-handlers';
 

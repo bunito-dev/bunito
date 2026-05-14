@@ -1,6 +1,5 @@
 import type { RawObject } from '@bunito/common';
-import type { Middleware } from '../middleware';
-import type { MiddlewareHandlers } from '../types';
+import type { Middleware, MiddlewareHandlers } from '../middleware';
 
 export function pushMiddlewareHandlers(
   handlers: MiddlewareHandlers,

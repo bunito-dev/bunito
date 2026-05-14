@@ -5,9 +5,13 @@ export { BodyParser, JSONSerializer } from './bundled';
 export {
   Delete,
   Get,
+  Head,
   OnRequest,
+  Patch,
   Post,
   Put,
+  UseCORS,
+  UseHeaders,
   UseMiddleware,
 } from './decorators';
 export {

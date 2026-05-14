@@ -19,12 +19,12 @@ import { processConfigValue } from './utils';
   global: true,
   injects: [
     {
-      useToken: CONFIG_ENVS_ID,
-      defaultValue: process.env,
-    },
-    {
       useToken: ConfigReader,
       optional: true,
+    },
+    {
+      useToken: CONFIG_ENVS_ID,
+      defaultValue: process.env,
     },
   ],
 })
@@ -33,8 +33,8 @@ export class ConfigService {
   private readonly readers: ConfigReader[] | undefined;
 
   constructor(
-    private readonly envs: Partial<Record<ConfigEnv, string>> = {},
     readers: ConfigReader[] | null = null,
+    private readonly envs: Partial<Record<ConfigEnv, string>> = {},
   ) {
     const nodeEnv = this.getEnv('NODE_ENV', 'lowercase');
 
@@ -65,7 +65,7 @@ export class ConfigService {
     const activeReaders = this.getEnv(
       'CONFIG_READERS',
       'lowercase',
-      (value) => new Set(value.split(',')),
+      (value) => new Set(value.split(';')),
     );
 
     this.readers = !activeReaders
