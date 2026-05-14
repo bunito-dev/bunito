@@ -61,67 +61,13 @@ jobs:
           --reporter=junit \
           --reporter-outfile=artifacts/test-results.xml
 
-      - name: Normalize JUnit report
-        if: ${{ !cancelled() }}
-        run: |
-          ruby <<'RUBY'
-          require 'rexml/document'
-
-          input = 'artifacts/test-results.xml'
-          output = 'artifacts/test-results.flattened.xml'
-
-          source = REXML::Document.new(File.read(input))
-          result = REXML::Document.new
-          result << REXML::XMLDecl.new('1.0', 'UTF-8')
-
-          root = REXML::Element.new('testsuites')
-          source.root.attributes.each_attribute do |attribute|
-            root.add_attribute(attribute.name, attribute.value)
-          end
-
-          source.root.each_element('testsuite') do |suite|
-            test_cases = []
-            suite.each_recursive do |element|
-              test_cases << element if element.name == 'testcase'
-            end
-
-            next if test_cases.empty?
-
-            flattened_suite = REXML::Element.new('testsuite')
-            suite.attributes.each_attribute do |attribute|
-              flattened_suite.add_attribute(attribute.name, attribute.value)
-            end
-
-            flattened_suite.add_attribute('tests', test_cases.length.to_s)
-            flattened_suite.add_attribute('failures', test_cases.count { |test_case| test_case.elements['failure'] }.to_s)
-            flattened_suite.add_attribute('errors', test_cases.count { |test_case| test_case.elements['error'] }.to_s)
-            flattened_suite.add_attribute('skipped', test_cases.count { |test_case| test_case.elements['skipped'] }.to_s)
-
-            test_cases.each do |test_case|
-              flattened_suite.add_element(test_case.deep_clone)
-            end
-
-            root.add_element(flattened_suite)
-          end
-
-          result.add_element(root)
-
-          formatter = REXML::Formatters::Pretty.new(2)
-          formatter.compact = true
-
-          File.open(output, 'w') do |file|
-            formatter.write(result, file)
-            file.write("\n")
-          end
-          RUBY
-
       - name: Publish test report
         if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
         uses: dorny/test-reporter@v3
         with:
           name: Bun Tests
-          path: artifacts/test-results.flattened.xml
-          reporter: java-junit
+          path: artifacts/test-results.xml
+          reporter: jest-junit.xml
 
       - name: Enforce coverage
         run: |

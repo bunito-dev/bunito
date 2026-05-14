@@ -53,7 +53,7 @@
     },
     "packages/app": {
       "name": "@bunito/app",
-      "version": "0.0.10",
+      "version": "0.0.13",
       "dependencies": {
         "@bunito/common": "workspace:0.0.10",
         "@bunito/config": "workspace:0.0.10",
@@ -63,7 +63,7 @@
     },
     "packages/broker": {
       "name": "@bunito/broker",
-      "version": "0.0.10",
+      "version": "0.0.13",
       "dependencies": {
         "@bunito/app": "workspace:0.0.10",
         "@bunito/common": "workspace:0.0.10",
@@ -80,7 +80,7 @@
     },
     "packages/bun": {
       "name": "@bunito/bun",
-      "version": "0.0.10",
+      "version": "0.0.13",
       "dependencies": {
         "@bunito/app": "workspace:0.0.10",
         "@bunito/common": "workspace:0.0.10",
@@ -91,7 +91,7 @@
     },
     "packages/bunito": {
       "name": "@bunito/bunito",
-      "version": "0.0.10",
+      "version": "0.0.13",
       "dependencies": {
         "@bunito/app": "workspace:0.0.10",
         "@bunito/common": "workspace:0.0.10",
@@ -102,7 +102,7 @@
     },
     "packages/cli": {
       "name": "@bunito/cli",
-      "version": "0.0.10",
+      "version": "0.0.13",
       "bin": {
         "bunito": "./src/main.ts",
       },
@@ -118,11 +118,11 @@
     },
     "packages/common": {
       "name": "@bunito/common",
-      "version": "0.0.10",
+      "version": "0.0.13",
     },
     "packages/config": {
       "name": "@bunito/config",
-      "version": "0.0.10",
+      "version": "0.0.13",
       "dependencies": {
         "@bunito/common": "workspace:0.0.10",
         "@bunito/container": "workspace:0.0.10",
@@ -136,14 +136,14 @@
     },
     "packages/container": {
       "name": "@bunito/container",
-      "version": "0.0.10",
+      "version": "0.0.13",
       "dependencies": {
         "@bunito/common": "workspace:0.0.10",
       },
     },
     "packages/http": {
       "name": "@bunito/http",
-      "version": "0.0.10",
+      "version": "0.0.13",
       "dependencies": {
         "@bunito/bun": "workspace:0.0.10",
         "@bunito/common": "workspace:0.0.10",
@@ -160,7 +160,7 @@
     },
     "packages/logger": {
       "name": "@bunito/logger",
-      "version": "0.0.10",
+      "version": "0.0.13",
       "dependencies": {
         "@bunito/common": "workspace:0.0.10",
         "@bunito/config": "workspace:0.0.10",
