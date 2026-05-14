@@ -1,6 +1,6 @@
 {
   "name": "@bunito/bun",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Bun-specific integrations for bunito applications.",
   "keywords": [
     "bunito",
@@ -36,11 +36,11 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/app": "workspace:0.0.12",
-    "@bunito/common": "workspace:0.0.12",
-    "@bunito/config": "workspace:0.0.12",
-    "@bunito/container": "workspace:0.0.12",
-    "@bunito/logger": "workspace:0.0.12"
+    "@bunito/app": "workspace:0.0.13",
+    "@bunito/common": "workspace:0.0.13",
+    "@bunito/config": "workspace:0.0.13",
+    "@bunito/container": "workspace:0.0.13",
+    "@bunito/logger": "workspace:0.0.13"
   },
   "devDependencies": {},
   "engines": {
