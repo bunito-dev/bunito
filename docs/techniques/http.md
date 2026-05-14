@@ -274,7 +274,7 @@ Use them when a handler needs to stop normal response flow with an HTTP error.
 
 Build these ideas step by step:
 
-- [Simple Controller](/tutorials/simple-controller)
-- [JSON Middleware](/tutorials/json-middleware)
-- [Multiple APIs](/tutorials/multiple-apis)
-- [CORS Support](/tutorials/cors-support)
+- [Simple Controller](../tutorials/simple-controller.md)
+- [JSON Middleware](../tutorials/json-middleware.md)
+- [Multiple APIs](../tutorials/multiple-apis.md)
+- [CORS Support](../tutorials/cors-support.md)

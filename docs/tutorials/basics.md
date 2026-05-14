@@ -150,4 +150,4 @@ cd examples/basics
 bun run start
 ```
 
-Next, build an HTTP controller in [Simple Controller](/tutorials/simple-controller).
+Next, build an HTTP controller in [Simple Controller](./simple-controller.md).

@@ -119,8 +119,8 @@ bun run start
 
 ## Next Steps
 
-- Read the project model in [Overview](/overview).
-- Learn how the CLI discovers projects in [CLI](/cli).
-- Build the first example in [Basics](/tutorials/basics).
-- Add HTTP controllers in [HTTP](/techniques/http).
-- Explore composed apps in [Monorepo](/tutorials/monorepo).
+- Read the project model in [Overview](./overview.md).
+- Learn how the CLI discovers projects in [CLI](./cli.md).
+- Build the first example in [Basics](./tutorials/basics.md).
+- Add HTTP controllers in [HTTP](./techniques/http.md).
+- Explore composed apps in [Monorepo](./tutorials/monorepo.md).

@@ -145,4 +145,4 @@ bun run start simple-controller
 Request examples are available in
 `examples/http/apps/simple-controller.http`.
 
-Continue with [JSON Middleware](/tutorials/json-middleware).
+Continue with [JSON Middleware](./json-middleware.md).

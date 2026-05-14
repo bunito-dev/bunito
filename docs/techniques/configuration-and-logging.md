@@ -100,4 +100,4 @@ For most apps:
 - parse values at the boundary, not deep inside services
 - inject ready-to-use config objects into providers
 
-Continue with [HTTP](/techniques/http) to see config and logger used in web apps.
+Continue with [HTTP](../techniques/http.md) to see config and logger used in web apps.

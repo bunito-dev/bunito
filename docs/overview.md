@@ -149,5 +149,5 @@ Runnable examples live in separate workspaces under `examples/`:
 
 Multi-app examples use app-local `.env` files for ports and broker settings.
 
-Continue with [Modules and Providers](/techniques/modules-and-providers) or jump
-straight into [HTTP](/techniques/http) or [Broker](/techniques/broker).
+Continue with [Modules and Providers](./techniques/modules-and-providers.md) or jump
+straight into [HTTP](./techniques/http.md) or [Broker](./techniques/broker.md).

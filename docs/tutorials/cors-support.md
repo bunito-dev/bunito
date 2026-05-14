@@ -148,5 +148,5 @@ Then try a regular request:
 curl -i http://localhost:4004/foo
 ```
 
-Continue with [Microservices](/tutorials/microservices) when you want to combine HTTP
+Continue with [Microservices](./microservices.md) when you want to combine HTTP
 routes with broker messaging.

@@ -161,10 +161,10 @@ sets the port for only the `json-middleware` app.
 
 The tutorials explain those apps step by step:
 
-- [Basics](/tutorials/basics)
-- [Simple Controller](/tutorials/simple-controller)
-- [JSON Middleware](/tutorials/json-middleware)
-- [Multiple APIs](/tutorials/multiple-apis)
-- [CORS Support](/tutorials/cors-support)
-- [Microservices](/tutorials/microservices)
-- [Monorepo](/tutorials/monorepo)
+- [Basics](./tutorials/basics.md)
+- [Simple Controller](./tutorials/simple-controller.md)
+- [JSON Middleware](./tutorials/json-middleware.md)
+- [Multiple APIs](./tutorials/multiple-apis.md)
+- [CORS Support](./tutorials/cors-support.md)
+- [Microservices](./tutorials/microservices.md)
+- [Monorepo](./tutorials/monorepo.md)

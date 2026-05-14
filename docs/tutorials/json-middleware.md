@@ -121,4 +121,4 @@ bun run start json-middleware
 
 Request examples are available in `examples/http/apps/json-middleware.http`.
 
-Continue with [Multiple APIs](/tutorials/multiple-apis).
+Continue with [Multiple APIs](./multiple-apis.md).

@@ -92,5 +92,5 @@ App-local `.env` files are loaded by the CLI for monorepo apps.
 
 ## Example
 
-See [Microservices](/tutorials/microservices) for a small workspace where HTTP
+See [Microservices](../tutorials/microservices.md) for a small workspace where HTTP
 controllers call each other through broker messages.

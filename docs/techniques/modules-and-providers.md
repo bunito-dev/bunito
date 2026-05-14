@@ -111,7 +111,7 @@ diagnose.
 
 ## Where To Go Next
 
-- Use config and logging in [Configuration and Logging](/techniques/configuration-and-logging).
-- Build controllers in [HTTP](/techniques/http).
-- Add message handlers in [Broker](/techniques/broker).
-- Walk through the full first app in [Basics](/tutorials/basics).
+- Use config and logging in [Configuration and Logging](../techniques/configuration-and-logging.md).
+- Build controllers in [HTTP](../techniques/http.md).
+- Add message handlers in [Broker](../techniques/broker.md).
+- Walk through the full first app in [Basics](../tutorials/basics.md).
