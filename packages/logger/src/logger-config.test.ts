@@ -1,32 +1,13 @@
-import { afterEach, describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'bun:test';
 import { ConfigService } from '@bunito/config';
 import { LoggerConfig } from './logger-config';
 
-const originalEnv = { ...process.env };
-
-afterEach(() => {
-  restoreEnv('NODE_ENV');
-  restoreEnv('CI');
-  restoreEnv('LOG_FORMAT');
-  restoreEnv('LOG_LEVEL');
-});
-
-function restoreEnv(key: string): void {
-  const value = originalEnv[key];
-
-  if (value === undefined) {
-    delete process.env[key];
-    return;
-  }
-
-  process.env[key] = value;
-}
-
 describe('LoggerConfig', () => {
   it('resolves explicit environment values', async () => {
-    process.env.LOG_FORMAT = 'PRETTY';
-    process.env.LOG_LEVEL = 'debug';
-    const configService = new ConfigService();
+    const configService = new ConfigService(null, {
+      LOG_FORMAT: 'PRETTY',
+      LOG_LEVEL: 'debug',
+    });
 
     if (!('useFactory' in LoggerConfig)) {
       throw new Error('Expected LoggerConfig factory provider');
@@ -45,14 +26,17 @@ describe('LoggerConfig', () => {
       throw new Error('Expected LoggerConfig factory provider');
     }
 
-    process.env.NODE_ENV = 'development';
-    delete process.env.CI;
-    delete process.env.LOG_FORMAT;
-    delete process.env.LOG_LEVEL;
-    const devConfig = await LoggerConfig.useFactory(new ConfigService());
+    const devConfig = await LoggerConfig.useFactory(
+      new ConfigService(null, {
+        NODE_ENV: 'development',
+      }),
+    );
 
-    process.env.NODE_ENV = 'production';
-    const prodConfig = await LoggerConfig.useFactory(new ConfigService());
+    const prodConfig = await LoggerConfig.useFactory(
+      new ConfigService(null, {
+        NODE_ENV: 'production',
+      }),
+    );
 
     expect(devConfig).toEqual({
       format: 'pretty',
@@ -69,11 +53,13 @@ describe('LoggerConfig', () => {
       throw new Error('Expected LoggerConfig factory provider');
     }
 
-    process.env.LOG_LEVEL = 'unknown';
-
     let error: unknown;
     try {
-      await LoggerConfig.useFactory(new ConfigService());
+      await LoggerConfig.useFactory(
+        new ConfigService(null, {
+          LOG_LEVEL: 'unknown',
+        }),
+      );
     } catch (err) {
       error = err;
     }

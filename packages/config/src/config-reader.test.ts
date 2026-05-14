@@ -6,6 +6,8 @@ describe('ConfigReader', () => {
   it('registers config readers as indexed extensions', () => {
     @ConfigReader({ scope: 'singleton' })
     class ExampleReader implements ConfigReader {
+      readonly NAME = 'example';
+
       async getValue(key: string): Promise<unknown> {
         return key;
       }

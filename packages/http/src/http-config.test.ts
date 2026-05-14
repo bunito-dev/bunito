@@ -1,11 +1,6 @@
-import { afterEach, describe, expect, it } from 'bun:test';
-import { restoreEnvs, setEnv } from '@bunito/common/testing';
+import { describe, expect, it } from 'bun:test';
 import { ConfigService } from '@bunito/config';
 import { HTTPConfig } from './http-config';
-
-afterEach(() => {
-  restoreEnvs('DEFAULT_RESPONSE_CONTENT_TYPE');
-});
 
 describe('HTTPRouterConfig', () => {
   it('resolves response content type from the environment', async () => {
@@ -13,9 +8,11 @@ describe('HTTPRouterConfig', () => {
       throw new Error('Expected HTTPRouterConfig factory provider');
     }
 
-    setEnv('DEFAULT_RESPONSE_CONTENT_TYPE', 'TEXT/PLAIN');
-
-    const config = await HTTPConfig.useFactory(new ConfigService());
+    const config = await HTTPConfig.useFactory(
+      new ConfigService(null, {
+        DEFAULT_RESPONSE_CONTENT_TYPE: 'TEXT/PLAIN',
+      }),
+    );
 
     expect(config).toEqual({
       defaultResponseContentType: 'text/plain',
@@ -26,8 +23,6 @@ describe('HTTPRouterConfig', () => {
     if (!('useFactory' in HTTPConfig)) {
       throw new Error('Expected HTTPRouterConfig factory provider');
     }
-
-    restoreEnvs('DEFAULT_RESPONSE_CONTENT_TYPE');
 
     const config = await HTTPConfig.useFactory(new ConfigService());
 

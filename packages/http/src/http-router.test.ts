@@ -3,6 +3,7 @@ import { ServerRouter } from '@bunito/bun/internals';
 import { Container, getClassMetadata, Id } from '@bunito/container';
 import { Logger } from '@bunito/logger';
 import { z } from 'zod';
+import { HTTP_ALL_METHODS } from './constants';
 import { HTTPConfig } from './http-config';
 import { HTTPRouter } from './http-router';
 import { Body, Context, Method, Params, Query } from './injections';
@@ -64,13 +65,36 @@ describe('HTTPRouter', () => {
     });
   });
 
-  it('returns not found and not implemented responses for unmatched requests', async () => {
+  it('returns not found, not implemented, and automatic OPTIONS responses', async () => {
+    const moduleId = Id.unique('Module');
+    const providerId = Id.unique('Controller');
     const router = new HTTPRouter(
       {
         defaultResponseContentType: 'application/json',
       },
       {
-        locateComponents: () => undefined,
+        locateComponents: () => ({
+          moduleId,
+          controllers: [
+            {
+              providerId,
+              options: {},
+              props: [
+                {
+                  propKind: 'method',
+                  propKey: 'handle',
+                  options: {
+                    kind: 'route',
+                    options: {
+                      method: 'POST',
+                      path: '/known',
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        }),
       } as never,
     );
 
@@ -79,15 +103,148 @@ describe('HTTPRouter', () => {
     } as never);
     const notImplemented = await router.processRequest(new Request('http://localhost'), {
       route: {
-        path: '/missing',
+        path: '/known',
         method: 'GET',
         params: {},
       },
     } as never);
+    const options = await router.processRequest(new Request('http://localhost'), {
+      route: {
+        path: '/known',
+        method: 'OPTIONS',
+        params: {},
+      },
+    } as never);
 
-    expect(router.getRoutePaths()).toEqual([]);
+    expect(router.getRoutePaths()).toEqual(['/known']);
     expect(notFound?.status).toBe(404);
     expect(notImplemented?.status).toBe(501);
+    expect(options?.status).toBe(204);
+    expect(options?.headers.get('Accept')).toBe('POST');
+  });
+
+  it('applies CORS and custom headers to OPTIONS and route responses', async () => {
+    const moduleId = Id.unique('Module');
+    const providerId = Id.unique('Controller');
+    const controller = {
+      handle: () => new Response('ok'),
+      handleAll: () => new Response('all'),
+    };
+    const router = new HTTPRouter(
+      {
+        defaultResponseContentType: 'application/json',
+      },
+      {
+        locateComponents: () => ({
+          moduleId,
+          props: [
+            {
+              propKind: 'class',
+              options: {
+                kind: 'cors',
+                options: {
+                  origin: 'https://example.com',
+                  methods: ['GET', 'POST'],
+                  allowedHeaders: ['X-Trace-Id'],
+                  credentials: false,
+                  maxAge: 60,
+                },
+              },
+            },
+          ],
+          controllers: [
+            {
+              providerId,
+              options: {},
+              props: [
+                {
+                  propKind: 'class',
+                  options: {
+                    kind: 'headers',
+                    headers: {
+                      'Cache-Control': 'no-store',
+                    },
+                  },
+                },
+                {
+                  propKind: 'method',
+                  options: {
+                    kind: 'headers',
+                    headers: {
+                      'Content-Type': 'text/custom',
+                    },
+                  },
+                },
+                {
+                  propKind: 'method',
+                  propKey: 'handle',
+                  options: {
+                    kind: 'route',
+                    options: {
+                      method: 'POST',
+                      path: '/known',
+                    },
+                  },
+                },
+                {
+                  propKind: 'method',
+                  propKey: 'handleAll',
+                  options: {
+                    kind: 'route',
+                    options: {
+                      method: 'ALL',
+                      path: '/all',
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        }),
+        resolveProvider: () => controller,
+        tryResolveProvider: () => undefined,
+      } as never,
+    );
+
+    const options = await router.processRequest(new Request('http://localhost'), {
+      route: {
+        path: '/known',
+        method: 'OPTIONS',
+        params: {},
+      },
+    } as never);
+    const allOptions = await router.processRequest(new Request('http://localhost'), {
+      route: {
+        path: '/all',
+        method: 'OPTIONS',
+        params: {},
+      },
+    } as never);
+    const response = await router.processRequest(new Request('http://localhost'), {
+      route: {
+        path: '/known',
+        method: 'POST',
+        params: {},
+      },
+    } as never);
+
+    expect(options?.status).toBe(204);
+    expect(options?.headers.get('Access-Control-Allow-Origin')).toBe(
+      'https://example.com',
+    );
+    expect(options?.headers.get('Access-Control-Allow-Credentials')).toBe('false');
+    expect(options?.headers.get('Access-Control-Allow-Methods')).toBe('POST');
+    expect(options?.headers.get('Access-Control-Allow-Headers')).toBe(
+      'Content-Type, Authorization, X-Trace-Id',
+    );
+    expect(options?.headers.get('Access-Control-Max-Age')).toBe('60');
+    expect(options?.headers.get('Vary')).toBe('Origin');
+    expect(allOptions?.headers.get('Accept')).toBe(HTTP_ALL_METHODS.join(', '));
+    expect(response?.headers.get('Cache-Control')).toBe('no-store');
+    expect(response?.headers.get('Content-Type')).toBe('text/custom');
+    expect(response?.headers.get('Access-Control-Allow-Origin')).toBe(
+      'https://example.com',
+    );
   });
 
   it('runs middleware, resolves handler injections, serializes data, and destroys requests', async () => {

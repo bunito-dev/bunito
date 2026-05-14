@@ -1,4 +1,4 @@
-import type { ModuleId, ProviderId, WithInjections } from '@bunito/container/internals';
+import type { ModuleId, ProviderId, WithInjections } from '@bunito/container';
 
 export type MessagePayload<TContext = unknown> = {
   kind: 'request' | 'event';

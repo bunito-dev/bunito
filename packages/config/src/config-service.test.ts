@@ -1,33 +1,15 @@
-import { afterEach, describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'bun:test';
 import { InternalException } from '@bunito/common';
 import type { ConfigReader } from './config-reader';
 import { ConfigService } from './config-service';
 
-const originalEnv = { ...process.env };
-
-afterEach(() => {
-  restoreEnv('NODE_ENV');
-  restoreEnv('CI');
-  restoreEnv('TEST_CONFIG_VALUE');
-  restoreEnv('OTHER_CONFIG_VALUE');
-});
-
-function restoreEnv(key: string): void {
-  const value = originalEnv[key];
-
-  if (value === undefined) {
-    delete process.env[key];
-    return;
-  }
-
-  process.env[key] = value;
-}
-
 describe('ConfigService', () => {
   it('reads trimmed environment values by single key or aliases', () => {
-    process.env.TEST_CONFIG_VALUE = '  value  ';
-    process.env.OTHER_CONFIG_VALUE = '42';
-    const configService = new ConfigService();
+    const envs = {
+      TEST_CONFIG_VALUE: '  value  ',
+      OTHER_CONFIG_VALUE: '42',
+    };
+    const configService = new ConfigService(null, envs);
 
     expect(configService.getEnv('TEST_CONFIG_VALUE')).toBe('value');
     expect(
@@ -35,35 +17,41 @@ describe('ConfigService', () => {
     ).toBe(42);
     expect(configService.getEnv({} as never)).toBeUndefined();
 
-    process.env.TEST_CONFIG_VALUE = '   ';
-    expect(configService.getEnv('TEST_CONFIG_VALUE')).toBeUndefined();
+    expect(
+      new ConfigService(null, {
+        TEST_CONFIG_VALUE: '   ',
+      }).getEnv('TEST_CONFIG_VALUE'),
+    ).toBeUndefined();
   });
 
   it('resolves runtime flags from NODE_ENV and CI', () => {
-    process.env.NODE_ENV = 'production';
-    delete process.env.CI;
-    const prodService = new ConfigService();
+    const prodService = new ConfigService(null, {
+      NODE_ENV: 'production',
+    });
 
     expect(prodService.getFlag('isProd')).toBeTrue();
     expect(prodService.whenProd('on', 'off')).toBe('on');
     expect(prodService.getFlag('isDev')).toBeFalse();
 
-    process.env.NODE_ENV = 'test';
-    const testService = new ConfigService();
+    const testService = new ConfigService(null, {
+      NODE_ENV: 'test',
+    });
 
     expect(testService.getFlag('isTest')).toBeTrue();
     expect(testService.whenTest('on', 'off')).toBe('on');
 
-    process.env.NODE_ENV = 'development';
-    process.env.CI = 'true';
-    const ciService = new ConfigService();
+    const ciService = new ConfigService(null, {
+      NODE_ENV: 'development',
+      CI: 'true',
+    });
 
     expect(ciService.getFlag('isCI')).toBeTrue();
     expect(ciService.whenCI('on', 'off')).toBe('on');
     expect(ciService.getFlag('isProd')).toBeFalse();
 
-    delete process.env.CI;
-    const devService = new ConfigService();
+    const devService = new ConfigService(null, {
+      NODE_ENV: 'development',
+    });
 
     expect(devService.getFlag('isDev')).toBeTrue();
     expect(devService.whenDev('on', 'off')).toBe('on');
@@ -72,10 +60,12 @@ describe('ConfigService', () => {
   it('reads values and secrets from the first reader that returns a value', async () => {
     const readers: ConfigReader[] = [
       {
+        NAME: 'empty',
         getValue: async () => undefined,
         getSecret: async () => undefined,
       },
       {
+        NAME: 'memory',
         getValue: async (key) => `value:${key}`,
         getSecret: async (key) => `secret:${key}`,
       },
@@ -89,9 +79,32 @@ describe('ConfigService', () => {
     expect(secret).toBe('secret:api.token');
   });
 
+  it('uses only active readers selected by the environment', async () => {
+    const configService = new ConfigService(
+      [
+        {
+          NAME: 'first',
+          getValue: async () => 'first',
+        },
+        {
+          NAME: 'second',
+          getValue: async () => 'second',
+        },
+      ],
+      {
+        CONFIG_READERS: 'second',
+      },
+    );
+
+    const value = await configService.getValue('api.url');
+
+    expect(value).toBe('second');
+  });
+
   it('reads values and secrets by aliases and wraps parser failures', async () => {
     const configService = new ConfigService([
       {
+        NAME: 'memory',
         getValue: async (key) => (key === 'value.second' ? 'ON' : undefined),
         getSecret: async (key) => (key === 'secret.second' ? 'token' : undefined),
       },
@@ -136,8 +149,9 @@ describe('ConfigService', () => {
   });
 
   it('wraps environment parser failures', () => {
-    process.env.TEST_CONFIG_VALUE = 'value';
-    const configService = new ConfigService();
+    const configService = new ConfigService(null, {
+      TEST_CONFIG_VALUE: 'value',
+    });
 
     expect(() => {
       configService.getEnv('TEST_CONFIG_VALUE', 'string', () => {
@@ -149,6 +163,7 @@ describe('ConfigService', () => {
   it('skips readers that do not implement a requested method', async () => {
     const configService = new ConfigService([
       {
+        NAME: 'memory',
         getValue: async () => 'value',
       },
     ]);
