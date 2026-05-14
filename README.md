@@ -1,7 +1,8 @@
 # `bunito`
 
-[![CI](https://github.com/bunito-dev/bunito/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/bunito-dev/bunito/actions/workflows/ci.yml)
-[![NPM](https://img.shields.io/npm/v/%40bunito%2Fbunito)](https://www.npmjs.com/package/@bunito/bunito)
+[![CI][ci-img]][ci-url]
+![NPM Version][npm-img]
+![License MIT][license-img]
 
 `bunito` is a small Bun-first TypeScript framework for building applications with
 modules, dependency injection, lifecycle hooks, configuration, logging, HTTP
@@ -15,10 +16,6 @@ The project is intentionally split into focused packages. You can start with
 
 The best way to understand the current API is to read and run the examples.
 Start with the examples guide: [`examples/`](./examples/README.md).
-
-The VitePress documentation lives in [`docs/`](./docs) and follows the examples:
-getting started, core concepts, CLI discovery, focused techniques, and step-by-step
-tutorials.
 
 ## Packages 📦
 
@@ -43,14 +40,13 @@ bun run test
 bun run coverage
 ```
 
-Package versions are synchronized from the root manifest with:
-
-```bash
-bun run sync-versions
-```
-
 For contribution notes, see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## License
 
 MIT
+
+[npm-img]: https://img.shields.io/npm/v/%40bunito%2Fbunito
+[ci-img]: https://github.com/bunito-dev/bunito/actions/workflows/ci.yml/badge.svg?branch=master
+[ci-url]: https://github.com/bunito-dev/bunito/actions/workflows/ci.yml
+[license-img]: https://img.shields.io/badge/license-MIT-green.svg

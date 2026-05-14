@@ -2,6 +2,7 @@ import type { ExtensionDecorator, ProviderDecoratorOptions } from '@bunito/conta
 import { createExtensionDecorator } from '@bunito/container';
 
 export interface ConfigReader {
+  readonly NAME: string;
   getSecret?: (key: string) => Promise<unknown>;
   getValue?: (key: string) => Promise<unknown>;
 }

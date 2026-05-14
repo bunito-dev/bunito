@@ -1,5 +1,8 @@
 # `@bunito/broker`
 
+[![NPM Version][npm-img]][npm-url]
+![License MIT][license-img]
+
 Broker support for bunito applications. The package provides a `BrokerModule`,
 message-handler decorators, request/event publishing through `BrokerService`, and
 local or NATS-backed adapters.
@@ -52,3 +55,7 @@ Use `BrokerService.sendRequest()` when a reply is expected and
 ## License
 
 MIT
+
+[npm-img]: https://img.shields.io/npm/v/%40bunito%2Fbroker
+[npm-url]: https://www.npmjs.com/package/@bunito/broker
+[license-img]: https://img.shields.io/badge/license-MIT-green.svg

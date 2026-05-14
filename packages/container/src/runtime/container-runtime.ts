@@ -282,7 +282,7 @@ export class ContainerRuntime extends ProviderStore {
     let token: TokenLike | undefined;
     let tokenOptions: unknown;
 
-    let optional = false;
+    let defaultValue: unknown;
 
     if (isObject(injection)) {
       if ('useValue' in injection) {
@@ -293,13 +293,15 @@ export class ContainerRuntime extends ProviderStore {
         return injection.useBuilder(injection.options);
       }
 
-      if ('optional' in injection) {
-        optional = !!injection.optional;
-      }
-
       if ('useToken' in injection) {
         token = injection.useToken;
         tokenOptions = injection.options;
+
+        if ('defaultValue' in injection) {
+          defaultValue = injection.defaultValue;
+        } else if (injection.optional) {
+          defaultValue = null;
+        }
       }
     }
 
@@ -346,7 +348,11 @@ export class ContainerRuntime extends ProviderStore {
       );
     }
 
-    if (value === undefined && !optional) {
+    if (value === undefined) {
+      if (defaultValue !== undefined) {
+        return defaultValue;
+      }
+
       return InternalException.throw`Injection ${Id.for(token)} at ${pos} could not be resolved`;
     }
 

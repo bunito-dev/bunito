@@ -6,6 +6,8 @@ import type { SecretKey } from './types';
   injects: [SecretsService],
 })
 export class SecretsConfigReader implements ConfigReader {
+  readonly NAME = 'bun-secrets';
+
   constructor(private readonly secretsService: SecretsService) {}
 
   getSecret(key: string): Promise<unknown> {

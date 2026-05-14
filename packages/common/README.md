@@ -1,5 +1,8 @@
 # `@bunito/common`
 
+[![NPM Version][npm-img]][npm-url]
+![License MIT][license-img]
+
 Shared exceptions, predicates, types, and small utilities for bunito packages.
 
 This package is framework-agnostic and is used by the rest of the bunito workspace.
@@ -32,3 +35,7 @@ if (!isObject(value)) {
 ## License
 
 MIT
+
+[npm-img]: https://img.shields.io/npm/v/%40bunito%2Fcommon
+[npm-url]: https://www.npmjs.com/package/@bunito/common
+[license-img]: https://img.shields.io/badge/license-MIT-green.svg

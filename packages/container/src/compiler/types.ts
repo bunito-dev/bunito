@@ -86,8 +86,9 @@ export type InjectionLike = TokenLike | InjectionOptions;
 
 export type InjectionTokenOptions<TOptions = unknown> = {
   useToken: TokenLike;
-  optional?: true;
   options?: TOptions;
+  optional?: true;
+  defaultValue?: unknown;
 };
 
 export type InjectionBuilderOptions<TOptions = unknown> = {

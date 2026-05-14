@@ -1,5 +1,8 @@
 # `@bunito/bunito`
 
+[![NPM Version][npm-img]][npm-url]
+![License MIT][license-img]
+
 Main application entrypoint for bunito.
 
 Use this package for the core application APIs: `App`, modules, providers,
@@ -43,3 +46,7 @@ await app.shutdown();
 ## License
 
 MIT
+
+[npm-img]: https://img.shields.io/npm/v/%40bunito%2Fbunito
+[npm-url]: https://www.npmjs.com/package/@bunito/bunito
+[license-img]: https://img.shields.io/badge/license-MIT-green.svg

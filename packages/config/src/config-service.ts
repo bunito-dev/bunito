@@ -2,6 +2,7 @@ import * as process from 'node:process';
 import { InternalException, isFn, isNullish, isString } from '@bunito/common';
 import { Provider } from '@bunito/container';
 import { ConfigReader } from './config-reader';
+import { CONFIG_ENVS_ID } from './constants';
 import type {
   ConfigEnv,
   ConfigFlag,
@@ -18,20 +19,26 @@ import { processConfigValue } from './utils';
   global: true,
   injects: [
     {
+      useToken: CONFIG_ENVS_ID,
+      defaultValue: process.env,
+    },
+    {
       useToken: ConfigReader,
       optional: true,
     },
   ],
 })
 export class ConfigService {
-  private readonly flags: Record<ConfigFlag, boolean>;
+  private readonly flags: Partial<Record<ConfigFlag, boolean>> = {};
+  private readonly readers: ConfigReader[] | undefined;
 
-  constructor(private readonly readers: ConfigReader[] | null = null) {
-    const { NODE_ENV, CI } = process.env;
+  constructor(
+    private readonly envs: Partial<Record<ConfigEnv, string>> = {},
+    readers: ConfigReader[] | null = null,
+  ) {
+    const nodeEnv = this.getEnv('NODE_ENV', 'lowercase');
 
-    const nodeEnv = NODE_ENV?.toLowerCase();
-
-    const isCI = CI?.toLowerCase() === 'true' || nodeEnv === 'ci';
+    const isCI = this.getEnv('CI', 'boolean') || nodeEnv === 'ci';
     const isProd = nodeEnv === 'production' || nodeEnv === 'prod';
     const isTest = nodeEnv === 'test';
 
@@ -50,6 +57,20 @@ export class ConfigService {
     this.getEnv = this.getEnv.bind(this);
     this.getValue = this.getValue.bind(this);
     this.getSecret = this.getSecret.bind(this);
+
+    if (!readers) {
+      return;
+    }
+
+    const activeReaders = this.getEnv(
+      'CONFIG_READERS',
+      'lowercase',
+      (value) => new Set(value.split(',')),
+    );
+
+    this.readers = !activeReaders
+      ? readers
+      : readers.filter((reader) => activeReaders.has(reader.NAME));
   }
 
   whenCI<TValue>(on: TValue, off: TValue): TValue {
@@ -69,7 +90,7 @@ export class ConfigService {
   }
 
   getFlag(flag: ConfigFlag): boolean {
-    return this.flags[flag];
+    return this.flags[flag] ?? false;
   }
 
   getEnv<TFormat extends ConfigFormat>(
@@ -193,7 +214,7 @@ export class ConfigService {
   }
 
   private readEnv(key: ConfigEnv): string | undefined {
-    const value = process.env[key]?.trim();
+    const value = this.envs[key]?.trim();
     return value ? value : undefined;
   }
 

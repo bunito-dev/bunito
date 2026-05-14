@@ -1,5 +1,8 @@
 # `@bunito/config`
 
+[![NPM Version][npm-img]][npm-url]
+![License MIT][license-img]
+
 Configuration module for bunito applications.
 
 It provides config factories, environment parsing, typed value formatting, and
@@ -33,3 +36,7 @@ class AppModule {}
 ## License
 
 MIT
+
+[npm-img]: https://img.shields.io/npm/v/%40bunito%2Fconfig
+[npm-url]: https://www.npmjs.com/package/@bunito/config
+[license-img]: https://img.shields.io/badge/license-MIT-green.svg
