@@ -56,6 +56,7 @@ export default defineConfig({
           { text: 'Simple Controller', link: '/tutorials/simple-controller' },
           { text: 'JSON Middleware', link: '/tutorials/json-middleware' },
           { text: 'Multiple APIs', link: '/tutorials/multiple-apis' },
+          { text: 'CORS Support', link: '/tutorials/cors-support' },
           { text: 'Microservices', link: '/tutorials/microservices' },
           { text: 'Monorepo', link: '/tutorials/monorepo' },
         ],

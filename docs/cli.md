@@ -129,6 +129,9 @@ examples/
       simple-controller/
         .env
         src/main.ts
+      cors-support/
+        .env
+        src/main.ts
   microservices/
     apps/
       foo/
@@ -162,5 +165,6 @@ The tutorials explain those apps step by step:
 - [Simple Controller](/tutorials/simple-controller)
 - [JSON Middleware](/tutorials/json-middleware)
 - [Multiple APIs](/tutorials/multiple-apis)
+- [CORS Support](/tutorials/cors-support)
 - [Microservices](/tutorials/microservices)
 - [Monorepo](/tutorials/monorepo)

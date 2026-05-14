@@ -1,9 +1,10 @@
 # HTTP
 
 HTTP support lives in `@bunito/http`. Add it when an application needs routes,
-middleware, request injections, JSON handling, or HTTP exceptions. Controllers use
-the core `@Controller()` decorator from `@bunito/bunito`; route decorators and HTTP
-runtime pieces come from `@bunito/http`.
+middleware, request injections, JSON handling, CORS, custom response headers, or
+HTTP exceptions. Controllers use the core `@Controller()` decorator from
+`@bunito/bunito`; route decorators and HTTP runtime pieces come from
+`@bunito/http`.
 
 ## Installation
 
@@ -87,11 +88,13 @@ class AppModule {}
 Use route decorators for HTTP methods:
 
 ```ts
-import { Delete, Get, OnRequest, Post, Put } from '@bunito/http';
+import { Delete, Get, Head, OnRequest, Patch, Post, Put } from '@bunito/http';
 ```
 
-Available decorators include `Get`, `Post`, `Put`, `Delete`, and `OnRequest`.
-Use `OnRequest` when a handler should match any HTTP method.
+Available decorators include `Get`, `Head`, `Post`, `Put`, `Patch`, `Delete`, and
+`OnRequest`. Use `OnRequest` when a handler should match any HTTP method. `OPTIONS`
+is handled by the router for discovered routes, which is especially useful for CORS
+preflight requests.
 
 ## Request Injections
 
@@ -179,11 +182,19 @@ the decorator more than once when a controller or module needs several middlewar
 
 ## Prefixes and Middleware
 
-`UsePrefix` and `UseMiddleware` can be applied at module level:
+`UsePrefix`, `UseMiddleware`, `UseCORS`, and `UseHeaders` can be applied at module
+level. Module-level decorators affect controllers declared in that module and in
+imported child modules:
 
 ```ts
 import { Module, UsePrefix } from '@bunito/bunito';
-import { HTTPModule, JSONSerializer, UseMiddleware } from '@bunito/http';
+import {
+  HTTPModule,
+  JSONSerializer,
+  UseCORS,
+  UseHeaders,
+  UseMiddleware,
+} from '@bunito/http';
 
 @Module({
   imports: [HTTPModule],
@@ -191,10 +202,61 @@ import { HTTPModule, JSONSerializer, UseMiddleware } from '@bunito/http';
 })
 @UsePrefix('/api')
 @UseMiddleware(JSONSerializer)
+@UseHeaders('Cache-Control', 'no-store')
+@UseCORS({
+  origin: 'https://example.com',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['X-Trace-Id'],
+  credentials: true,
+  maxAge: 3600,
+})
 class ApiModule {}
 ```
 
-This keeps route groups local to a feature module.
+This keeps route groups, middleware, headers, and CORS policy local to a feature
+module.
+
+## CORS and Headers
+
+Use `UseCORS` on a module or controller to configure CORS for its routes:
+
+```ts
+import { Controller, Module, UsePrefix } from '@bunito/bunito';
+import { Get, HTTPModule, UseCORS, UseHeaders } from '@bunito/http';
+
+@Controller()
+@UseCORS({
+  methods: ['GET'],
+})
+class FooController {
+  @Get()
+  @UseHeaders('X-Feature', 'foo')
+  getFoo(): Response {
+    return Response.json({
+      foo: 'Hello foo!',
+    });
+  }
+}
+
+@Module({
+  imports: [HTTPModule],
+  controllers: [FooController],
+})
+@UsePrefix('/foo')
+@UseCORS({
+  origin: '*',
+  credentials: false,
+  maxAge: 3600,
+})
+class FooModule {}
+```
+
+CORS options are merged from parent modules to feature modules and controllers, with
+more local options overriding earlier ones. `UseHeaders` accepts either a header map
+or a single name/value pair, and can be applied to a module, controller, or route
+handler.
+
+For browser clients, use an explicit `origin` when `credentials` is enabled.
 
 ## Exceptions
 
@@ -215,3 +277,4 @@ Build these ideas step by step:
 - [Simple Controller](/tutorials/simple-controller)
 - [JSON Middleware](/tutorials/json-middleware)
 - [Multiple APIs](/tutorials/multiple-apis)
+- [CORS Support](/tutorials/cors-support)

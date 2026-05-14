@@ -6,8 +6,8 @@ Small runnable workspaces that mirror the current bunito API.
 
 - [`basics`](./basics): providers, explicit injections, lifecycle hooks, logger
   usage, and manual provider resolution.
-- [`http`](./http): HTTP controllers, validation, JSON middleware, route prefixes,
-  and multi-app CLI discovery.
+- [`http`](./http): HTTP controllers, validation, JSON middleware, CORS, route
+  prefixes, and multi-app CLI discovery.
 - [`microservices`](./microservices): broker controllers, request/reply messaging,
   local broker transport, and HTTP entrypoints.
 - [`monorepo`](./monorepo): several apps plus a shared library in one workspace.

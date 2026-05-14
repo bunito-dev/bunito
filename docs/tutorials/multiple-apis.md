@@ -125,3 +125,6 @@ You now have two route groups:
 
 - `/foo/*`: simple text responses
 - `/bar/*`: JSON responses with module-level middleware
+
+Continue with [CORS Support](/tutorials/cors-support) to add route headers and
+CORS policy to HTTP modules.

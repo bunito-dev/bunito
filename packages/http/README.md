@@ -5,8 +5,8 @@
 
 HTTP module for bunito applications.
 
-It provides route decorators, request injections, middleware, JSON handling, and
-HTTP exceptions for bunito controllers.
+It provides route decorators, request injections, middleware, CORS, custom response
+headers, JSON handling, and HTTP exceptions for bunito controllers.
 
 ## Installation 📦
 
@@ -22,13 +22,17 @@ import {
   Get,
   HTTPModule,
   JSONSerializer,
+  UseCORS,
+  UseHeaders,
   UseMiddleware,
 } from '@bunito/http';
 
 @Controller('/hello')
 @UseMiddleware(JSONSerializer)
+@UseCORS()
 class HelloController {
   @Get()
+  @UseHeaders('Cache-Control', 'no-store')
   hello(): Record<string, string> {
     return {
       message: 'Hello from HTTP',

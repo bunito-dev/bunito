@@ -136,14 +136,14 @@ The framework is split into packages so applications can stay small:
   - `@bunito/common`: shared exceptions, predicates, types, and utilities
 - `@bunito/broker`: message handlers, local/NATS adapters, and request/reply APIs
 - `@bunito/bun`: Bun-specific integrations
-- `@bunito/http`: routes, middleware, request injections, and HTTP exceptions
+- `@bunito/http`: routes, middleware, request injections, CORS, headers, and HTTP exceptions
 
 ## Examples
 
 Runnable examples live in separate workspaces under `examples/`:
 
 - `examples/basics`: one standard app
-- `examples/http`: three HTTP apps discovered from `apps/*/src/main.ts`
+- `examples/http`: HTTP apps discovered from `apps/*/src/main.ts`
 - `examples/microservices`: broker apps that call each other through messages
 - `examples/monorepo`: several apps plus a shared library
 
