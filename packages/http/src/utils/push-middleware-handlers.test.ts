@@ -8,6 +8,7 @@ describe('pushMiddlewareHandlers', () => {
     const handlers = cloneMiddlewareHandlers(undefined);
     const middleware: Middleware = {
       beforeRequest: () => undefined,
+      beforeResponse: (response) => response,
       serializeResponseData: () => undefined,
       serializeException: () => undefined,
     };
@@ -15,6 +16,7 @@ describe('pushMiddlewareHandlers', () => {
     pushMiddlewareHandlers(handlers, middleware, { enabled: true });
 
     expect(handlers.beforeRequest).toHaveLength(1);
+    expect(handlers.beforeResponse).toHaveLength(1);
     expect(handlers.serializeResponseData).toHaveLength(1);
     expect(handlers.serializeException).toHaveLength(1);
     expect(handlers.beforeRequest.at(0)?.options).toEqual({
@@ -25,6 +27,7 @@ describe('pushMiddlewareHandlers', () => {
   it('ignores middleware methods that are not implemented', () => {
     const handlers: MiddlewareHandlers = {
       beforeRequest: [],
+      beforeResponse: [],
       serializeResponseData: [],
       serializeException: [],
     };
@@ -33,6 +36,7 @@ describe('pushMiddlewareHandlers', () => {
 
     expect(handlers).toEqual({
       beforeRequest: [],
+      beforeResponse: [],
       serializeResponseData: [],
       serializeException: [],
     });

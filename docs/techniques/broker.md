@@ -73,7 +73,25 @@ class OrdersClient {
 ```
 
 Use `sendRequest()` when a response is expected and `sendEvent()` for
-fire-and-forget messages.
+fire-and-forget messages. `BrokerService` serializes public payloads before they
+reach an adapter and deserializes replies by default. Pass `false` as the third
+argument to `sendRequest()` when adapter-level code needs the raw `Uint8Array`
+reply.
+
+Handlers can inject both decoded data and the raw payload:
+
+```ts
+import { Data, OnMessage, Payload } from '@bunito/broker';
+
+class OrdersController {
+  @OnMessage('created', {
+    injects: [Data, Payload],
+  })
+  handle(data: Data<{ id: string }>, payload: Payload): string {
+    return `${data.id}:${payload.byteLength}`;
+  }
+}
+```
 
 ## Configuration
 
@@ -88,7 +106,7 @@ NATS_BROKER_SERVERS=nats://localhost:4222
 NATS_BROKER_QUEUE=default
 ```
 
-App-local `.env` files are loaded by the CLI for monorepo apps.
+App-local `.env` files are loaded by the CLI for workspace apps.
 
 ## Example
 

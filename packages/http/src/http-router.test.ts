@@ -123,7 +123,7 @@ describe('HTTPRouter', () => {
     expect(options?.headers.get('Accept')).toBe('POST');
   });
 
-  it('applies CORS and custom headers to OPTIONS and route responses', async () => {
+  it('applies CORS headers to OPTIONS and route responses', async () => {
     const moduleId = Id.unique('Module');
     const providerId = Id.unique('Controller');
     const controller = {
@@ -157,24 +157,6 @@ describe('HTTPRouter', () => {
               providerId,
               options: {},
               props: [
-                {
-                  propKind: 'class',
-                  options: {
-                    kind: 'headers',
-                    headers: {
-                      'Cache-Control': 'no-store',
-                    },
-                  },
-                },
-                {
-                  propKind: 'method',
-                  options: {
-                    kind: 'headers',
-                    headers: {
-                      'Content-Type': 'text/custom',
-                    },
-                  },
-                },
                 {
                   propKind: 'method',
                   propKey: 'handle',
@@ -240,8 +222,6 @@ describe('HTTPRouter', () => {
     expect(options?.headers.get('Access-Control-Max-Age')).toBe('60');
     expect(options?.headers.get('Vary')).toBe('Origin');
     expect(allOptions?.headers.get('Accept')).toBe(HTTP_ALL_METHODS.join(', '));
-    expect(response?.headers.get('Cache-Control')).toBe('no-store');
-    expect(response?.headers.get('Content-Type')).toBe('text/custom');
     expect(response?.headers.get('Access-Control-Allow-Origin')).toBe(
       'https://example.com',
     );

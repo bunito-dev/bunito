@@ -5,14 +5,35 @@ import type { Context } from '../context';
 import { CLIService } from '../services';
 import { GenerateCommand } from './generate-command';
 
-function createContext(mode: 'unknown' | 'standard' | 'monorepo' = 'monorepo'): Context {
+function createContext(initialized = true): Context {
   const logs: unknown[][] = [];
+  const apps = new Set(['api']);
+  const libs = new Set<string>();
 
   return {
     project: {
-      settings: {
-        mode,
-        apps: new Map([['api', { name: 'api' }]]),
+      requireInitialized: () => {
+        if (!initialized) {
+          throw new Exception('Project is not initialized');
+        }
+      },
+      addApp: (name: string) => {
+        if (!/^[a-z][a-z0-9-]*$/.test(name)) {
+          throw new Exception('App name must be kebab-case');
+        }
+        if (apps.has(name)) {
+          throw new Exception(`App "${name}" already exists`);
+        }
+        apps.add(name);
+      },
+      addLib: (name: string) => {
+        if (!/^[a-z][a-z0-9-]*$/.test(name)) {
+          throw new Exception('Lib name must be kebab-case');
+        }
+        if (libs.has(name)) {
+          throw new Exception(`Lib "${name}" already exists`);
+        }
+        libs.add(name);
       },
       renderTemplate:
         () =>
@@ -65,7 +86,7 @@ describe('GenerateCommand', () => {
     }
   });
 
-  it('generates apps and libraries in monorepo projects', async () => {
+  it('generates workspace apps and libraries', async () => {
     const context = createContext();
 
     await new GenerateCommand({ element: 'app', name: 'admin' }, context).run();
@@ -98,26 +119,15 @@ describe('GenerateCommand', () => {
     ]);
   });
 
-  it('rejects unsupported project modes and invalid names', async () => {
+  it('rejects uninitialized projects and invalid names', async () => {
     await expectRejectedMessage(
-      new GenerateCommand(
-        { element: 'app', name: 'api' },
-        createContext('unknown'),
-      ).run(),
+      new GenerateCommand({ element: 'app', name: 'api' }, createContext(false)).run(),
       'Project is not initialized',
     );
 
     await expectRejectedMessage(
-      new GenerateCommand(
-        { element: 'app', name: 'api' },
-        createContext('standard'),
-      ).run(),
-      'This command is available only in monorepo projects',
-    );
-
-    await expectRejectedMessage(
       new GenerateCommand({ element: 'app', name: 'BadName' }, createContext()).run(),
-      'App name must use kebab-case',
+      'App name must be kebab-case',
     );
 
     await expectRejectedMessage(
@@ -127,7 +137,7 @@ describe('GenerateCommand', () => {
 
     await expectRejectedMessage(
       new GenerateCommand({ element: 'lib', name: 'BadName' }, createContext()).run(),
-      'Library name must use kebab-case',
+      'Lib name must be kebab-case',
     );
   });
 });

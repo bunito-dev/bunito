@@ -8,26 +8,25 @@ describe('ProjectTemplate', () => {
       name: 'demo',
       pkgVersion: '1.0.0',
       bunVersion: '>=1.3.11',
-      apps: [],
     });
 
-    expect(Object.keys(result).sort()).toContain('src/app-module.ts');
-    expect(Object.keys(result).sort()).toContain('src/index.ts');
+    expect(Object.keys(result).sort()).toEqual([
+      '.gitignore',
+      'README.md',
+      'package.json',
+      'tsconfig.json',
+    ]);
     expect(result['package.json']).toContain('"name": "demo"');
     expect(result['package.json']).toContain('"@bunito/bunito": "1.0.0"');
     expect(result['tsconfig.json']).toContain('@bunito/bunito/tsconfig.json');
   });
 
-  it('renders a monorepo project with app path aliases', () => {
+  it('renders project path aliases without engines when no Bun version is provided', () => {
     const result = renderTemplate(ProjectTemplate, {
       name: 'workspace',
       pkgVersion: 'workspace:*',
-      apps: ['api'],
     });
 
-    expect(Object.keys(result).sort()).toContain('apps/api/src/app-module.ts');
-    expect(Object.keys(result).sort()).toContain('apps/api/src/index.ts');
-    expect(result['package.json']).toContain('"apps"');
     expect(result['tsconfig.json']).not.toContain('"baseUrl"');
     expect(result['tsconfig.json']).toContain('"@apps/*"');
     expect(result['tsconfig.json']).toContain('./apps/*/src/index.ts');

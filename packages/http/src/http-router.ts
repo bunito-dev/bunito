@@ -80,7 +80,7 @@ export class HTTPRouter implements ServerRouter {
         }
 
         if (isFn(instance.beforeResponse)) {
-          instance.beforeRequest = instance.beforeResponse.bind(instance);
+          instance.beforeResponse = instance.beforeResponse.bind(instance);
           isMiddleware = true;
         }
 

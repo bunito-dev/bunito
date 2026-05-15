@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { mkdir, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { decode, encode } from '@msgpack/msgpack';
 import { LocalBroker } from './local-broker';
 import type { LocalBrokerContext } from './types';
 
@@ -20,16 +21,22 @@ describe('LocalBroker', () => {
         return;
       }
 
-      broker.sendResponse(payload.context, {
-        received: payload.payload,
-      });
+      broker.sendResponse(
+        payload.context,
+        encode({
+          received: decode(payload.payload),
+        }),
+      );
     });
 
-    const response = await broker.sendRequest('orders.created', {
-      id: 1,
-    });
+    const response = await broker.sendRequest(
+      'orders.created',
+      encode({
+        id: 1,
+      }),
+    );
 
-    expect(response).toEqual({
+    expect(decode(response as Uint8Array)).toEqual({
       received: {
         id: 1,
       },
@@ -47,7 +54,7 @@ describe('LocalBroker', () => {
     });
 
     try {
-      await broker.sendRequest('orders.created', {});
+      await broker.sendRequest('orders.created', encode({}));
       throw new Error('Request should time out');
     } catch (err) {
       expect(err).toBeInstanceOf(Error);
@@ -74,7 +81,7 @@ describe('LocalBroker', () => {
         readMessage: (file: Bun.BunFile) => Promise<
           | {
               context: LocalBrokerContext;
-              data: unknown;
+              payload: Uint8Array;
               kind: 'request';
               topic: string;
             }
@@ -87,7 +94,7 @@ describe('LocalBroker', () => {
         publishMessage: (payload: {
           kind: 'request';
           topic: string;
-          data: unknown;
+          payload: Uint8Array;
           context: LocalBrokerContext;
         }) => Promise<void>;
       }
@@ -99,9 +106,9 @@ describe('LocalBroker', () => {
       await publishMessage({
         kind: 'request',
         topic: 'orders.created',
-        data: {
+        payload: encode({
           id: 1,
-        },
+        }),
         context: {
           id: 'message',
         },
@@ -117,19 +124,17 @@ describe('LocalBroker', () => {
       expect(missing).toBeUndefined();
       expect(directory).toBeUndefined();
       expect(own).toBeUndefined();
-      expect(written).toEqual({
-        kind: 'request',
-        topic: 'orders.created',
-        data: {
-          id: 1,
-        },
-        context: {
-          id: 'message',
-        },
+      expect(written?.kind).toBe('request');
+      expect(written?.topic).toBe('orders.created');
+      expect(decode(written?.payload as Uint8Array)).toEqual({
+        id: 1,
+      });
+      expect(written?.context).toEqual({
+        id: 'message',
       });
 
       await reader.connect();
-      expect(await readdir(dataDir)).toEqual([]);
+      expect((await readdir(dataDir)).sort()).toEqual(['reader', 'writer']);
 
       await reader.disconnect();
     } finally {
@@ -157,7 +162,7 @@ describe('LocalBroker', () => {
         publishMessage: (payload: {
           kind: 'event';
           topic: string;
-          data: unknown;
+          payload: Uint8Array;
           context: LocalBrokerContext;
         }) => Promise<void>;
       }
@@ -170,7 +175,7 @@ describe('LocalBroker', () => {
 
     try {
       reader.subscribe('orders.*', (_err, payload) => {
-        received.push(payload?.payload);
+        received.push(decode(payload?.payload as Uint8Array));
       });
 
       processFileEvent('change', null);
@@ -178,9 +183,9 @@ describe('LocalBroker', () => {
       await publishMessage({
         kind: 'event',
         topic: 'orders.created',
-        data: {
+        payload: encode({
           id: 1,
-        },
+        }),
         context: {
           id: 'message',
         },
@@ -202,6 +207,57 @@ describe('LocalBroker', () => {
     }
   });
 
+  it('handles filesystem lifecycle edge cases and publish failures', async () => {
+    const dataDir = join('/tmp', `bunito-broker-${Bun.randomUUIDv7()}`);
+    const broker = new LocalBroker({
+      mode: 'fs',
+      uid: 'reader',
+      timeout: 250,
+      dataDir,
+    });
+    const processFileEvent = (
+      broker as unknown as {
+        processFileEvent: (event: string, relativePath: string | null) => void;
+      }
+    ).processFileEvent.bind(broker);
+
+    try {
+      await broker.connect();
+      await broker.connect();
+      await Bun.write(join(dataDir, 'writer', 'broken.json'), '{');
+
+      processFileEvent('rename', join('writer', 'broken.json'));
+
+      await broker.disconnect();
+      await broker.disconnect();
+    } finally {
+      await rm(dataDir, { recursive: true, force: true });
+    }
+
+    const invalidDataDir = join('/tmp', `bunito-broker-${Bun.randomUUIDv7()}`);
+    const failingBroker = new LocalBroker({
+      mode: 'fs',
+      uid: 'writer',
+      timeout: 250,
+      dataDir: invalidDataDir,
+    });
+
+    await Bun.write(invalidDataDir, 'not-a-directory');
+
+    try {
+      let error: unknown;
+      try {
+        await failingBroker.sendRequest('orders.created', encode({}));
+      } catch (err) {
+        error = err;
+      }
+
+      expect(error).toBeInstanceOf(Error);
+    } finally {
+      await rm(invalidDataDir, { force: true });
+    }
+  });
+
   it('publishes events with event payload kind', async () => {
     const broker = new LocalBroker({
       mode: 'in-memory',
@@ -215,7 +271,7 @@ describe('LocalBroker', () => {
       kind = payload?.kind;
     });
 
-    await broker.sendEvent('orders.created', {});
+    await broker.sendEvent('orders.created', encode({}));
 
     expect(kind).toBe('event');
   });

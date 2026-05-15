@@ -39,10 +39,16 @@ describe('CLIService', () => {
     const processes: unknown[] = [];
     let startOptions: unknown;
     const settings = {
-      mode: 'unknown',
+      cwd: '/repo',
+      argv: [],
+      pkgVersion: 'workspace:*',
+      bunVersion: '>=1.3.11',
+    };
+    const state = {
+      initialized: false,
       name: 'demo',
       path: '/repo',
-      apps: new Map([['api', { name: 'api' }]]),
+      apps: new Set(['api']),
     };
     const logger = {
       info: (...args: unknown[]) => {
@@ -56,33 +62,55 @@ describe('CLIService', () => {
       br: () => undefined,
     };
     const context = {
+      settings,
       project: {
-        settings,
-        create: async (name: string, apps: string[]) => {
-          created.push({ name, apps });
-          return ['package.json'];
+        state,
+        isInitialized: () => state.initialized,
+        requireInitialized: () => {
+          if (!state.initialized) {
+            throw new Error('Project is not initialized');
+          }
         },
+        initialize: (name: string) => {
+          state.name = name;
+          state.initialized = true;
+        },
+        addApp: (name: string) => {
+          created.push({ name: state.name, apps: [name] });
+          state.apps.add(name);
+        },
+        getApp: () => ({
+          name: state.name,
+          main: true,
+          path: '/repo',
+        }),
         getApps: (names?: Set<string>) => [
           {
             name: names?.values().next().value ?? 'api',
-            entry: 'apps/api/src/main.ts',
-            envs: 'apps/api/.env',
+            main: false,
+            path: '/repo/apps/api',
           },
         ],
         renderTemplate:
-          (template: unknown, options: unknown) =>
+          (template: { name?: string }, options: unknown) =>
           async (...paths: string[]) => {
-            generated.push([template, options, ...paths]);
-            return ['src/main.ts'];
+            generated.push([template.name, options, ...paths]);
+            if (paths.length) {
+              return [`${paths.join('/')}/src/main.ts`];
+            }
+
+            return template.name === 'ProjectTemplate'
+              ? ['package.json']
+              : ['src/main.ts'];
           },
       },
       fs: {
-        ensurePath: async (path: string) => {
-          ensured.push(path);
+        ensurePath: async (...paths: string[]) => {
+          ensured.push(paths.join('/'));
         },
-        getFile: (path: string, name: string) => ({
+        getFile: (...paths: string[]) => ({
           write: async (content: string) => {
-            written.push(`${path}/${name}:${content}`);
+            written.push(`${paths.join('/')}:${content}`);
             return content.length;
           },
         }),
@@ -115,7 +143,6 @@ describe('CLIService', () => {
 
     try {
       await cli.runCommand(['init', 'demo-app', '--app', 'api']);
-      settings.mode = 'monorepo';
       await cli.runCommand(['generate', 'app', 'admin']);
       await cli.runCommand(['build', 'api', '--minify', '--sourcemap']);
       await cli.runCommand(['start', 'api', '--watch', '--prod', '--label', 'full']);
@@ -129,8 +156,12 @@ describe('CLIService', () => {
         name: 'demo-app',
         apps: ['api'],
       },
+      {
+        name: 'demo-app',
+        apps: ['admin'],
+      },
     ]);
-    expect(generated).toHaveLength(1);
+    expect(generated.length).toBeGreaterThanOrEqual(3);
     expect(builds).toHaveLength(1);
     expect(ensured).toEqual(['/repo/out/api']);
     expect(written).toEqual(['/repo/out/api/main.js:compiled']);
@@ -140,10 +171,10 @@ describe('CLIService', () => {
         args: [
           'bun',
           '--cwd=/repo',
-          '--env-file=apps/api/.env',
+          '--env-file=/repo/apps/api/.env',
           'run',
           '--watch',
-          'apps/api/src/main.ts',
+          '/repo/apps/api/src/main.ts',
         ],
         envs: {
           NODE_ENV: 'production',

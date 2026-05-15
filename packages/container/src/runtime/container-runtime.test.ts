@@ -194,7 +194,7 @@ describe('ContainerRuntime', () => {
     expect(consumer?.requestId).toBeNumber();
     expect(consumer?.literal).toBe('literal');
     expect(consumer?.requestIdGetter()).toBeUndefined();
-    expect(consumer?.requestState).toBeInstanceOf(Map);
+    expect(consumer?.requestState).toBeInstanceOf(WeakMap);
     expect(consumer?.value).toBe(42);
     expect(consumer?.optional).toBeNull();
     expect(consumer?.fallback).toBe('resolved-by-callback');

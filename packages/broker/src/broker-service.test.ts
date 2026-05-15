@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'bun:test';
 import { Id } from '@bunito/container';
+import { decode, encode } from '@msgpack/msgpack';
 import type { BrokerAdapter } from './broker-adapter';
 import { BrokerService } from './broker-service';
-import { Context, Data, Subject, Topic } from './injections';
+import { Context, Data, Payload, Subject, Topic } from './injections';
 import type { BrokerMessage, BrokerMessageHandler } from './types';
 
 class TestController {
@@ -25,6 +26,8 @@ class TestAdapter implements BrokerAdapter {
   connected = false;
   disconnected = false;
   subscriptions = new Map<string, BrokerMessageHandler>();
+  requests: unknown[] = [];
+  events: unknown[] = [];
   responses: unknown[] = [];
 
   async connect(): Promise<void> {
@@ -35,16 +38,20 @@ class TestAdapter implements BrokerAdapter {
     this.disconnected = true;
   }
 
-  sendRequest(): string {
-    return 'response';
+  sendRequest(_topic: string, payload: Uint8Array): Uint8Array {
+    this.requests.push(decode(payload));
+
+    return encode('response');
   }
 
-  sendEvent(): boolean {
+  sendEvent(_topic: string, payload: Uint8Array): boolean {
+    this.events.push(decode(payload));
+
     return true;
   }
 
-  sendResponse(_context: unknown, data: unknown): boolean {
-    this.responses.push(data);
+  sendResponse(_context: unknown, payload: Uint8Array): boolean {
+    this.responses.push(decode(payload));
 
     return true;
   }
@@ -99,7 +106,7 @@ describe('BrokerService', () => {
                   kind: 'handler',
                   options: {
                     pattern: 'created',
-                    injects: [Data(), Topic(), Subject(), Context()],
+                    injects: [Data(), Payload(), Topic(), Subject(), Context()],
                   },
                 },
               },
@@ -120,11 +127,12 @@ describe('BrokerService', () => {
           moduleId?: unknown;
         },
       ) => {
-        expect(injects).toHaveLength(4);
+        expect(injects).toHaveLength(5);
         expect(options.moduleId).toBe(moduleId);
 
         return Promise.all([
           options.injectionResolver(Data),
+          options.injectionResolver(Payload),
           options.injectionResolver(Topic),
           options.injectionResolver(Subject),
           options.injectionResolver(Context),
@@ -143,9 +151,9 @@ describe('BrokerService', () => {
     const payload: BrokerMessage = {
       kind: 'request',
       topic: 'root.orders.created',
-      payload: {
+      payload: encode({
         id: 1,
-      },
+      }),
       context: {
         requestId: 'abc',
       },
@@ -160,6 +168,9 @@ describe('BrokerService', () => {
         {
           id: 1,
         },
+        encode({
+          id: 1,
+        }),
         'root.orders.created',
         'root.orders.created',
         {
@@ -182,9 +193,13 @@ describe('BrokerService', () => {
 
     const request = await service.sendRequest('orders.created', {});
     const event = await service.sendEvent('orders.created', {});
+    const rawRequest = await service.sendRequest('orders.created', {}, false);
 
     expect(request).toBe('response');
+    expect(rawRequest).toEqual(encode('response'));
     expect(event).toBeTrue();
+    expect(adapter.requests).toEqual([{}, {}]);
+    expect(adapter.events).toEqual([{}]);
   });
 
   it('handles empty component matches and subscription edge cases', async () => {
@@ -308,15 +323,15 @@ describe('BrokerService', () => {
     adapter.subscriptions.get('orders.missing')?.(null, {
       kind: 'request',
       topic: 'orders.missing',
-      payload: {},
+      payload: encode({}),
       context: {},
     });
     adapter.subscriptions.get('orders.event')?.(null, {
       kind: 'event',
       topic: 'orders.event',
-      payload: {
+      payload: encode({
         id: 1,
-      },
+      }),
       context: {},
     });
     adapter.subscriptions.get('orders.event')?.(new Error('Subscription failed'));
@@ -324,15 +339,15 @@ describe('BrokerService', () => {
     adapter.subscriptions.get('orders.failed')?.(null, {
       kind: 'request',
       topic: 'orders.failed',
-      payload: {},
+      payload: encode({}),
       context: {},
     });
     adapter.subscriptions.get('child.audit.logged')?.(null, {
       kind: 'event',
       topic: 'child.audit.logged',
-      payload: {
+      payload: encode({
         id: 2,
-      },
+      }),
       context: {},
     });
 

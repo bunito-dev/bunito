@@ -20,29 +20,31 @@ bunx @bunito/cli --help
 A bunito project is any directory, or parent directory, whose `package.json`
 depends on `@bunito/bunito`.
 
-The CLI supports two layouts:
+The CLI supports one main app and optional workspace apps:
 
-- standard apps: `src/main.ts`
-- monorepos: `apps/<name>/src/main.ts`
+- main app: `src/main.ts`
+- workspace apps: `apps/<name>/src/main.ts`
+- shared libraries: `libs/<name>/index.ts`
 
 Optional environment files are discovered automatically:
 
-- standard apps: `.env`
-- monorepo apps: `apps/<name>/.env`
+- main app: `.env`
+- workspace apps: `apps/<name>/.env`
 
 ## Commands
 
-Start every discovered app:
+Start the main app:
 
 ```bash
 bunito start
 ```
 
-Start selected apps in a monorepo:
+Start selected workspace apps or every workspace app:
 
 ```bash
 bunito start simple-controller
 bunito start json-middleware multiple-apis
+bunito start --all
 ```
 
 Useful start flags:
@@ -53,11 +55,13 @@ bunito start --prod
 bunito start --label name
 ```
 
-Build apps into `out/`:
+Build the main app into `out/main.js`, or build selected workspace apps into
+`out/<name>/main.js`:
 
 ```bash
 bunito build
 bunito build simple-controller --minify --sourcemap
+bunito build --all
 ```
 
 Generate files:
@@ -89,11 +93,11 @@ Each example workspace keeps scripts small:
 }
 ```
 
-Run all example apps:
+Run all workspace apps in a multi-app example:
 
 ```bash
 cd examples/http
-bun run start
+bun run start --all
 ```
 
 Run one example app:
@@ -157,7 +161,8 @@ examples/
 ```
 
 `.env` files are app-local. For example, `examples/http/apps/json-middleware/.env`
-sets the port for only the `json-middleware` app.
+sets the port for only the `json-middleware` app. The CLI always passes the matching
+`.env` file when it starts an app.
 
 The tutorials explain those apps step by step:
 

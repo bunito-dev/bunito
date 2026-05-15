@@ -77,7 +77,7 @@ CLIService.registerCommand(StartCommand, {
   describe: 'Start the app(s)',
   builder: (yargs) =>
     yargs
-      .example('$0 start', 'Start all apps')
+      .example('$0 start', 'Start the main app')
       .example('$0 start foo', 'Start the foo app')
       .example('$0 start foo bar', 'Start the foo and the bar apps')
       .positional('apps', {
@@ -88,7 +88,7 @@ CLIService.registerCommand(StartCommand, {
         coerce: notEmptySet<string>,
       })
       .option('all', {
-        describe: 'Start all apps except main one',
+        describe: 'Start all workspace apps',
         default: false,
         type: 'boolean',
         alias: 'a',

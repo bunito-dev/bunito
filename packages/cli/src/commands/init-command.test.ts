@@ -20,21 +20,42 @@ class TestInitCommand extends InitCommand {
 }
 
 function createContext(
-  settings: { mode: string; name: string } = {
-    mode: 'unknown',
+  settings: { initialized?: boolean; name: string } = {
     name: 'demo',
   },
 ): Context {
   const logs: unknown[][] = [];
+  const files: string[] = [];
 
   return {
+    settings: {
+      pkgVersion: 'workspace:*',
+      bunVersion: '>=1.3.11',
+    },
     project: {
-      settings,
-      create: async (name: string, apps: string[]) => [
-        'package.json',
-        ...apps.map((app) => `apps/${app}/src/main.ts`),
-        `project:${name}`,
-      ],
+      state: settings,
+      isInitialized: () => settings.initialized ?? false,
+      initialize: (name: string) => {
+        if (!/^[a-z][a-z0-9-]*$/.test(name)) {
+          throw new Exception('Project name must be kebab-case');
+        }
+        settings.name = name;
+      },
+      addApp: (name: string) => {
+        if (!/^[a-z][a-z0-9-]*$/.test(name)) {
+          throw new Exception('App name must be kebab-case');
+        }
+        files.push(`apps/${name}/src/main.ts`);
+      },
+      renderTemplate:
+        (template: { name?: string }) =>
+        async (...paths: string[]) => {
+          if (paths.length) {
+            return [`${paths.join('/')}/src/main.ts`];
+          }
+
+          return template.name === 'ProjectTemplate' ? ['package.json'] : ['src/main.ts'];
+        },
     },
     logger: {
       logs,
@@ -83,7 +104,7 @@ describe('InitCommand', () => {
     }
   });
 
-  it('creates standard projects with a provided name', async () => {
+  it('creates projects with a main app from a provided name', async () => {
     const context = createContext();
 
     await new InitCommand({ project: 'demo-app' }, context).run();
@@ -91,11 +112,11 @@ describe('InitCommand', () => {
     expect((context.logger as unknown as { logs: unknown[][] }).logs[0]).toEqual([
       'Project "demo-app" initialized with files:',
       'package.json',
-      'project:demo-app',
+      'src/main.ts',
     ]);
   });
 
-  it('creates monorepo projects from provided app names', async () => {
+  it('creates workspace apps from provided app names', async () => {
     const context = createContext();
 
     await new InitCommand(
@@ -134,23 +155,28 @@ describe('InitCommand', () => {
     expect((context.logger as unknown as { logs: unknown[][] }).logs[0]).toEqual([
       'Project "demo-app" initialized with files:',
       'package.json',
+      'src/main.ts',
       'apps/api/src/main.ts',
-      'project:demo-app',
     ]);
   });
 
-  it('rejects empty interactive monorepo app lists', async () => {
-    await expectRejectedMessage(
-      new TestInitCommand(
-        {
-          project: 'demo-app',
-          app: null,
-        },
-        createContext(),
-        [''],
-      ).run(),
-      'Create at least one app or omit --app for a standard project',
-    );
+  it('creates only the main app when interactive app input is empty', async () => {
+    const context = createContext();
+
+    await new TestInitCommand(
+      {
+        project: 'demo-app',
+        app: null,
+      },
+      context,
+      [''],
+    ).run();
+
+    expect((context.logger as unknown as { logs: unknown[][] }).logs[0]).toEqual([
+      'Project "demo-app" initialized with files:',
+      'package.json',
+      'src/main.ts',
+    ]);
   });
 
   it('rejects initialized projects and invalid names', async () => {
@@ -158,16 +184,16 @@ describe('InitCommand', () => {
       new InitCommand(
         { project: 'demo-app' },
         createContext({
-          mode: 'standard',
+          initialized: true,
           name: 'demo',
         }),
       ).run(),
-      'Project "demo" is already initialized',
+      'Project is already initialized',
     );
 
     await expectRejectedMessage(
       new InitCommand({ project: 'DemoApp' }, createContext()).run(),
-      'Project name must use kebab-case',
+      'Project name must be kebab-case',
     );
 
     await expectRejectedMessage(
@@ -175,7 +201,7 @@ describe('InitCommand', () => {
         { project: 'demo-app', app: new Set(['valid', 'BadName']) },
         createContext(),
       ).run(),
-      'App name #2 must use kebab-case',
+      'App name must be kebab-case',
     );
   });
 });

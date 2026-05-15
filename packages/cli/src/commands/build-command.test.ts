@@ -61,28 +61,30 @@ describe('BuildCommand', () => {
     }) as unknown as typeof Bun.build);
     const context = {
       project: {
-        settings: {
-          mode: 'monorepo',
+        state: {
           path: '/repo',
         },
+        requireInitialized: () => undefined,
         getApps: () => [
           {
             name: 'api',
-            entry: 'apps/api/src/main.ts',
+            main: false,
+            path: '/repo/apps/api',
           },
           {
             name: 'admin',
-            entry: 'apps/admin/src/main.ts',
+            main: false,
+            path: '/repo/apps/admin',
           },
         ],
       },
       fs: {
-        ensurePath: async (path: string) => {
-          ensured.push(path);
+        ensurePath: async (...paths: string[]) => {
+          ensured.push(paths.join('/'));
         },
-        getFile: (path: string, name: string) => ({
+        getFile: (...paths: string[]) => ({
           write: async (content: string) => {
-            written.push({ path: `${path}/${name}`, content });
+            written.push({ path: paths.join('/'), content });
             return content.length;
           },
         }),
@@ -114,15 +116,19 @@ describe('BuildCommand', () => {
         root: '/repo',
         target: 'bun',
         minify: true,
+        packages: 'bundle',
         sourcemap: 'inline',
-        entrypoints: ['apps/api/src/main.ts'],
+        entrypoints: ['/repo/apps/api/src/main.ts'],
+        tsconfig: '/repo/apps/api/tsconfig.json',
       },
       {
         root: '/repo',
         target: 'bun',
         minify: true,
+        packages: 'bundle',
         sourcemap: 'inline',
-        entrypoints: ['apps/admin/src/main.ts'],
+        entrypoints: ['/repo/apps/admin/src/main.ts'],
+        tsconfig: '/repo/apps/admin/tsconfig.json',
       },
     ]);
     expect(ensured).toEqual(['/repo/out/api', '/repo/out/admin']);
@@ -142,7 +148,7 @@ describe('BuildCommand', () => {
     ]);
   });
 
-  it('builds standard projects to the root output directory', async () => {
+  it('builds the main app to the root output directory', async () => {
     const ensured: string[] = [];
     const written: string[] = [];
     const build = spyOn(Bun, 'build').mockImplementation((async () => ({
@@ -155,24 +161,23 @@ describe('BuildCommand', () => {
     })) as unknown as typeof Bun.build);
     const context = {
       project: {
-        settings: {
-          mode: 'standard',
+        state: {
           path: '/repo',
         },
-        getApps: () => [
-          {
-            name: 'demo',
-            entry: 'src/main.ts',
-          },
-        ],
+        requireInitialized: () => undefined,
+        getApp: () => ({
+          name: 'demo',
+          main: true,
+          path: '/repo',
+        }),
       },
       fs: {
-        ensurePath: async (path: string) => {
-          ensured.push(path);
+        ensurePath: async (...paths: string[]) => {
+          ensured.push(paths.join('/'));
         },
-        getFile: (path: string, name: string) => ({
+        getFile: (...paths: string[]) => ({
           write: async () => {
-            written.push(`${path}/${name}`);
+            written.push(paths.join('/'));
             return 1;
           },
         }),
@@ -197,8 +202,11 @@ describe('BuildCommand', () => {
     await expectRejectedMessage(
       new BuildCommand({}, {
         project: {
-          settings: {
-            mode: 'unknown',
+          state: {
+            path: '/repo',
+          },
+          requireInitialized: () => {
+            throw new Exception('Project is not initialized');
           },
         },
       } as unknown as Context).run(),
@@ -208,10 +216,13 @@ describe('BuildCommand', () => {
     await expectRejectedMessage(
       new BuildCommand({}, {
         project: {
-          settings: {
-            mode: 'monorepo',
+          state: {
+            path: '/repo',
           },
-          getApps: () => [],
+          requireInitialized: () => undefined,
+          getApp: () => {
+            throw new Exception('No runnable apps were found');
+          },
         },
       } as unknown as Context).run(),
       'No runnable apps were found',

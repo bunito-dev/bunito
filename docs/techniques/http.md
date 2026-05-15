@@ -1,8 +1,8 @@
 # HTTP
 
 HTTP support lives in `@bunito/http`. Add it when an application needs routes,
-middleware, request injections, JSON handling, CORS, custom response headers, or
-HTTP exceptions. Controllers use the core `@Controller()` decorator from
+middleware, request injections, JSON handling, CORS, response handling, or HTTP
+exceptions. Controllers use the core `@Controller()` decorator from
 `@bunito/bunito`; route decorators and HTTP runtime pieces come from
 `@bunito/http`.
 
@@ -133,6 +133,26 @@ Important injections:
 - `Query`: URL query values
 - `Body`: parsed request body
 - `Method`: HTTP method
+- `Context`: the current HTTP context
+- `CustomInjection`: a custom resolver that can read the HTTP context
+
+Use `CustomInjection` when a handler needs data that is not covered by the bundled
+injections:
+
+```ts
+import { CustomInjection, Get } from '@bunito/http';
+
+const TraceId = CustomInjection((context) => context.request.headers.get('x-trace-id'));
+
+class UsersController {
+  @Get('/', {
+    injects: [TraceId],
+  })
+  list(traceId: string | null): Response {
+    return Response.json({ traceId });
+  }
+}
+```
 
 ## JSON Middleware
 
@@ -211,7 +231,7 @@ import {
 class ApiModule {}
 ```
 
-This keeps route groups, middleware, headers, and CORS policy local to a feature
+This keeps route groups, middleware, response handling, and CORS policy local to a feature
 module.
 
 ## CORS and Headers
@@ -249,9 +269,12 @@ class FooModule {}
 ```
 
 CORS options are merged from parent modules to feature modules and controllers, with
-more local options overriding earlier ones. 
+more local options overriding earlier ones.
 
 For browser clients, use an explicit `origin` when `credentials` is enabled.
+
+Middleware may also implement `beforeResponse()` to adjust the response after a route
+handler runs. This is the recommended place for feature-local response headers.
 
 ## Exceptions
 

@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'bun:test';
+import { InternalException } from '@bunito/common';
+import { decode, encode } from '@msgpack/msgpack';
 import { NatsBroker } from './nats-broker';
 import type { NatsBrokerContext } from './types';
 
 type SubscriptionCallback = (
   err: Error | null,
   msg: {
-    json: <T>() => T;
+    data: Uint8Array;
     reply?: string;
     subject: string;
   },
@@ -14,9 +16,9 @@ type SubscriptionCallback = (
 class TestConnection {
   closed = false;
   published: unknown[] = [];
-  response = {
+  response = encode({
     ok: true,
-  };
+  });
   subscriptions = new Map<string, SubscriptionCallback>();
 
   close(): void {
@@ -25,9 +27,9 @@ class TestConnection {
 
   async request(
     topic: string,
-    data: string,
+    data: Uint8Array,
   ): Promise<{
-    json: () => unknown;
+    data: Uint8Array;
   }> {
     this.published.push({
       topic,
@@ -36,11 +38,11 @@ class TestConnection {
     });
 
     return {
-      json: () => this.response,
+      data: this.response,
     };
   }
 
-  publish(topic: string, data: string): void {
+  publish(topic: string, data: Uint8Array): void {
     this.published.push({
       topic,
       data,
@@ -68,21 +70,31 @@ function setConnection(broker: NatsBroker, connection: TestConnection): void {
 }
 
 describe('NatsBroker', () => {
-  it('returns safe fallback results before a connection is opened', async () => {
+  it('rejects adapter operations before a connection is opened', async () => {
     const broker = new NatsBroker({
       servers: ['nats://localhost:4222'],
       queue: 'default',
     });
 
-    const request = await broker.sendRequest('orders.created', {});
-    const event = await broker.sendEvent('orders.created', {});
+    let requestError: unknown;
+    try {
+      await broker.sendRequest('orders.created', encode({}));
+    } catch (err) {
+      requestError = err;
+    }
 
-    broker.subscribe('orders.*', () => {
-      throw new Error('subscribe should be a no-op without a connection');
-    });
+    let eventError: unknown;
+    try {
+      await broker.sendEvent('orders.created', encode({}));
+    } catch (err) {
+      eventError = err;
+    }
 
-    expect(request).toBeUndefined();
-    expect(event).toBeFalse();
+    expect(() => broker.subscribe('orders.*', () => {})).toThrow(
+      'Nats connection is not available',
+    );
+    expect(requestError).toBeInstanceOf(InternalException);
+    expect(eventError).toBeInstanceOf(InternalException);
   });
 
   it('uses an opened connection for requests, events, responses, and subscriptions', async () => {
@@ -96,19 +108,26 @@ describe('NatsBroker', () => {
 
     setConnection(broker, connection);
 
-    const request = await broker.sendRequest('orders.created', {
-      id: 1,
-    });
-    const event = await broker.sendEvent('orders.created', {
-      id: 2,
-    });
+    const request = await broker.sendRequest(
+      'orders.created',
+      encode({
+        id: 1,
+      }),
+    );
+    const event = await broker.sendEvent(
+      'orders.created',
+      encode({
+        id: 2,
+      }),
+    );
     const response = await broker.sendResponse(
       {
-        respond: (data: string) => data === '{"ok":true}',
+        respond: (payload: Uint8Array) =>
+          JSON.stringify(decode(payload)) === JSON.stringify({ ok: true }),
       } as unknown as NatsBrokerContext,
-      {
+      encode({
         ok: true,
-      },
+      }),
     );
 
     broker.subscribe('orders.*', (err, payload) => {
@@ -121,32 +140,29 @@ describe('NatsBroker', () => {
     });
 
     connection.subscriptions.get('orders.*')?.(null, {
-      json: <T>() =>
-        ({
-          id: 3,
-        }) as T,
+      data: encode({
+        id: 3,
+      }),
       reply: 'reply',
       subject: 'orders.created',
     });
     connection.subscriptions.get('orders.*')?.(null, {
-      json: <T>() =>
-        ({
-          id: 4,
-        }) as T,
+      data: encode({
+        id: 4,
+      }),
       subject: 'orders.updated',
     });
     connection.subscriptions.get('orders.*')?.(new Error('failed'), {
-      json: <T>() =>
-        ({
-          id: 5,
-        }) as T,
+      data: encode({
+        id: 5,
+      }),
       subject: 'orders.failed',
     });
 
     await broker.connect();
     await broker.disconnect();
 
-    expect(request).toEqual({
+    expect(decode(request)).toEqual({
       ok: true,
     });
     expect(event).toBeTrue();
@@ -154,12 +170,16 @@ describe('NatsBroker', () => {
     expect(connection.published).toEqual([
       {
         topic: 'orders.created',
-        data: '{"id":1}',
+        data: encode({
+          id: 1,
+        }),
         kind: 'request',
       },
       {
         topic: 'orders.created',
-        data: '{"id":2}',
+        data: encode({
+          id: 2,
+        }),
         kind: 'event',
       },
     ]);
@@ -168,17 +188,17 @@ describe('NatsBroker', () => {
         context: expect.any(Object),
         kind: 'request',
         topic: 'orders.created',
-        data: {
+        payload: encode({
           id: 3,
-        },
+        }),
       },
       {
         context: expect.any(Object),
         kind: 'event',
         topic: 'orders.updated',
-        data: {
+        payload: encode({
           id: 4,
-        },
+        }),
       },
     ]);
     expect(errors).toHaveLength(1);

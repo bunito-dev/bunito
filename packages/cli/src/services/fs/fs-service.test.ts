@@ -68,6 +68,19 @@ describe('FSService', () => {
     expect(await service.getFile(dir, 'nested').tryStat()).toBeUndefined();
   });
 
+  it('copies content recursively', async () => {
+    const source = await mkdtemp(join(tmpdir(), 'bunito-fs-source-'));
+    const target = await mkdtemp(join(tmpdir(), 'bunito-fs-target-'));
+    const service = new FSService(createContext());
+
+    await mkdir(join(source, 'nested'), { recursive: true });
+    await Bun.write(join(source, 'nested/file.txt'), 'copied');
+
+    await service.copyContent(source, join(target, 'copy'));
+
+    expect(await Bun.file(join(target, 'copy/nested/file.txt')).text()).toBe('copied');
+  });
+
   it('ignores missing, invalid, or directory package files', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'bunito-fs-'));
     const service = new FSService(createContext());

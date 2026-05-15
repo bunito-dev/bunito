@@ -5,8 +5,8 @@
 
 HTTP module for bunito applications.
 
-It provides route decorators, request injections, middleware, CORS, custom response
-headers, JSON handling, and HTTP exceptions for bunito controllers.
+It provides route decorators, request injections, middleware, CORS, response
+handling, JSON handling, and HTTP exceptions for bunito controllers.
 
 ## Installation 📦
 

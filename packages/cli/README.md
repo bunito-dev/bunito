@@ -5,9 +5,9 @@
 
 Command-line tools for creating, running, and building bunito projects.
 
-It provides the `bunito` binary. The CLI discovers standard projects from
-`src/main.ts` and monorepo apps from `apps/*/src/main.ts`; no project config file is
-required.
+It provides the `bunito` binary. The CLI discovers the main app from `src/main.ts`,
+workspace apps from `apps/*/src/main.ts`, and libraries from `libs/*/index.ts`; no
+project config file is required.
 
 ## Installation 📦
 
@@ -30,12 +30,16 @@ bunito --help
 bunito init my-app
 bunito init my-workspace --app api --app worker
 bunito start
+bunito start --all
 bunito build
+bunito build --all
 bunito generate app worker
 bunito generate lib shared
 ```
 
-The CLI loads `.env` for standard apps and `apps/<name>/.env` for monorepo apps.
+`start` and `build` target the main app by default. Pass app names or `--all` to run
+workspace apps. The CLI loads `.env` for the main app and `apps/<name>/.env` for
+workspace apps.
 
 ## License
 

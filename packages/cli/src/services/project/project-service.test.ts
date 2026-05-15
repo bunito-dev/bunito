@@ -37,7 +37,7 @@ async function writePackage(dir: string): Promise<void> {
 }
 
 describe('ProjectService', () => {
-  it('detects standard projects with optional env files', async () => {
+  it('detects projects with a main app', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
     await writePackage(dir);
     await mkdir(join(dir, 'src'), { recursive: true });
@@ -48,41 +48,42 @@ describe('ProjectService', () => {
     await service.loadState();
 
     expect(service.state).toEqual({
-      mode: 'standard',
+      initialized: true,
+      app: true,
       name: 'demo',
       path: dir,
-      entry: 'src/main.ts',
-      envs: '.env',
     });
-    expect(service.getApps(undefined)).toEqual([
-      {
-        name: 'demo',
-        path: dir,
-        entry: 'src/main.ts',
-        envs: '.env',
-      },
-    ]);
+    expect(service.getApp()).toEqual({
+      main: true,
+      name: 'demo',
+      path: dir,
+    });
+    expect(() => service.getApps(undefined)).toThrow(
+      new Exception('No runnable apps were found'),
+    );
   });
 
-  it('detects monorepo apps and libraries', async () => {
+  it('detects workspace apps and libraries', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
     await writePackage(dir);
     await mkdir(join(dir, 'apps/api/src'), { recursive: true });
     await mkdir(join(dir, 'apps/empty'), { recursive: true });
     await mkdir(join(dir, 'libs/shared'), { recursive: true });
     await Bun.write(join(dir, 'apps/api/src/main.ts'), 'console.log("api");');
-    await Bun.write(join(dir, 'apps/api/.env'), 'PORT=3000');
+    await Bun.write(join(dir, 'libs/shared/index.ts'), 'export {};');
 
     const service = new ProjectService(await createProjectContext(join(dir, 'apps/api')));
     await service.loadState();
 
-    expect(service.state.mode).toBe('monorepo');
+    expect(service.state.name).toBe('demo');
+    expect(service.state.path).toBe(dir);
+    expect(service.state.apps).toEqual(new Set(['api']));
+    expect(service.state.libs).toEqual(new Set(['shared']));
     expect(service.getApps(undefined)).toEqual([
       {
+        main: false,
         name: 'api',
-        path: 'apps/api',
-        entry: 'apps/api/src/main.ts',
-        envs: 'apps/api/.env',
+        path: join(dir, 'apps/api'),
       },
     ]);
     expect(service.getApps(new Set(['api']))).toHaveLength(1);
@@ -95,15 +96,16 @@ describe('ProjectService', () => {
     await service.loadState();
 
     expect(service.state).toMatchObject({
-      mode: 'unknown',
+      initialized: undefined,
+      name: expect.any(String),
       path: dir,
     });
-    expect(() => service.getApps(undefined)).toThrow(
+    expect(() => service.requireInitialized()).toThrow(
       new Exception('Project is not initialized'),
     );
   });
 
-  it('rejects named apps in standard projects and missing monorepo apps', async () => {
+  it('rejects workspace app selection when apps are missing', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
     await writePackage(dir);
     await mkdir(join(dir, 'src'), { recursive: true });
@@ -113,7 +115,7 @@ describe('ProjectService', () => {
     await standard.loadState();
 
     expect(() => standard.getApps(new Set(['api']))).toThrow(
-      new Exception('This command is available only in monorepo projects'),
+      new Exception('No runnable apps were found'),
     );
 
     const monorepoDir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
@@ -129,20 +131,47 @@ describe('ProjectService', () => {
     );
   });
 
+  it('adds libraries and rejects invalid or duplicate library names', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
+    const service = new ProjectService(await createProjectContext(dir));
+
+    await service.loadState();
+
+    service.addLib('shared-auth');
+
+    expect(service.state.libs).toEqual(new Set(['shared-auth']));
+    expect(service.hasLib('shared-auth')).toBeTrue();
+    expect(() => service.addLib('BadName')).toThrow(
+      new Exception('Lib name must be kebab-case'),
+    );
+    expect(() => service.addLib('shared-auth')).toThrow(
+      new Exception('Lib "shared-auth" already exists'),
+    );
+  });
+
   it('creates projects and protects existing template paths', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
     const service = new ProjectService(await createProjectContext(dir));
 
     await service.loadState();
 
-    const files = await service.initialize('demo', ['api']);
+    service.initialize('demo');
+    service.addApp('api');
+
+    const files = await service.renderTemplate(() => ({
+      'package.json': '{}',
+      'apps/api/src/app-module.ts': 'export {};',
+      'apps/api/src/index.ts': 'export {};',
+    }))();
 
     expect(files).toContain('package.json');
     expect(await Bun.file(join(dir, 'apps/api/src/app-module.ts')).exists()).toBeTrue();
     expect(await Bun.file(join(dir, 'apps/api/src/index.ts')).exists()).toBeTrue();
 
     try {
-      await service.initialize('demo', ['api']);
+      await service.renderTemplate(() => ({
+        'apps/api/src/app-module.ts': 'export {};',
+      }))();
       throw new Error('Expected duplicate template paths to fail');
     } catch (error) {
       expect(error).toBeInstanceOf(Exception);

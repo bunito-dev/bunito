@@ -49,15 +49,15 @@ describe('StartCommand', () => {
     let exitCode: number | string | null | undefined;
     const context = {
       project: {
-        settings: {
-          mode: 'monorepo',
+        state: {
           path: '/repo',
         },
+        requireInitialized: () => undefined,
         getApps: (names?: Set<string>) => [
           {
             name: names ? 'api' : 'all',
-            entry: 'apps/api/src/main.ts',
-            envs: 'apps/api/.env',
+            main: false,
+            path: '/repo/apps/api',
           },
         ],
       },
@@ -94,10 +94,10 @@ describe('StartCommand', () => {
         args: [
           'bun',
           '--cwd=/repo',
-          '--env-file=apps/api/.env',
+          '--env-file=/repo/apps/api/.env',
           'run',
           '--watch',
-          'apps/api/src/main.ts',
+          '/repo/apps/api/src/main.ts',
         ],
         envs: {
           NODE_ENV: 'production',
@@ -110,20 +110,19 @@ describe('StartCommand', () => {
     expect(exitCode).toBe(7);
   });
 
-  it('starts apps without optional flags or env files', async () => {
+  it('starts the main app without optional flags', async () => {
     const processes: unknown[] = [];
     const context = {
       project: {
-        settings: {
-          mode: 'standard',
+        state: {
           path: '/repo',
         },
-        getApps: () => [
-          {
-            name: 'demo',
-            entry: 'src/main.ts',
-          },
-        ],
+        requireInitialized: () => undefined,
+        getApp: () => ({
+          name: 'demo',
+          main: true,
+          path: '/repo',
+        }),
       },
       spawn: {
         addProcess: (options: unknown) => processes.push(options),
@@ -143,7 +142,7 @@ describe('StartCommand', () => {
     expect(processes).toEqual([
       {
         name: 'demo',
-        args: ['bun', '--cwd=/repo', 'run', 'src/main.ts'],
+        args: ['bun', '--cwd=/repo', '--env-file=/repo/.env', 'run', '/repo/src/main.ts'],
         envs: {},
       },
     ]);
@@ -152,8 +151,11 @@ describe('StartCommand', () => {
   it('rejects unknown projects', async () => {
     const context = {
       project: {
-        settings: {
-          mode: 'unknown',
+        state: {
+          path: '/repo',
+        },
+        requireInitialized: () => {
+          throw new Exception('Project is not initialized');
         },
       },
     } as unknown as Context;

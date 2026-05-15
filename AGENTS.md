@@ -33,7 +33,7 @@ modern decorators, VitePress for documentation, and Biome for linting and format
 
 - Root config:
   - `package.json`
-  - `biome.json`
+  - `biome.json` extends the shared config exported from `@bunito/bunito`
   - `bunfig.toml`
   - `tsconfig.json`
 - Framework packages live in `packages/*`.
@@ -73,7 +73,8 @@ Current examples and run commands are listed in `examples/README.md`.
     `@bunito/logger`, and `@bunito/bun`
   - Uses `zod` as an optional dependency for route input validation
   - Owns `HTTPModule`, controller and route decorators, parameter/body/query/method
-    injections, middleware, JSON middleware/module, and HTTP exceptions
+    injections, custom HTTP injections, middleware, JSON middleware/module, CORS,
+    and HTTP exceptions
 - `@bunito/broker`
   - Depends on `@bunito/app`, `@bunito/common`, `@bunito/config`,
     `@bunito/container`, and `@bunito/logger`
@@ -276,8 +277,8 @@ Notes:
 
 - if you change routing behavior, inspect both decorator declaration and runtime
   consumption in `HTTPRouter`
-- route injections such as `Params`, `Query`, `Body`, and `Method` may validate
-  through Zod when schemas are supplied
+- route injections such as `Params`, `Query`, `Body`, `Method`, `Context`, and
+  `CustomInjection` may validate or resolve values from the current HTTP context
 - validate routing-related changes against the relevant HTTP example documented in
   `examples/http/README.md`
 
@@ -287,7 +288,7 @@ Important areas:
 
 - `packages/broker/src/broker-service.ts`
 - `packages/broker/src/decorators/*`
-- `packages/broker/src/injection/*`
+- `packages/broker/src/injections/*`
 - `packages/broker/src/bundled/local-broker/*`
 - `packages/broker/src/bundled/nats-broker/*`
 
@@ -295,6 +296,9 @@ Notes:
 
 - broker handlers are discovered from controller metadata
 - request/reply behavior depends on adapter payload shape and context forwarding
+- adapters exchange encoded `Uint8Array` payloads; public `BrokerService` methods
+  encode/decode values and handlers can inject both decoded `Data()` and raw
+  `Payload()`
 - local broker supports in-memory and filesystem modes; keep both covered
 - validate broker-facing changes against `examples/microservices/README.md`
 
@@ -338,8 +342,10 @@ Important areas:
 Notes:
 
 - the `bunito` binary is used by the `examples` workspace scripts
-- the CLI discovers standard apps from `src/main.ts` and monorepo apps from
-  `apps/*/src/main.ts`
+- the CLI discovers the main app from `src/main.ts`, workspace apps from
+  `apps/*/src/main.ts`, and libraries from `libs/*/index.ts`
+- `start` and `build` target the main app by default; named apps or `--all` target
+  workspace apps
 - when CLI behavior changes, validate at least one
   `cd examples/http && bun run start <app>` command
 

@@ -136,7 +136,7 @@ The framework is split into packages so applications can stay small:
   - `@bunito/common`: shared exceptions, predicates, types, and utilities
 - `@bunito/broker`: message handlers, local/NATS adapters, and request/reply APIs
 - `@bunito/bun`: Bun-specific integrations
-- `@bunito/http`: routes, middleware, request injections, CORS, headers, and HTTP exceptions
+- `@bunito/http`: routes, middleware, request injections, CORS, response handling, and HTTP exceptions
 
 ## Examples
 

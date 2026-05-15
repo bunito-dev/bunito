@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import {
-  CLASS_METADATA_KEYS,
-  Controller,
-  Module,
-  Provider,
-  UsePrefix,
-} from '../decorators';
+import { Controller, getClassMetadata, Module, Provider, UsePrefix } from '../decorators';
 import { Id } from '../utils';
 import { ContainerCompiler } from './container-compiler';
 
@@ -56,15 +50,12 @@ describe('ContainerCompiler', () => {
     })
     class B {}
 
-    A[Symbol.metadata] ??= {};
-    const metadata = A[Symbol.metadata];
+    const metadata = getClassMetadata(A, 'module');
     if (!metadata) {
       throw new Error('Expected metadata object');
     }
     // This avoids using a forward class reference before B is initialized.
-    metadata[CLASS_METADATA_KEYS.module] = {
-      imports: [B],
-    };
+    metadata.imports = [B];
 
     expect(() => new ContainerCompiler(A)).toThrow('Circular module dependency');
   });

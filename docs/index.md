@@ -13,8 +13,8 @@ The framework is intentionally split into focused packages. Start with
 `@bunito/http` or `@bunito/broker` when the application needs them.
 
 The fastest way to learn the API is to run one of the repository examples, then
-read the matching tutorial. The snippets below show the same standard project
-shape the CLI expects.
+read the matching tutorial. The snippets below show the same main-app project shape
+the CLI expects.
 
 ## Run the CLI
 
@@ -107,7 +107,7 @@ Add scripts to `package.json`:
 }
 ```
 
-The CLI discovers `src/main.ts` automatically in standard projects.
+The CLI discovers the main app from `src/main.ts` automatically.
 If you add a `.env` file next to `package.json`, the CLI loads it before starting
 the app.
 
