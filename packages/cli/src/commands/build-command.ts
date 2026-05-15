@@ -89,7 +89,7 @@ CLIService.registerCommand(BuildCommand, {
         coerce: notEmptySet<string>,
       })
       .option('all', {
-        describe: 'Start all apps except main one',
+        describe: 'Build all apps except main one',
         default: false,
         type: 'boolean',
         alias: 'a',
