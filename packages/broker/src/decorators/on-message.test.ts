@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { getControllerProps } from '@bunito/container';
 import { BROKER_CONTROLLER_KEY } from '../constants';
-import { Data } from '../injection';
+import { Data } from '../injections';
 import { OnMessage } from './on-message';
 
 describe('OnMessage', () => {

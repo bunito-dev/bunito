@@ -1,15 +1,15 @@
 import type { ModuleId, ProviderId, WithInjections } from '@bunito/container';
 
-export type MessagePayload<TContext = unknown> = {
+export type BrokerMessage<TContext = unknown> = {
   kind: 'request' | 'event';
   topic: string;
-  data: unknown;
+  payload: Uint8Array;
   context: TContext;
 };
 
-export type MessageHandler<TContext = unknown> = (
+export type BrokerMessageHandler<TContext = unknown> = (
   err: unknown,
-  payload?: MessagePayload<TContext>,
+  message?: BrokerMessage<TContext>,
 ) => void;
 
 export type ControllerDefinition = {

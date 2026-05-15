@@ -1,5 +1,3 @@
-import './polyfill';
-
 import type { Fn } from '@bunito/common';
 import { isFn, isObject } from '@bunito/common';
 import type { ControllerOptions } from '../../compiler';
@@ -36,5 +34,7 @@ export function getClassMetadata(target: unknown, kind: ClassMetadataKind): unkn
     targetFn = target.constructor as Fn;
   }
 
-  return targetFn?.[Symbol.metadata]?.[CLASS_METADATA_KEYS[kind]];
+  return targetFn?.[Symbol.metadata ?? Symbol.for('Symbol.metadata')]?.[
+    CLASS_METADATA_KEYS[kind]
+  ];
 }

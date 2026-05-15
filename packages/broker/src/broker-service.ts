@@ -5,15 +5,16 @@ import type { ResolveConfig } from '@bunito/config';
 import type { MatchedControllers } from '@bunito/container';
 import { Container, Provider } from '@bunito/container';
 import { Logger } from '@bunito/logger';
+import { decode, encode } from '@msgpack/msgpack';
 import { BrokerAdapter } from './broker-adapter';
 import { BrokerConfig } from './broker-config';
 import { BROKER_CONTROLLER_KEY } from './constants';
-import { Context, Data, Subject, Topic } from './injection';
+import { Context, Data, Payload, Subject, Topic } from './injections';
 import type {
+  BrokerMessage,
   ControllerDefinition,
   ControllerMethodOptions,
   HandlerDefinition,
-  MessagePayload,
 } from './types';
 
 @Provider({
@@ -71,14 +72,34 @@ export class BrokerService {
   }
 
   async sendEvent(topic: string, data: unknown): Promise<boolean> {
-    return this.adapter.sendEvent(topic, data);
+    return this.adapter.sendEvent(topic, this.encodePayload(data));
   }
 
-  async sendRequest<TOutput = unknown>(topic: string, data: unknown): Promise<TOutput> {
-    return (await this.adapter.sendRequest(topic, data)) as TOutput;
+  async sendRequest(
+    topic: string,
+    data: unknown,
+    decode: false,
+  ): Promise<Uint8Array | undefined>;
+  async sendRequest<TOutput = unknown>(
+    topic: string,
+    data: unknown,
+    decode?: true,
+  ): Promise<TOutput | undefined>;
+  async sendRequest(topic: string, data: unknown, decode = true): Promise<unknown> {
+    const response = await this.adapter.sendRequest(topic, this.encodePayload(data));
+
+    if (!response) {
+      return;
+    }
+
+    if (!decode) {
+      return response;
+    }
+
+    return this.decodePayload(response);
   }
 
-  private async processMessage(pattern: string, payload: MessagePayload): Promise<void> {
+  private async processMessage(pattern: string, message: BrokerMessage): Promise<void> {
     const handlers = this.handlers.get(pattern);
 
     if (!handlers) {
@@ -109,17 +130,21 @@ export class BrokerService {
             let arg: unknown;
 
             switch (token) {
-              case Data:
-                arg = payload.data;
-                break;
-
               case Context:
-                arg = payload.context;
+                arg = message.context;
                 break;
 
               case Topic:
               case Subject:
-                arg = payload.topic;
+                arg = message.topic;
+                break;
+
+              case Payload:
+                arg = message.payload;
+                break;
+
+              case Data:
+                arg = this.decodePayload(message.payload);
                 break;
             }
 
@@ -129,10 +154,10 @@ export class BrokerService {
 
         const data = await controller[propKey](...args);
 
-        const { kind, context } = payload;
+        const { kind, context } = message;
 
         if (kind === 'request') {
-          await this.adapter.sendResponse(context, data);
+          await this.adapter.sendResponse(context, this.encodePayload(data));
         }
       }
     });
@@ -211,16 +236,16 @@ export class BrokerService {
                 controller,
               });
 
-            this.adapter.subscribe(prefixedPattern, (err, payload) => {
+            this.adapter.subscribe(prefixedPattern, (err, message) => {
               if (err) {
                 this.logger?.error(err);
               }
 
-              if (!payload) {
+              if (!message) {
                 return;
               }
 
-              this.processMessage(prefixedPattern, payload).catch((err) => {
+              this.processMessage(prefixedPattern, message).catch((err) => {
                 this.logger?.error(err);
               });
             });
@@ -234,5 +259,13 @@ export class BrokerService {
         this.buildHandlers(child, rootPrefix);
       }
     }
+  }
+
+  private decodePayload(payload: Uint8Array): unknown {
+    return decode(payload);
+  }
+
+  private encodePayload(data: unknown): Uint8Array {
+    return encode(data ?? null);
   }
 }

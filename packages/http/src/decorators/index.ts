@@ -7,6 +7,5 @@ export * from './post';
 export * from './put';
 export * from './types';
 export * from './use-cors';
-export * from './use-headers';
 export * from './use-middleware';
 export * from './utils';

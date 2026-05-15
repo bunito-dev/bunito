@@ -21,7 +21,7 @@ describe('LocalBroker', () => {
       }
 
       broker.sendResponse(payload.context, {
-        received: payload.data,
+        received: payload.payload,
       });
     });
 
@@ -170,7 +170,7 @@ describe('LocalBroker', () => {
 
     try {
       reader.subscribe('orders.*', (_err, payload) => {
-        received.push(payload?.data);
+        received.push(payload?.payload);
       });
 
       processFileEvent('change', null);

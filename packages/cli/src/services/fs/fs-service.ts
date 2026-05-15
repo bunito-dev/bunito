@@ -1,4 +1,4 @@
-import { mkdir, readdir } from 'node:fs/promises';
+import { cp, mkdir, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Context } from '../../context';
 import { PKG_INFO_FILE, PKG_INFO_SCHEMA } from './constants';
@@ -32,6 +32,12 @@ export class FSService {
     });
 
     return file;
+  }
+
+  async copyContent(srcPath: string, destPath: string): Promise<void> {
+    await cp(srcPath, destPath, {
+      recursive: true,
+    });
   }
 
   async readDir(path: string, ...paths: string[]): Promise<FileExt[] | undefined> {

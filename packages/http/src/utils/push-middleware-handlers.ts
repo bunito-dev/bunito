@@ -13,6 +13,13 @@ export function pushMiddlewareHandlers(
     });
   }
 
+  if (instance.beforeResponse) {
+    handlers.beforeResponse.push({
+      handler: instance.beforeResponse,
+      options,
+    });
+  }
+
   if (instance.serializeResponseData) {
     handlers.serializeResponseData.push({
       handler: instance.serializeResponseData,

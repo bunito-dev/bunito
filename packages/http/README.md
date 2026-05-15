@@ -23,7 +23,6 @@ import {
   HTTPModule,
   JSONSerializer,
   UseCORS,
-  UseHeaders,
   UseMiddleware,
 } from '@bunito/http';
 
@@ -32,7 +31,6 @@ import {
 @UseCORS()
 class HelloController {
   @Get()
-  @UseHeaders('Cache-Control', 'no-store')
   hello(): Record<string, string> {
     return {
       message: 'Hello from HTTP',

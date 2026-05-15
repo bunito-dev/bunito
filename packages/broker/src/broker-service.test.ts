@@ -2,8 +2,8 @@ import { describe, expect, it } from 'bun:test';
 import { Id } from '@bunito/container';
 import type { BrokerAdapter } from './broker-adapter';
 import { BrokerService } from './broker-service';
-import { Context, Data, Subject, Topic } from './injection';
-import type { MessageHandler, MessagePayload } from './types';
+import { Context, Data, Subject, Topic } from './injections';
+import type { BrokerMessage, BrokerMessageHandler } from './types';
 
 class TestController {
   calls: unknown[][] = [];
@@ -24,7 +24,7 @@ class TestAdapter implements BrokerAdapter {
 
   connected = false;
   disconnected = false;
-  subscriptions = new Map<string, MessageHandler>();
+  subscriptions = new Map<string, BrokerMessageHandler>();
   responses: unknown[] = [];
 
   async connect(): Promise<void> {
@@ -49,7 +49,7 @@ class TestAdapter implements BrokerAdapter {
     return true;
   }
 
-  subscribe(pattern: string, handler: MessageHandler): void {
+  subscribe(pattern: string, handler: BrokerMessageHandler): void {
     this.subscriptions.set(pattern, handler);
   }
 }
@@ -140,10 +140,10 @@ describe('BrokerService', () => {
     expect(adapter.connected).toBeTrue();
     expect(adapter.subscriptions.has('root.orders.created')).toBeTrue();
 
-    const payload: MessagePayload = {
+    const payload: BrokerMessage = {
       kind: 'request',
       topic: 'root.orders.created',
-      data: {
+      payload: {
         id: 1,
       },
       context: {
@@ -308,13 +308,13 @@ describe('BrokerService', () => {
     adapter.subscriptions.get('orders.missing')?.(null, {
       kind: 'request',
       topic: 'orders.missing',
-      data: {},
+      payload: {},
       context: {},
     });
     adapter.subscriptions.get('orders.event')?.(null, {
       kind: 'event',
       topic: 'orders.event',
-      data: {
+      payload: {
         id: 1,
       },
       context: {},
@@ -324,13 +324,13 @@ describe('BrokerService', () => {
     adapter.subscriptions.get('orders.failed')?.(null, {
       kind: 'request',
       topic: 'orders.failed',
-      data: {},
+      payload: {},
       context: {},
     });
     adapter.subscriptions.get('child.audit.logged')?.(null, {
       kind: 'event',
       topic: 'child.audit.logged',
-      data: {
+      payload: {
         id: 2,
       },
       context: {},

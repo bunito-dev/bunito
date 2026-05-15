@@ -6,6 +6,10 @@ import type { MiddlewareContext } from './types';
 
 export interface Middleware<TOptions extends RawObject = EmptyObject> {
   beforeRequest?(context: MiddlewareContext<TOptions>): MaybePromise;
+  beforeResponse?(
+    response: Response,
+    context: MiddlewareContext<TOptions>,
+  ): MaybePromise<Response | undefined>;
   serializeResponseData?(
     responseData: unknown,
     context: MiddlewareContext<TOptions>,

@@ -8,8 +8,8 @@ and loads each app's `.env` file automatically.
 ```bash
 bun run start simple-controller
 bun run start cors-support
-bun run start
-bun run build
+bun run start --all
+bun run build --all
 ```
 
 Run those commands from `examples/http`.

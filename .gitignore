@@ -20,8 +20,3 @@ dist
 .eslintcache
 .cache
 *.tsbuildinfo
-
-# other
-draft
-bak
-demo

@@ -8,4 +8,4 @@ export {
   NatsBrokerModule,
 } from './bundled';
 export { OnMessage } from './decorators';
-export { Context, Data, Subject, Topic } from './injection';
+export { Context, Data, Subject, Topic } from './injections';

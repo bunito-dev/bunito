@@ -12,7 +12,6 @@ export class Exception extends Error {
     }
 
     super(message);
-
     this.description = description;
     this.cause = cause;
   }

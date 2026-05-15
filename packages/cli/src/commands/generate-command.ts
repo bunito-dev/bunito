@@ -1,5 +1,4 @@
 import { input } from '@inquirer/prompts';
-import { Exception, isKebabCase } from '../common';
 import type { Context } from '../context';
 import { CLIService, PROJECT_APPS_DIR } from '../services';
 import { AppTemplate, LibTemplate } from '../templates';
@@ -20,24 +19,13 @@ export class GenerateCommand extends AbstractCommand<GenerateCommandOptions> {
 
   public async run(): Promise<void> {
     const { project, logger } = this.context;
-    const { settings } = project;
 
-    switch (settings.mode) {
-      case 'unknown':
-        throw new Exception('Project is not initialized');
-
-      case 'standard':
-        throw new Exception('This command is available only in monorepo projects');
-
-      default:
-    }
+    project.requireInitialized();
 
     let { name } = this.options;
 
     switch (this.options.element) {
       case 'app': {
-        const { apps } = settings;
-
         if (!name) {
           name = await this.readInput({
             message: 'App name',
@@ -45,13 +33,7 @@ export class GenerateCommand extends AbstractCommand<GenerateCommandOptions> {
           });
         }
 
-        if (!isKebabCase(name)) {
-          throw new Exception('App name must use kebab-case');
-        }
-
-        if (apps.has(name)) {
-          throw new Exception(`App "${name}" already exists`);
-        }
+        project.addApp(name);
 
         const files = await project.renderTemplate(AppTemplate)(PROJECT_APPS_DIR, name);
 
@@ -68,9 +50,7 @@ export class GenerateCommand extends AbstractCommand<GenerateCommandOptions> {
           });
         }
 
-        if (!isKebabCase(name)) {
-          throw new Exception('Library name must use kebab-case');
-        }
+        project.addLib(name);
 
         const files = await project.renderTemplate(LibTemplate, {
           name,

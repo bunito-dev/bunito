@@ -1,56 +1,12 @@
-import { join } from 'node:path';
-import type { RawObject } from '@bunito/common';
-import { PROJECT_APPS_DIR } from '../services';
-import { AppTemplate } from './app-template';
 import type { TemplateResult } from './types';
 
 export function ProjectTemplate(options: {
   name: string;
   pkgVersion: string;
   bunVersion?: string;
-  apps: string[];
 }): TemplateResult {
-  const { name, pkgVersion, bunVersion, apps } = options;
-
-  let src: TemplateResult;
-
-  let pkgFiles: string[];
-
-  let tsCompilerOptions: RawObject | undefined;
-
-  if (!apps.length) {
-    src = AppTemplate();
-
-    pkgFiles = ['src', '!src/**/*.test.ts'];
-  } else {
-    src = {};
-
-    pkgFiles = ['apps', 'libs', '!apps/**/*.test.ts', '!libs/**/*.test.ts'];
-
-    for (const app of apps) {
-      const appSrc = AppTemplate();
-
-      src = {
-        ...src,
-        ...Object.fromEntries(
-          Object.entries(appSrc).map(([key, value]) => [
-            join(PROJECT_APPS_DIR, app, key),
-            value,
-          ]),
-        ),
-      };
-    }
-
-    tsCompilerOptions = {
-      paths: {
-        '@apps/*': ['./apps/*/src/index.ts'],
-        '@libs/*': ['./libs/*/index.ts'],
-      },
-    };
-  }
-
+  const { name, pkgVersion, bunVersion } = options;
   return {
-    ...src,
     '.gitignore': `
       # system / ide
       .idea
@@ -79,7 +35,6 @@ export function ProjectTemplate(options: {
       name,
       private: true,
       type: 'module',
-      files: [...pkgFiles, 'README.md'],
       scripts: {
         cli: 'bunito',
         build: 'bunito build',
@@ -109,7 +64,12 @@ export function ProjectTemplate(options: {
 
     'tsconfig.json': {
       extends: '@bunito/bunito/tsconfig.json',
-      compilerOptions: tsCompilerOptions,
+      compilerOptions: {
+        paths: {
+          '@apps/*': ['./apps/*/src/index.ts'],
+          '@libs/*': ['./libs/*/index.ts'],
+        },
+      },
     },
   };
 }

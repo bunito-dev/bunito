@@ -2,9 +2,9 @@
 
 A workspace with three apps and one shared library.
 
+- `main` composes the `first` and `second` app modules into one app.
 - `first` imports `ExampleModule` from `libs/example`.
 - `second` imports the same shared module.
-- `mono` composes the `first` and `second` app modules into one app.
 
 ## Run 🚀
 
@@ -16,13 +16,13 @@ bun run start first
 Run every app:
 
 ```bash
-bun run start
+bun run start --all
 ```
 
-Run the composed app:
+Run the main app:
 
 ```bash
-bun run start mono
+bun run start
 ```
 
 Build every app:
@@ -36,4 +36,4 @@ bun run build
 - `libs/example`: shared module and provider exported for apps.
 - `apps/first/src/first-module.ts`: imports the shared library.
 - `apps/second/src/second-module.ts`: imports the shared library independently.
-- `apps/mono/src/app-module.ts`: imports app modules from `first` and `second`.
+- `src/app-module.ts`: imports app modules from `first` and `second`.

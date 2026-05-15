@@ -1,11 +1,13 @@
-import type { MessageHandler } from '../../types';
+import type { BrokerMessageHandler } from '../../types';
 
 export type LocalBrokerContext = {
   id: string;
   requestId?: string;
 };
 
-export type LocalBrokerHandler = {
+export type LocalBrokerTopicHandler = {
   pattern: RegExp;
-  matched: MessageHandler<LocalBrokerContext>[];
+  matched: BrokerMessageHandler<LocalBrokerContext>[];
 };
+
+export type LocalBrokerRequestCallback = (err: unknown, payload?: Uint8Array) => void;

@@ -1,5 +1,5 @@
 {
-  "extends": "./packages/common/tsconfig.base.json",
+  "extends": "./packages/bunito/tsconfig.base.json",
   "include": [
     "packages/**/src/**/*.ts",
     "scripts/**/*.ts"

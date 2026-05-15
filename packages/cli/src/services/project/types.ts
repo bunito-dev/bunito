@@ -1,26 +1,14 @@
-import type { WithBase } from '@bunito/common';
-
-export type ProjectSettings = WithBase<
-  {
-    name: string;
-    path: string;
-  },
-  {
-    mode: 'monorepo';
-    apps: Map<string, ProjectApp>;
-    libs?: Set<string>;
-  },
-  {
-    mode: 'standard';
-  } & Omit<ProjectApp, 'name' | 'path'>,
-  {
-    mode: 'unknown';
-  }
->;
+export type ProjectState = {
+  name: string;
+  path: string;
+  initialized?: boolean;
+  app?: boolean;
+  apps?: Set<string>;
+  libs?: Set<string>;
+};
 
 export type ProjectApp = {
   name: string;
+  main: boolean;
   path: string;
-  entry: string;
-  envs?: string;
 };

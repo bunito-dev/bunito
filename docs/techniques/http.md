@@ -182,7 +182,7 @@ the decorator more than once when a controller or module needs several middlewar
 
 ## Prefixes and Middleware
 
-`UsePrefix`, `UseMiddleware`, `UseCORS`, and `UseHeaders` can be applied at module
+`UsePrefix`, `UseMiddleware` and `UseCORS` can be applied at module
 level. Module-level decorators affect controllers declared in that module and in
 imported child modules:
 
@@ -192,7 +192,6 @@ import {
   HTTPModule,
   JSONSerializer,
   UseCORS,
-  UseHeaders,
   UseMiddleware,
 } from '@bunito/http';
 
@@ -202,7 +201,6 @@ import {
 })
 @UsePrefix('/api')
 @UseMiddleware(JSONSerializer)
-@UseHeaders('Cache-Control', 'no-store')
 @UseCORS({
   origin: 'https://example.com',
   methods: ['GET', 'POST'],
@@ -222,7 +220,7 @@ Use `UseCORS` on a module or controller to configure CORS for its routes:
 
 ```ts
 import { Controller, Module, UsePrefix } from '@bunito/bunito';
-import { Get, HTTPModule, UseCORS, UseHeaders } from '@bunito/http';
+import { Get, HTTPModule, UseCORS } from '@bunito/http';
 
 @Controller()
 @UseCORS({
@@ -230,7 +228,6 @@ import { Get, HTTPModule, UseCORS, UseHeaders } from '@bunito/http';
 })
 class FooController {
   @Get()
-  @UseHeaders('X-Feature', 'foo')
   getFoo(): Response {
     return Response.json({
       foo: 'Hello foo!',
@@ -252,9 +249,7 @@ class FooModule {}
 ```
 
 CORS options are merged from parent modules to feature modules and controllers, with
-more local options overriding earlier ones. `UseHeaders` accepts either a header map
-or a single name/value pair, and can be applied to a module, controller, or route
-handler.
+more local options overriding earlier ones. 
 
 For browser clients, use an explicit `origin` when `credentials` is enabled.
 

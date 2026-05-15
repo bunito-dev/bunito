@@ -58,7 +58,11 @@ export class Context {
       engines: { bun: bunVersion },
     } = pkgInfo;
 
-    const { cwd: cwdArgv, debug } = await yargs(argv)
+    const {
+      cwd: cwdArgv,
+      debug,
+      readonly,
+    } = await yargs(argv)
       .help(false)
       .version(false)
       .option({
@@ -72,6 +76,10 @@ export class Context {
           alias: 'd',
           default: false,
         },
+        readonly: {
+          type: 'boolean',
+          default: false,
+        },
       })
       .parse();
 
@@ -82,6 +90,7 @@ export class Context {
       bunVersion,
       pkgVersion: pkgVersion && !debug ? pkgVersion : 'workspace:*',
       debug,
+      readonly,
     };
   }
 

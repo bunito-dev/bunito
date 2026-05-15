@@ -6,7 +6,7 @@
         "./apps/*/src/index.ts"
       ],
       "@libs/*": [
-        "./libs/*"
+        "./libs/*/index.ts"
       ]
     }
   }

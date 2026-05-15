@@ -16,7 +16,6 @@ export type HTTPContentType = (typeof HTTP_CONTENT_TYPES)[number] | (string & {}
 export type HTTPHeaderName = (typeof HTTP_HEADER_NAMES)[number] | (string & {});
 export type HTTPParams = RawObject<string>;
 export type HTTPQuery = RawObject<string | string[]>;
-export type HTTPHeaders = Partial<Record<HTTPHeaderName, string>>;
 
 export type HTTPContext = {
   request: Request;
@@ -24,6 +23,7 @@ export type HTTPContext = {
   params: HTTPParams;
   query: HTTPQuery;
   body: unknown;
+  data: RawObject;
 };
 
 export type ControllerDefinition = {
@@ -41,21 +41,12 @@ export type ControllerClassOptions =
   | {
       kind: 'cors';
       options: CORSOptions;
-    }
-  | {
-      kind: 'headers';
-      headers: HTTPHeaders;
     };
 
-export type ControllerMethodOptions =
-  | {
-      kind: 'route';
-      options: RouteOptions;
-    }
-  | {
-      kind: 'headers';
-      headers: HTTPHeaders;
-    };
+export type ControllerMethodOptions = {
+  kind: 'route';
+  options: RouteOptions;
+};
 
 export type RouteMethod = Exclude<HTTPMethod, 'OPTIONS'> | 'ALL';
 
@@ -66,7 +57,6 @@ export type RouteOptions = WithInjections<{
 
 export type RouteDefinition = WithInjections<{
   controller: ControllerDefinition;
-  headers?: Headers;
   propKey: PropertyKey;
 }>;
 

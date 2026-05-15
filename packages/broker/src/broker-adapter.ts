@@ -1,7 +1,7 @@
 import type { MaybePromise } from '@bunito/common';
 import type { ExtensionDecorator, ProviderDecoratorOptions } from '@bunito/container';
 import { createExtensionDecorator } from '@bunito/container';
-import type { MessageHandler } from './types';
+import type { BrokerMessageHandler } from './types';
 
 export interface BrokerAdapter<TContext = unknown> {
   readonly NAME: string;
@@ -10,13 +10,13 @@ export interface BrokerAdapter<TContext = unknown> {
 
   disconnect?: () => MaybePromise<void>;
 
-  sendRequest(topic: string, data: unknown): MaybePromise;
+  sendRequest(topic: string, payload: Uint8Array): MaybePromise<Uint8Array | undefined>;
 
-  sendEvent(topic: string, data: unknown): MaybePromise<boolean>;
+  sendEvent(topic: string, payload: Uint8Array): MaybePromise<boolean>;
 
-  sendResponse(context: TContext, data: unknown): MaybePromise<boolean>;
+  sendResponse(context: TContext, payload: Uint8Array): MaybePromise<boolean>;
 
-  subscribe(pattern: string, handler: MessageHandler<TContext>): MaybePromise<void>;
+  subscribe(pattern: string, handler: BrokerMessageHandler<TContext>): MaybePromise<void>;
 }
 
 export function BrokerAdapter<TContext = unknown>(

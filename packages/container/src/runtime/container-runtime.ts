@@ -20,16 +20,12 @@ import {
   ROOT_MODULE_ID,
 } from './constants';
 import { ProviderStore } from './provider-store';
-import type { ResolveProviderOptions } from './types';
+import type { RequestStore, ResolveProviderOptions } from './types';
 
 export class ContainerRuntime extends ProviderStore {
   private static requestCounter = 0;
 
-  private readonly requestStorage = new AsyncLocalStorage<{
-    id?: number;
-    providers?: ProviderStore;
-    state?: Map<unknown, unknown>;
-  }>();
+  private readonly requestStorage = new AsyncLocalStorage<RequestStore>();
 
   constructor(private readonly compiler: ContainerCompiler) {
     super();
@@ -246,7 +242,7 @@ export class ContainerRuntime extends ProviderStore {
   ): Promise<unknown> {
     const { rootModuleId } = this.compiler;
 
-    const { moduleId = rootModuleId, providerOptions, injectionResolver } = options;
+    const { moduleId = rootModuleId, injectionResolver } = options;
 
     switch (injection) {
       case MODULE_ID:
@@ -268,7 +264,7 @@ export class ContainerRuntime extends ProviderStore {
         const requestStore = this.requestStorage.getStore();
 
         if (requestStore) {
-          requestStore.state ??= new Map();
+          requestStore.state ??= new WeakMap();
         }
 
         return requestStore?.state ?? null;
@@ -326,8 +322,8 @@ export class ContainerRuntime extends ProviderStore {
         for (const { providerId, moduleId } of providers) {
           instances.push(
             await this.resolveProvider(providerId, {
-              ...options,
               moduleId,
+              injectionResolver,
             }),
           );
         }
@@ -340,9 +336,8 @@ export class ContainerRuntime extends ProviderStore {
       value = await this.resolveProvider(
         Id.for(token),
         {
-          ...options,
           moduleId,
-          providerOptions: tokenOptions ?? providerOptions,
+          injectionResolver,
         },
         false,
       );

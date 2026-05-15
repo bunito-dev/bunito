@@ -21,7 +21,7 @@ import {
 } from './exceptions';
 import { HTTPConfig } from './http-config';
 import type { HTTPException } from './http-exception';
-import { Body, Context, Method, Params, Query } from './injections';
+import { Body, Context, CustomInjection, Method, Params, Query } from './injections';
 import type { MiddlewareContext, MiddlewareHandlers } from './middleware';
 import { Middleware } from './middleware';
 import type {
@@ -30,7 +30,6 @@ import type {
   ControllerDefinition,
   ControllerMethodOptions,
   HTTPContext,
-  HTTPHeaders,
   HTTPPath,
   RouteDefinition,
   RouteMethod,
@@ -57,9 +56,10 @@ export class HTTPRouter implements ServerRouter {
   private readonly routes = new Map<
     string,
     {
-      cors?: CORSOptions;
+      corsOptions?: CORSOptions;
+      corsHeaders?: Headers;
       headers: Headers;
-      methods: Map<RouteMethod, RouteDefinition>;
+      definitions: Map<RouteMethod, RouteDefinition>;
     }
   >();
 
@@ -76,6 +76,11 @@ export class HTTPRouter implements ServerRouter {
 
         if (isFn(instance.beforeRequest)) {
           instance.beforeRequest = instance.beforeRequest.bind(instance);
+          isMiddleware = true;
+        }
+
+        if (isFn(instance.beforeResponse)) {
+          instance.beforeRequest = instance.beforeResponse.bind(instance);
           isMiddleware = true;
         }
 
@@ -126,11 +131,11 @@ export class HTTPRouter implements ServerRouter {
 
       return new Response(null, {
         status: HTTP_SUCCESS_STATUS_CODES.NO_CONTENT,
-        headers,
+        headers: headers,
       });
     }
 
-    const route = routes?.methods?.get(method) ?? routes?.methods?.get('ALL');
+    const route = routes?.definitions?.get(method) ?? routes?.definitions?.get('ALL');
 
     if (!route) {
       return new NotImplementedException().toResponse(defaultResponseContentType);
@@ -159,6 +164,7 @@ export class HTTPRouter implements ServerRouter {
       params,
       query,
       body: null,
+      data: {},
     };
 
     try {
@@ -227,6 +233,13 @@ export class HTTPRouter implements ServerRouter {
 
                     case Headers:
                       return request.headers;
+
+                    case CustomInjection: {
+                      if (isFn(options)) {
+                        return options(context);
+                      }
+                      break;
+                    }
                   }
 
                   if (path && isObject<ZodType>(options) && 'safeParse' in options) {
@@ -318,9 +331,30 @@ export class HTTPRouter implements ServerRouter {
       response = exception.toResponse(defaultResponseContentType);
     }
 
-    if (response && route.headers) {
-      for (const [key, value] of route.headers) {
-        response.headers.append(key, value);
+    if (response) {
+      if (middleware?.beforeResponse) {
+        try {
+          if (middleware?.beforeResponse) {
+            for (const { handler, options } of middleware.beforeResponse) {
+              const output = await handler(response, {
+                ...context,
+                ...options,
+              });
+
+              if (output instanceof Response) {
+                response = output;
+              }
+            }
+          }
+        } catch (err) {
+          logger?.warn(err);
+        }
+      }
+
+      if (routes.corsHeaders) {
+        for (const [key, value] of routes.corsHeaders) {
+          response.headers.set(key, value);
+        }
       }
     }
 
@@ -332,8 +366,7 @@ export class HTTPRouter implements ServerRouter {
       | MatchedControllers<ControllerClassOptions, ControllerMethodOptions>
       | undefined,
     parentPrefix?: HTTPPath,
-    parentCORS?: CORSOptions,
-    parentHeaders?: HTTPHeaders,
+    parentCORSOptions?: CORSOptions,
     parentMiddleware?: MiddlewareHandlers,
   ) {
     if (!matchedControllers) {
@@ -343,8 +376,7 @@ export class HTTPRouter implements ServerRouter {
     const { moduleId, controllers, props, children } = matchedControllers;
 
     let rootPrefix = parentPrefix;
-    let rootCORS = parentCORS;
-    let rootHeaders = parentHeaders;
+    let rootCORSOptions = parentCORSOptions;
 
     const rootMiddleware = cloneMiddlewareHandlers(parentMiddleware);
 
@@ -362,14 +394,7 @@ export class HTTPRouter implements ServerRouter {
             break;
 
           case 'cors':
-            rootCORS = mergeCorsOptions(rootCORS, options.options);
-            break;
-
-          case 'headers':
-            rootHeaders = {
-              ...(rootHeaders ?? {}),
-              ...options.headers,
-            };
+            rootCORSOptions = mergeCorsOptions(rootCORSOptions, options.options);
             break;
 
           case 'middleware': {
@@ -393,8 +418,7 @@ export class HTTPRouter implements ServerRouter {
         let prefix = options.prefix
           ? normalizePath(rootPrefix, `/${options.prefix}`)
           : rootPrefix;
-        let cors = rootCORS;
-        let headers = rootHeaders;
+        let corsOptions = rootCORSOptions;
 
         const controller: ControllerDefinition = {
           moduleId,
@@ -413,14 +437,7 @@ export class HTTPRouter implements ServerRouter {
                   break;
 
                 case 'cors':
-                  cors = mergeCorsOptions(cors, options.options);
-                  break;
-
-                case 'headers':
-                  headers = {
-                    ...(headers ?? {}),
-                    ...options.headers,
-                  };
+                  corsOptions = mergeCorsOptions(corsOptions, options.options);
                   break;
 
                 case 'middleware': {
@@ -435,20 +452,6 @@ export class HTTPRouter implements ServerRouter {
                   pushMiddlewareHandlers(controller.middleware, instance, opts);
                   break;
                 }
-              }
-              break;
-            }
-
-            case 'method': {
-              const { options } = prop;
-
-              switch (options.kind) {
-                case 'headers':
-                  headers = {
-                    ...(headers ?? {}),
-                    ...options.headers,
-                  };
-                  break;
               }
               break;
             }
@@ -471,18 +474,17 @@ export class HTTPRouter implements ServerRouter {
           const path = normalizePath(prefix, options.path);
           const routes = this.routes.getOrInsertComputed(path, () => ({
             headers: new Headers(),
-            methods: new Map(),
+            definitions: new Map(),
           }));
 
-          if (routes.methods.has(method)) {
+          if (routes.definitions.has(method)) {
             return InternalException.throw`Duplicate route ${method} ${path} detected in ${providerId}#${propKey}`;
           }
 
-          routes.cors = mergeCorsOptions(routes.cors, cors);
-          routes.methods.set(method, {
+          routes.corsOptions = mergeCorsOptions(routes.corsOptions, corsOptions);
+          routes.definitions.set(method, {
             controller,
             propKey,
-            headers: headers ? new Headers(headers as HeadersInit) : undefined,
             injects,
           });
         }
@@ -495,70 +497,62 @@ export class HTTPRouter implements ServerRouter {
 
     if (children) {
       for (const child of children) {
-        this.buildRoutes(child, rootPrefix, rootCORS, rootHeaders, rootMiddleware);
+        this.buildRoutes(child, rootPrefix, rootCORSOptions, rootMiddleware);
       }
     }
   }
 
   private prepareRouteHeaders(): void {
-    for (const { headers, methods, cors } of this.routes.values()) {
-      const commonHeaders = new Headers();
+    for (const routes of this.routes.values()) {
+      const { headers, definitions, corsOptions } = routes;
 
       const allowedMethods = new Set(
-        methods.has('ALL') ? HTTP_ALL_METHODS : ([...methods.keys()] as HTTPMethod[]),
+        definitions.has('ALL')
+          ? HTTP_ALL_METHODS
+          : ([...definitions.keys()] as HTTPMethod[]),
       );
 
       headers.set('Accept', [...allowedMethods].join(', '));
 
-      if (cors) {
-        const corsMethods = cors.methods?.length
-          ? [...new Set(cors.methods.filter((method) => allowedMethods.has(method)))]
-          : [...allowedMethods];
-
-        if (corsMethods.length) {
-          commonHeaders.set('Access-Control-Allow-Origin', cors.origin ?? '*');
-          commonHeaders.set(
-            'Access-Control-Allow-Credentials',
-            cors.credentials === false ? 'false' : 'true',
-          );
-          commonHeaders.set('Vary', 'Origin');
-
-          headers.set('Access-Control-Allow-Methods', corsMethods.join(', '));
-          headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-          for (const [key, value] of commonHeaders) {
-            headers.set(key, value);
-          }
-
-          if (cors.allowedHeaders?.length) {
-            headers.append(
-              'Access-Control-Allow-Headers',
-              cors.allowedHeaders.join(', '),
-            );
-          }
-
-          if (isNumber(cors.maxAge)) {
-            headers.set('Access-Control-Max-Age', cors.maxAge.toString(10));
-          }
-        }
-      }
-
-      for (const [key, value] of commonHeaders) {
-        headers.set(key, value);
-      }
-
-      if (!commonHeaders.count) {
+      if (!corsOptions) {
         continue;
       }
 
-      for (const route of methods.values()) {
-        if (route.headers) {
-          for (const [key, value] of commonHeaders) {
-            route.headers.set(key, value);
-          }
-        } else {
-          route.headers = commonHeaders;
-        }
+      const corsMethods = corsOptions.methods?.length
+        ? [...new Set(corsOptions.methods.filter((method) => allowedMethods.has(method)))]
+        : [...allowedMethods];
+
+      if (!corsMethods.length) {
+        continue;
+      }
+
+      routes.corsHeaders = new Headers();
+
+      const { corsHeaders } = routes;
+
+      corsHeaders.set('Access-Control-Allow-Origin', corsOptions.origin ?? '*');
+      corsHeaders.set(
+        'Access-Control-Allow-Credentials',
+        corsOptions.credentials === false ? 'false' : 'true',
+      );
+      corsHeaders.set('Vary', 'Origin');
+
+      for (const [key, value] of corsHeaders) {
+        headers.set(key, value);
+      }
+
+      headers.set('Access-Control-Allow-Methods', corsMethods.join(', '));
+      headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+      if (corsOptions.allowedHeaders?.length) {
+        headers.append(
+          'Access-Control-Allow-Headers',
+          corsOptions.allowedHeaders.join(', '),
+        );
+      }
+
+      if (isNumber(corsOptions.maxAge)) {
+        headers.set('Access-Control-Max-Age', corsOptions.maxAge.toString(10));
       }
     }
   }

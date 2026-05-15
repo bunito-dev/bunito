@@ -5,6 +5,7 @@ export function cloneMiddlewareHandlers(
 ): MiddlewareHandlers {
   return {
     beforeRequest: handlers?.beforeRequest ? [...handlers.beforeRequest] : [],
+    beforeResponse: handlers?.beforeResponse ? [...handlers.beforeResponse] : [],
     serializeResponseData: handlers?.serializeResponseData
       ? [...handlers.serializeResponseData]
       : [],

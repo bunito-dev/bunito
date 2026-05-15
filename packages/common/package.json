@@ -1,6 +1,6 @@
 {
   "name": "@bunito/common",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Shared exceptions, predicates, types, and utilities for bunito packages.",
   "keywords": [
     "bunito",
@@ -26,16 +26,13 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts",
-    "./biome.json": "./biome.base.json",
-    "./tsconfig.json": "./tsconfig.base.json"
+    ".": "./src/index.ts"
   },
   "files": [
     "src",
     "!src/**/*.test.ts",
     "README.md",
-    "LICENSE",
-    "tsconfig.base.json"
+    "LICENSE"
   ],
   "dependencies": {},
   "devDependencies": {},

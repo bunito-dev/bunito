@@ -9,3 +9,5 @@ export const PROJECT_OUT_DIR = 'out';
 
 export const PROJECT_ENVS_FILE = '.env';
 export const PROJECT_ENTRY_FILE = join(PROJECT_SRC_DIR, 'main.ts');
+export const PROJECT_INDEX_FILE = 'index.ts';
+export const PROJECT_TSCONFIG_FILE = 'tsconfig.json';

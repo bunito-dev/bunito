@@ -1,7 +1,8 @@
 import { input } from '@inquirer/prompts';
-import { Exception, isKebabCase, notEmptySet } from '../common';
+import { Exception, notEmptySet } from '../common';
 import type { Context } from '../context';
-import { CLIService } from '../services';
+import { CLIService, PROJECT_APPS_DIR } from '../services';
+import { AppTemplate, ProjectTemplate } from '../templates';
 import { AbstractCommand } from './abstract-command';
 
 type InitCommandOptions = {
@@ -18,11 +19,12 @@ export class InitCommand extends AbstractCommand<InitCommandOptions> {
   }
 
   public async run(): Promise<void> {
-    const { project, logger } = this.context;
-    const { settings } = project;
+    const { project, logger, settings } = this.context;
+    const { pkgVersion, bunVersion } = settings;
+    const { state } = project;
 
-    if (settings.mode !== 'unknown') {
-      throw new Exception(`Project "${settings.name}" is already initialized`);
+    if (project.isInitialized()) {
+      throw new Exception('Project is already initialized');
     }
 
     let { project: name, app: appNames } = this.options;
@@ -32,13 +34,11 @@ export class InitCommand extends AbstractCommand<InitCommandOptions> {
         message: 'Project name',
         required: true,
         prefill: 'tab',
-        default: settings.name,
+        default: state.name,
       });
     }
 
-    if (!isKebabCase(name)) {
-      throw new Exception('Project name must use kebab-case');
-    }
+    project.initialize(name);
 
     const apps: string[] = [];
 
@@ -50,29 +50,33 @@ export class InitCommand extends AbstractCommand<InitCommandOptions> {
           default: '',
         });
 
-        if (!app || apps.includes(app)) {
+        if (!app) {
           break;
         }
 
+        project.addApp(app);
         apps.push(app);
       }
-
-      if (!apps.length) {
-        throw new Exception(
-          'Create at least one app or omit --app for a standard project',
-        );
-      }
     } else if (appNames) {
-      apps.push(...appNames);
-    }
-
-    for (const [index, app] of apps.entries()) {
-      if (!isKebabCase(app)) {
-        throw new Exception(`App name #${index + 1} must use kebab-case`);
+      for (const app of appNames) {
+        project.addApp(app);
+        apps.push(app);
       }
     }
 
-    const fileNames = await project.create(name, apps);
+    const fileNames = await project.renderTemplate(ProjectTemplate, {
+      name,
+      pkgVersion,
+      bunVersion,
+    })();
+
+    fileNames.push(...(await project.renderTemplate(AppTemplate)()));
+
+    for (const app of apps) {
+      fileNames.push(
+        ...(await project.renderTemplate(AppTemplate)(PROJECT_APPS_DIR, app)),
+      );
+    }
 
     logger.info(`Project "${name}" initialized with files:`, ...fileNames);
   }
@@ -94,7 +98,7 @@ CLIService.registerCommand(InitCommand, {
         required: true,
       })
       .option('app', {
-        describe: 'Create an app in monorepo mode',
+        describe: 'Create an app',
         type: 'string',
         alias: 'a',
         array: true,

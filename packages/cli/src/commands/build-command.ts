@@ -1,11 +1,18 @@
 import { join } from 'node:path';
-import { Exception, notEmptySet } from '../common';
+import { notEmptySet } from '../common';
 import type { Context } from '../context';
-import { CLIService, PROJECT_OUT_DIR } from '../services';
+import type { ProjectApp } from '../services';
+import {
+  CLIService,
+  PROJECT_ENTRY_FILE,
+  PROJECT_OUT_DIR,
+  PROJECT_TSCONFIG_FILE,
+} from '../services';
 import { AbstractCommand } from './abstract-command';
 
 type BuildCommandOptions = {
   apps?: Set<string>;
+  all?: boolean;
   minify?: boolean;
   sourcemap?: boolean;
 };
@@ -18,20 +25,19 @@ export class BuildCommand extends AbstractCommand<BuildCommandOptions> {
 
   public async run(): Promise<void> {
     const { project, logger, fs } = this.context;
-    const { settings } = project;
+    const { state } = project;
 
-    if (settings.mode === 'unknown') {
-      throw new Exception('Project is not initialized');
-    }
+    project.requireInitialized();
 
-    const { apps: appNames, minify, sourcemap } = this.options;
-    const { mode, path: root } = settings;
+    const { apps: onlyNames, all, minify, sourcemap } = this.options;
+    const { path: projectPath } = state;
 
-    const apps = project.getApps(appNames);
-    const app = apps[0];
+    let apps: ProjectApp[];
 
-    if (!app) {
-      throw new Exception('No runnable apps were found');
+    if (all || onlyNames) {
+      apps = project.getApps(onlyNames);
+    } else {
+      apps = [project.getApp()];
     }
 
     for (const [index, app] of apps.entries()) {
@@ -43,22 +49,25 @@ export class BuildCommand extends AbstractCommand<BuildCommandOptions> {
         success,
         outputs: [output],
       } = await Bun.build({
-        root,
+        root: projectPath,
         target: 'bun',
         minify,
+        packages: 'bundle',
         sourcemap: sourcemap ? 'inline' : 'none',
-        entrypoints: [app.entry],
+        entrypoints: [join(app.path, PROJECT_ENTRY_FILE)],
+        tsconfig: join(app.path, PROJECT_TSCONFIG_FILE),
       });
 
       if (success && output) {
-        const outPath =
-          mode === 'standard' ? join(PROJECT_OUT_DIR) : join(PROJECT_OUT_DIR, app.name);
+        const outPath = app.main
+          ? join(PROJECT_OUT_DIR)
+          : join(PROJECT_OUT_DIR, app.name);
 
-        const path = join(root, outPath);
-        await fs.ensurePath(path);
+        await fs.ensurePath(projectPath, outPath);
 
         const content = await output.text();
-        const file = fs.getFile(path, 'main.js');
+
+        const file = fs.getFile(projectPath, outPath, 'main.js');
         await file.write(content);
 
         logger.info(`Built "${app.name}" app:`, join(outPath, 'main.js'));
@@ -78,6 +87,12 @@ CLIService.registerCommand(BuildCommand, {
         array: true,
         type: 'string',
         coerce: notEmptySet<string>,
+      })
+      .option('all', {
+        describe: 'Start all apps except main one',
+        default: false,
+        type: 'boolean',
+        alias: 'a',
       })
       .option('sourcemap', {
         describe: 'Build with inline source maps',

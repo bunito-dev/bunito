@@ -2,6 +2,7 @@ import process from 'node:process';
 import type { Class, RawObject } from '@bunito/common';
 import yargs, { type CommandModule } from 'yargs';
 import type { AbstractCommand } from '../../commands';
+import { Exception } from '../../common';
 import type { Context } from '../../context';
 import type { CLICommand } from './types';
 
@@ -58,7 +59,11 @@ export class CLIService {
       })
       .fail((msg, err, yargs) => {
         if (Error.isError(err)) {
-          logger.error(err.message).br();
+          if (err instanceof Exception && err.description) {
+            logger.error(err.message, ...err.description).br();
+          } else {
+            logger.error(err.message).br();
+          }
         } else if (msg) {
           logger.error(msg).br();
         } else {

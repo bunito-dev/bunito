@@ -25,6 +25,6 @@ const cwd = process.cwd();
 const argv = hideBin([...process.argv]);
 
 await context.loadSettings(cwd, argv);
-await project.loadSettings();
+await project.loadState();
 
 await cli.runCommand(argv);

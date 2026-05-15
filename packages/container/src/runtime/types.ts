@@ -10,12 +10,13 @@ export type RequestIdGetter = () => number | undefined;
 export type RequestStore = {
   id?: number;
   providers?: ProviderStore;
-  state?: Map<unknown, unknown>;
+  state?: RequestState;
 };
+
+export type RequestState = WeakMap<symbol | object, unknown>;
 
 export type ResolveProviderOptions = {
   moduleId?: ModuleId;
-  providerOptions?: unknown;
   injectionResolver?: InjectionResolver;
 };
 

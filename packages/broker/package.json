@@ -1,6 +1,6 @@
 {
   "name": "@bunito/broker",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Message broker module, adapters, and decorators for Bunito",
   "keywords": [
     "bunito",
@@ -36,11 +36,12 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/app": "workspace:0.0.13",
-    "@bunito/common": "workspace:0.0.13",
-    "@bunito/config": "workspace:0.0.13",
-    "@bunito/container": "workspace:0.0.13",
-    "@bunito/logger": "workspace:0.0.13"
+    "@bunito/app": "workspace:0.0.14",
+    "@bunito/common": "workspace:0.0.14",
+    "@bunito/config": "workspace:0.0.14",
+    "@bunito/container": "workspace:0.0.14",
+    "@bunito/logger": "workspace:0.0.14",
+    "@msgpack/msgpack": "3.1.3"
   },
   "devDependencies": {
     "@nats-io/transport-node": "catalog:"

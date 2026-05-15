@@ -45,9 +45,9 @@ describe('ProjectService', () => {
     await Bun.write(join(dir, '.env'), 'PORT=3000');
 
     const service = new ProjectService(await createProjectContext(dir));
-    await service.loadSettings();
+    await service.loadState();
 
-    expect(service.settings).toEqual({
+    expect(service.state).toEqual({
       mode: 'standard',
       name: 'demo',
       path: dir,
@@ -74,9 +74,9 @@ describe('ProjectService', () => {
     await Bun.write(join(dir, 'apps/api/.env'), 'PORT=3000');
 
     const service = new ProjectService(await createProjectContext(join(dir, 'apps/api')));
-    await service.loadSettings();
+    await service.loadState();
 
-    expect(service.settings.mode).toBe('monorepo');
+    expect(service.state.mode).toBe('monorepo');
     expect(service.getApps(undefined)).toEqual([
       {
         name: 'api',
@@ -92,9 +92,9 @@ describe('ProjectService', () => {
     const dir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
     const service = new ProjectService(await createProjectContext(dir));
 
-    await service.loadSettings();
+    await service.loadState();
 
-    expect(service.settings).toMatchObject({
+    expect(service.state).toMatchObject({
       mode: 'unknown',
       path: dir,
     });
@@ -110,7 +110,7 @@ describe('ProjectService', () => {
     await Bun.write(join(dir, 'src/main.ts'), 'console.log("ok");');
 
     const standard = new ProjectService(await createProjectContext(dir));
-    await standard.loadSettings();
+    await standard.loadState();
 
     expect(() => standard.getApps(new Set(['api']))).toThrow(
       new Exception('This command is available only in monorepo projects'),
@@ -122,7 +122,7 @@ describe('ProjectService', () => {
     await Bun.write(join(monorepoDir, 'apps/api/src/main.ts'), 'console.log("api");');
 
     const monorepo = new ProjectService(await createProjectContext(monorepoDir));
-    await monorepo.loadSettings();
+    await monorepo.loadState();
 
     expect(() => monorepo.getApps(new Set(['admin']))).toThrow(
       new Exception('App "admin" was not found'),
@@ -133,16 +133,16 @@ describe('ProjectService', () => {
     const dir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
     const service = new ProjectService(await createProjectContext(dir));
 
-    await service.loadSettings();
+    await service.loadState();
 
-    const files = await service.create('demo', ['api']);
+    const files = await service.initialize('demo', ['api']);
 
     expect(files).toContain('package.json');
     expect(await Bun.file(join(dir, 'apps/api/src/app-module.ts')).exists()).toBeTrue();
     expect(await Bun.file(join(dir, 'apps/api/src/index.ts')).exists()).toBeTrue();
 
     try {
-      await service.create('demo', ['api']);
+      await service.initialize('demo', ['api']);
       throw new Error('Expected duplicate template paths to fail');
     } catch (error) {
       expect(error).toBeInstanceOf(Exception);

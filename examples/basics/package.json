@@ -2,11 +2,6 @@
   "name": "basics",
   "private": true,
   "type": "module",
-  "files": [
-    "src",
-    "!src/**/*.test.ts",
-    "README.md"
-  ],
   "scripts": {
     "cli": "bunito",
     "build": "bunito build",

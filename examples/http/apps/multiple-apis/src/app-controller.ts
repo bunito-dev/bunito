@@ -6,7 +6,7 @@ export class AppController {
   @Get()
   index() {
     return Response.json({
-      example: 'multiple-apis',
+      app: 'multiple-apis',
     });
   }
 }

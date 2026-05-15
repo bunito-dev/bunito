@@ -2,7 +2,7 @@ import { InternalException } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import type { NatsConnection } from '@nats-io/transport-node';
 import { BrokerAdapter } from '../../broker-adapter';
-import type { MessageHandler, MessagePayload } from '../../types';
+import type { BrokerMessageHandler } from '../../types';
 import { NatsBrokerConfig } from './nats-broker-config';
 import type { NatsBrokerContext } from './types';
 
@@ -41,38 +41,26 @@ export class NatsBroker implements BrokerAdapter<NatsBrokerContext> {
     await this.connection.close();
   }
 
-  async sendRequest(topic: string, data: unknown): Promise<unknown> {
-    if (!this.connection) {
-      return;
-    }
+  async sendRequest(topic: string, payload: Uint8Array): Promise<Uint8Array> {
+    const { data } = await this.getConnection().request(topic, payload);
 
-    const msg = await this.connection.request(topic, JSON.stringify(data));
-
-    return msg.json();
+    return data;
   }
 
-  async sendEvent(topic: string, data: unknown): Promise<boolean> {
-    if (!this.connection) {
-      return false;
-    }
-
-    this.connection.publish(topic, JSON.stringify(data));
+  async sendEvent(topic: string, payload: Uint8Array): Promise<boolean> {
+    this.getConnection().publish(topic, payload);
 
     return true;
   }
 
-  async sendResponse(msg: NatsBrokerContext, data: unknown): Promise<boolean> {
-    return msg.respond(JSON.stringify(data));
+  async sendResponse(msg: NatsBrokerContext, payload: Uint8Array): Promise<boolean> {
+    return msg.respond(payload);
   }
 
-  subscribe(pattern: string, handler: MessageHandler<NatsBrokerContext>): void {
-    if (!this.connection) {
-      return;
-    }
-
+  subscribe(pattern: string, handler: BrokerMessageHandler<NatsBrokerContext>): void {
     const { queue } = this.config;
 
-    this.connection?.subscribe(pattern, {
+    this.getConnection().subscribe(pattern, {
       queue: `NatsBroker:${queue}`,
       callback: (err, msg) => {
         if (err) {
@@ -80,15 +68,21 @@ export class NatsBroker implements BrokerAdapter<NatsBrokerContext> {
           return;
         }
 
-        const data = msg.json<MessagePayload>();
-
         handler(null, {
           context: msg,
           kind: msg.reply ? 'request' : 'event',
           topic: msg.subject,
-          data,
+          payload: msg.data,
         });
       },
     });
+  }
+
+  private getConnection(): NatsConnection {
+    if (!this.connection) {
+      throw new InternalException('Nats connection is not available');
+    }
+
+    return this.connection;
   }
 }

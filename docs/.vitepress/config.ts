@@ -8,6 +8,7 @@ export default defineConfig({
   title: 'bunito',
   description: 'A Bun-first TypeScript framework for modular applications.',
   appearance: 'force-dark',
+  cacheDir: '.vitepress/.cache',
   buildEnd: async (config) => {
     await cp(join(config.srcDir, ASSETS_DIR), join(config.outDir, ASSETS_DIR), {
       recursive: true,

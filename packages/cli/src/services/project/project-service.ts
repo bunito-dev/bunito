@@ -1,36 +1,36 @@
-import { basename, dirname, join, relative, sep } from 'node:path';
-import { Exception } from '../../common';
+import { basename, dirname, join, sep } from 'node:path';
+import { Exception, isKebabCase } from '../../common';
 import type { Context } from '../../context';
 import type { Template } from '../../templates';
-import { ProjectTemplate, renderTemplate } from '../../templates';
+import { renderTemplate } from '../../templates';
 import {
   PROJECT_APPS_DIR,
   PROJECT_ENTRY_FILE,
-  PROJECT_ENVS_FILE,
+  PROJECT_INDEX_FILE,
   PROJECT_LIBS_DIR,
   PROJECT_PKG_DEPT,
 } from './constants';
-import type { ProjectApp, ProjectSettings } from './types';
+import type { ProjectApp, ProjectState } from './types';
 
 export class ProjectService {
-  private settingsLoaded: ProjectSettings | undefined;
+  private stateLoaded: ProjectState | undefined;
 
   constructor(
     private readonly context: Context,
-    settings?: ProjectSettings,
+    settings?: ProjectState,
   ) {
-    this.settingsLoaded = settings;
+    this.stateLoaded = settings;
   }
 
-  get settings(): ProjectSettings {
-    if (!this.settingsLoaded) {
-      throw new Exception('Project settings have not been loaded');
+  get state(): ProjectState {
+    if (!this.stateLoaded) {
+      throw new Exception('Project state have not been loaded');
     }
 
-    return this.settingsLoaded;
+    return this.stateLoaded;
   }
 
-  async loadSettings(): Promise<void> {
+  async loadState(): Promise<void> {
     const {
       fs,
       settings: { cwd },
@@ -40,6 +40,7 @@ export class ProjectService {
 
     let name: string | undefined;
     let path: string | undefined;
+    let initialized: boolean | undefined;
 
     while (paths.length > 1) {
       path = paths.join(sep);
@@ -48,6 +49,7 @@ export class ProjectService {
 
       if (pkgInfo?.dependencies[PROJECT_PKG_DEPT]) {
         name = pkgInfo.name;
+        initialized = true;
         break;
       }
 
@@ -56,141 +58,158 @@ export class ProjectService {
       path = undefined;
     }
 
-    name ??= basename(cwd ?? path);
+    path ??= cwd;
+    name ??= basename(path);
 
-    if (path) {
-      const entryFile = fs.getFile(path, PROJECT_ENTRY_FILE);
-      const entryStats = await entryFile.tryStat();
-      const envsFile = fs.getFile(path, PROJECT_ENVS_FILE);
-      const envsStats = await envsFile.tryStat();
+    this.stateLoaded = {
+      name,
+      path,
+      initialized,
+    };
 
-      if (entryStats) {
-        if (!entryStats.isFile()) {
-          throw new Exception(`Project entry "${PROJECT_ENTRY_FILE}" must be a file`);
-        }
+    if (!initialized) {
+      return;
+    }
 
-        this.settingsLoaded = {
-          mode: 'standard',
-          name,
-          path,
-          entry: relative(path, entryFile.name),
-          envs: envsStats?.isFile() ? relative(path, envsFile.name) : undefined,
-        };
-        return;
+    const entryStats = await fs.getFile(path, PROJECT_ENTRY_FILE).tryStat();
+
+    if (entryStats) {
+      if (!entryStats.isFile()) {
+        throw new Exception(`Project entry "${PROJECT_ENTRY_FILE}" must be a file`);
       }
 
-      const appDirs = await fs.readDir(path, PROJECT_APPS_DIR);
+      this.stateLoaded.app = true;
+    }
 
-      if (appDirs) {
-        const apps: [string, ProjectApp][] = [];
+    const appDirs = await fs.readDir(path, PROJECT_APPS_DIR);
 
-        for (const appDir of appDirs) {
-          const entryFile = fs.getFile(appDir.name, PROJECT_ENTRY_FILE);
-          const entryStats = await entryFile.tryStat();
-          const envsFile = fs.getFile(appDir.name, PROJECT_ENVS_FILE);
-          const envsStats = await envsFile.tryStat();
+    if (appDirs) {
+      for (const appDir of appDirs) {
+        const entryStats = await fs.getFile(appDir.name, PROJECT_ENTRY_FILE).tryStat();
 
-          if (entryStats?.isFile()) {
-            const name = basename(appDir.name);
-
-            apps.push([
-              name,
-              {
-                name,
-                path: relative(path, appDir.name),
-                entry: relative(path, entryFile.name),
-                envs: envsStats?.isFile() ? relative(path, envsFile.name) : undefined,
-              },
-            ]);
-          }
+        if (!entryStats?.isFile()) {
+          continue;
         }
 
-        let libs: Set<string> | undefined;
-        const libsDirs = await fs.readDir(path, PROJECT_LIBS_DIR);
-
-        if (libsDirs) {
-          libs = new Set(libsDirs.map((dir) => basename(dir.name)));
-        }
-
-        this.settingsLoaded = {
-          mode: 'monorepo',
-          path,
-          name,
-          apps: new Map(apps),
-          libs,
-        };
-        return;
+        this.stateLoaded.apps ??= new Set();
+        this.stateLoaded.apps.add(basename(appDir.name));
       }
     }
 
-    path ??= cwd;
+    const libsDirs = await fs.readDir(path, PROJECT_LIBS_DIR);
 
-    this.settingsLoaded = {
-      mode: 'unknown',
+    if (libsDirs) {
+      for (const libDir of libsDirs) {
+        const indexStats = await fs.getFile(libDir.name, PROJECT_INDEX_FILE).tryStat();
+
+        if (!indexStats?.isFile()) {
+          continue;
+        }
+
+        this.stateLoaded.libs ??= new Set();
+        this.stateLoaded.libs.add(basename(libDir.name));
+      }
+    }
+  }
+
+  requireInitialized(): void {
+    if (!this.isInitialized()) {
+      throw new Exception(['Project is not initialized', this.state.path]);
+    }
+  }
+
+  isInitialized(): boolean {
+    return this.state.initialized ?? false;
+  }
+
+  initialize(name: string): void {
+    if (!isKebabCase(name)) {
+      throw new Exception('Project name must be kebab-case');
+    }
+
+    this.state.name = name;
+    this.state.app = true;
+  }
+
+  addApp(name: string): void {
+    if (!isKebabCase(name)) {
+      throw new Exception('App name must be kebab-case');
+    }
+
+    if (this.hasApp(name)) {
+      throw new Exception(`App "${name}" already exists`);
+    }
+
+    this.state.apps ??= new Set();
+    this.state.apps.add(name);
+  }
+
+  addLib(name: string): void {
+    if (!isKebabCase(name)) {
+      throw new Exception('Lib name must be kebab-case');
+    }
+
+    if (this.hasLib(name)) {
+      throw new Exception(`Lib "${name}" already exists`);
+    }
+
+    this.state.libs ??= new Set();
+    this.state.libs.add(name);
+  }
+
+  hasApp(name?: string): boolean {
+    const { app, apps } = this.state;
+    return name ? (apps?.has(name) ?? false) : !!app;
+  }
+
+  hasLib(name: string): boolean {
+    return this.state.libs?.has(name) ?? false;
+  }
+
+  getApp(): ProjectApp {
+    const { name, app, path } = this.state;
+
+    if (!app) {
+      throw new Exception('Main app was not found');
+    }
+
+    return {
       name,
+      main: true,
       path,
     };
   }
 
-  async create(name: string, apps: string[]): Promise<string[]> {
-    const { bunVersion, pkgVersion } = this.context.settings;
+  getApps(onlyNames: Set<string> | undefined): ProjectApp[] {
+    const { apps, path: rootPath } = this.state;
 
-    return this.renderTemplate(ProjectTemplate, {
-      name,
-      pkgVersion,
-      bunVersion,
-      apps,
-    })();
-  }
-
-  getApps(names: Set<string> | undefined): ProjectApp[] {
-    switch (this.settings.mode) {
-      case 'unknown':
-        throw new Exception('Project is not initialized');
-
-      case 'standard': {
-        if (names) {
-          throw new Exception('This command is available only in monorepo projects');
-        }
-
-        const { name, path, envs, entry } = this.settings;
-
-        return [
-          {
-            name,
-            path,
-            envs,
-            entry,
-          },
-        ];
-      }
-
-      case 'monorepo': {
-        const { apps } = this.settings;
-
-        if (apps.size === 0) {
-          throw new Exception('No runnable apps were found');
-        }
-
-        if (!names) {
-          return Array.from(apps.values());
-        }
-
-        const result: ProjectApp[] = [];
-
-        for (const name of names) {
-          const app = apps.get(name);
-
-          if (!app) {
-            throw new Exception(`App "${name}" was not found`);
-          }
-
-          result.push(app);
-        }
-
-        return result;
-      }
+    if (!apps) {
+      throw new Exception('No runnable apps were found');
     }
+
+    let names: string[];
+
+    if (!onlyNames) {
+      names = [...apps];
+    } else {
+      names = [];
+
+      for (const name of onlyNames) {
+        if (!apps.has(name)) {
+          throw new Exception(`App "${name}" was not found`);
+        }
+      }
+
+      names.push(...onlyNames);
+    }
+
+    return names.map((name) => {
+      return {
+        name,
+        main: false,
+        path: join(rootPath, PROJECT_APPS_DIR, name),
+      };
+    });
   }
 
   renderTemplate<ITemplate extends Template>(
@@ -208,7 +227,7 @@ export class ProjectService {
         return {
           content,
           path,
-          file: fs.getFile(this.settings.path, path),
+          file: fs.getFile(this.state.path, path),
         };
       });
 

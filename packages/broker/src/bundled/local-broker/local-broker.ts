@@ -1,13 +1,18 @@
 import type { FSWatcher } from 'node:fs';
 import { watch } from 'node:fs';
-import { mkdir, readdir, rm } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import { join, sep } from 'node:path';
 import { clearTimeout, setTimeout } from 'node:timers';
+import { InternalException } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import { BrokerAdapter } from '../../broker-adapter';
-import type { MessageHandler, MessagePayload } from '../../types';
+import type { BrokerMessage, BrokerMessageHandler } from '../../types';
 import { LocalBrokerConfig } from './local-broker-config';
-import type { LocalBrokerContext, LocalBrokerHandler } from './types';
+import type {
+  LocalBrokerContext,
+  LocalBrokerRequestCallback,
+  LocalBrokerTopicHandler,
+} from './types';
 import { compilePattern } from './utils';
 
 @BrokerAdapter<LocalBrokerContext>({
@@ -16,9 +21,9 @@ import { compilePattern } from './utils';
 export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
   readonly NAME = 'local';
 
-  private readonly handlers = new Map<string, LocalBrokerHandler>();
+  private readonly topicHandlers = new Map<string, LocalBrokerTopicHandler>();
 
-  private readonly requests = new Map<string, (err: unknown, data?: unknown) => void>();
+  private readonly requestCallbacks = new Map<string, LocalBrokerRequestCallback>();
 
   private watcher: undefined | FSWatcher;
 
@@ -28,6 +33,12 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
     return this.config.mode;
   }
 
+  private get dataDir(): string {
+    const { dataDir, uid } = this.config;
+
+    return join(dataDir, uid);
+  }
+
   async connect(): Promise<void> {
     if (this.mode === 'in-memory' || this.watcher) {
       return;
@@ -35,9 +46,9 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
 
     const { dataDir } = this.config;
 
-    await mkdir(dataDir, { recursive: true });
+    await this.removeData();
 
-    await this.clearData();
+    await mkdir(this.dataDir, { recursive: true });
 
     this.watcher = watch(dataDir, { recursive: true }, this.processFileEvent);
   }
@@ -49,17 +60,17 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
 
     this.watcher.close();
 
-    await this.clearData();
+    await this.removeData();
   }
 
-  async sendRequest(topic: string, data: unknown): Promise<unknown> {
+  async sendRequest(topic: string, payload: Uint8Array): Promise<Uint8Array | undefined> {
     const id = Bun.randomUUIDv7();
 
     return new Promise((resolve, reject) => {
       let timeout: NodeJS.Timeout;
 
-      const callback = (err: unknown, data?: unknown): void => {
-        if (!this.requests.delete(id)) {
+      const callback: LocalBrokerRequestCallback = (err, payload): void => {
+        if (!this.requestCallbacks.delete(id)) {
           return;
         }
 
@@ -70,16 +81,20 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
           return;
         }
 
-        resolve(data);
+        resolve(payload);
       };
 
-      timeout = setTimeout(callback, this.config.timeout, new Error('Request timed out'));
+      timeout = setTimeout(
+        callback,
+        this.config.timeout,
+        new InternalException('Request timed out'),
+      );
 
-      this.requests.set(id, callback);
+      this.requestCallbacks.set(id, callback);
 
       this.publishMessage({
         kind: 'request',
-        data,
+        payload,
         topic,
         context: {
           id,
@@ -88,10 +103,10 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
     });
   }
 
-  async sendEvent(topic: string, data: unknown): Promise<boolean> {
+  async sendEvent(topic: string, payload: Uint8Array): Promise<boolean> {
     await this.publishMessage({
       kind: 'event',
-      data,
+      payload,
       topic,
       context: {
         id: Bun.randomUUIDv7(),
@@ -101,12 +116,12 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
     return true;
   }
 
-  async sendResponse(context: LocalBrokerContext, data: unknown): Promise<boolean> {
+  async sendResponse(context: LocalBrokerContext, payload: Uint8Array): Promise<boolean> {
     const { id: requestId } = context;
 
     await this.publishMessage({
       kind: 'request',
-      data,
+      payload,
       topic: 'response',
       context: {
         id: Bun.randomUUIDv7(),
@@ -117,8 +132,8 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
     return true;
   }
 
-  subscribe(pattern: string, handler: MessageHandler<LocalBrokerContext>): void {
-    this.handlers
+  subscribe(pattern: string, handler: BrokerMessageHandler<LocalBrokerContext>): void {
+    this.topicHandlers
       .getOrInsertComputed(pattern, () => ({
         pattern: compilePattern(pattern),
         matched: [],
@@ -150,35 +165,35 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
   };
 
   private async publishMessage(
-    payload: MessagePayload<LocalBrokerContext>,
+    message: BrokerMessage<LocalBrokerContext>,
   ): Promise<void> {
-    if (!this.processMessage(payload)) {
-      await this.writeMessage(payload);
+    if (!this.processMessage(message)) {
+      await this.writeMessage(message);
     }
   }
 
-  private processMessage(payload: MessagePayload<LocalBrokerContext>): boolean {
+  private processMessage(message: BrokerMessage<LocalBrokerContext>): boolean {
     const {
       topic,
       context: { requestId },
-      data,
-    } = payload;
+      payload,
+    } = message;
 
     if (requestId) {
-      const request = this.requests.get(requestId);
+      const requestCallback = this.requestCallbacks.get(requestId);
 
-      if (request) {
-        request(null, data);
+      if (requestCallback) {
+        requestCallback(null, payload);
         return true;
       }
     } else {
-      for (const { pattern, matched } of this.handlers.values()) {
+      for (const { pattern, matched } of this.topicHandlers.values()) {
         if (!pattern.test(topic)) {
           continue;
         }
 
         for (const handler of matched) {
-          handler(null, payload);
+          handler(null, message);
         }
       }
     }
@@ -188,7 +203,7 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
 
   private async readMessage(
     file: Bun.BunFile,
-  ): Promise<MessagePayload<LocalBrokerContext> | undefined> {
+  ): Promise<BrokerMessage<LocalBrokerContext> | undefined> {
     let isFile = false;
 
     try {
@@ -208,15 +223,22 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
       return;
     }
 
-    return (await file.json()) as MessagePayload<LocalBrokerContext>;
+    const content = await file.json();
+
+    const { payload, ...common } = content as BrokerMessage<LocalBrokerContext>;
+
+    return {
+      ...common,
+      payload: Uint8Array.from(payload),
+    };
   }
 
-  private async writeMessage(payload: MessagePayload<LocalBrokerContext>): Promise<void> {
+  private async writeMessage(message: BrokerMessage<LocalBrokerContext>): Promise<void> {
     if (this.mode === 'in-memory') {
       return;
     }
 
-    const { id } = payload.context;
+    const { id } = message.context;
 
     const { uid, dataDir } = this.config;
 
@@ -225,25 +247,30 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
 
     await mkdir(path, { recursive: true });
 
-    await file.write(JSON.stringify(payload, null, 2));
+    const { payload, ...common } = message;
+
+    await file.write(
+      JSON.stringify(
+        {
+          ...common,
+          payload: Array.from(payload),
+        },
+        null,
+        2,
+      ),
+    );
   }
 
-  private async clearData(): Promise<void> {
-    const { dataDir } = this.config;
+  private async removeData(): Promise<void> {
+    const dataFile = Bun.file(this.dataDir);
+    const dataStats = await dataFile.stat().catch(() => null);
 
-    for (const dir of await readdir(dataDir, { withFileTypes: true })) {
-      if (!dir.isDirectory()) {
-        continue;
-      }
-
-      try {
-        await rm(join(dir.parentPath, dir.name), {
-          recursive: true,
-          force: true,
-        });
-      } catch {
-        //
-      }
+    if (!dataStats?.isDirectory()) {
+      return;
     }
+
+    await rm(this.dataDir, {
+      recursive: true,
+    });
   }
 }

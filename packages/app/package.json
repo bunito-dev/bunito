@@ -1,6 +1,6 @@
 {
   "name": "@bunito/app",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Application bootstrap and lifecycle utilities for bunito.",
   "keywords": [
     "bunito",
@@ -35,10 +35,10 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.13",
-    "@bunito/config": "workspace:0.0.13",
-    "@bunito/container": "workspace:0.0.13",
-    "@bunito/logger": "workspace:0.0.13"
+    "@bunito/common": "workspace:0.0.14",
+    "@bunito/config": "workspace:0.0.14",
+    "@bunito/container": "workspace:0.0.14",
+    "@bunito/logger": "workspace:0.0.14"
   },
   "devDependencies": {},
   "engines": {

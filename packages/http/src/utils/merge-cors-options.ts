@@ -1,19 +1,19 @@
 import type { CORSOptions } from '../types';
 
 export function mergeCorsOptions(
-  current: CORSOptions | undefined,
-  options: CORSOptions | undefined,
+  currentOptions: CORSOptions | undefined,
+  mergedOptions: CORSOptions | undefined,
 ): CORSOptions | undefined {
-  if (!current && !options) {
+  if (!currentOptions && !mergedOptions) {
     return undefined;
   }
 
-  if (!options || !current) {
-    return options ?? current;
+  if (!mergedOptions || !currentOptions) {
+    return mergedOptions ?? currentOptions;
   }
 
   return {
-    ...current,
-    ...options,
+    ...currentOptions,
+    ...mergedOptions,
   };
 }

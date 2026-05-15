@@ -1,11 +1,13 @@
-import { Exception, notEmptySet } from '../common';
+import { join } from 'node:path';
+import { notEmptySet } from '../common';
 import type { Context } from '../context';
-import type { StartProcessOptions } from '../services';
-import { CLIService } from '../services';
+import type { ProjectApp, StartProcessOptions } from '../services';
+import { CLIService, PROJECT_ENTRY_FILE, PROJECT_ENVS_FILE } from '../services';
 import { AbstractCommand } from './abstract-command';
 
 type StartCommandOptions = {
   apps?: Set<string>;
+  all?: boolean;
   watch?: boolean;
   prod?: boolean;
 } & StartProcessOptions;
@@ -18,14 +20,20 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
 
   public async run(): Promise<void> {
     const { project, spawn } = this.context;
-    const { settings } = project;
+    const { state } = project;
 
-    if (settings.mode === 'unknown') {
-      throw new Exception('Project is not initialized');
+    project.requireInitialized();
+
+    const { apps: onlyNames, all, prod, label, watch } = this.options;
+    const { path } = state;
+
+    let apps: ProjectApp[];
+
+    if (all || onlyNames) {
+      apps = project.getApps(onlyNames);
+    } else {
+      apps = [project.getApp()];
     }
-
-    const { apps: appNames, prod, label, watch } = this.options;
-    const { path } = settings;
 
     const bunArgs = ['bun', `--cwd=${path}`];
     const runArgs = ['run'];
@@ -40,19 +48,16 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
       envs.NODE_ENV = 'production';
     }
 
-    const apps = project.getApps(appNames);
-
-    for (const app of apps) {
-      const args = [...bunArgs];
-
-      if (app.envs) {
-        args.push(`--env-file=${app.envs}`);
-      }
-
-      args.push(...runArgs, app.entry);
+    for (const { name, path } of apps) {
+      const args = [
+        ...bunArgs,
+        `--env-file=${join(path, PROJECT_ENVS_FILE)}`,
+        ...runArgs,
+        join(path, PROJECT_ENTRY_FILE),
+      ];
 
       spawn.addProcess({
-        name: app.name,
+        name,
         args,
         envs,
       });
@@ -82,6 +87,12 @@ CLIService.registerCommand(StartCommand, {
         type: 'string',
         coerce: notEmptySet<string>,
       })
+      .option('all', {
+        describe: 'Start all apps except main one',
+        default: false,
+        type: 'boolean',
+        alias: 'a',
+      })
       .option('watch', {
         describe: 'Watch for changes',
         default: false,
@@ -95,7 +106,7 @@ CLIService.registerCommand(StartCommand, {
         alias: 'p',
       })
       .option('label', {
-        describe: 'App label kind',
+        describe: 'App label format',
         default: 'full',
         type: 'string',
         choices: ['name', 'pid', 'full'],
