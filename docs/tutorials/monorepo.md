@@ -39,9 +39,9 @@ class AppModule {}
 
 Each app has its own `apps/<name>/src/main.ts`, so it can be started separately.
 
-## Composed App
+## Main App
 
-The `mono` app composes both app modules:
+The main app in `src/main.ts` composes both app modules:
 
 ```ts
 import { Module } from '@bunito/bunito';
@@ -63,11 +63,12 @@ combined entrypoint.
 cd examples/monorepo
 bun run start first
 bun run start second
-bun run start mono
+bun run start
 ```
 
-Build every discovered app:
+Start or build every workspace app under `apps/*`:
 
 ```bash
-bun run build
+bun run start --all
+bun run build --all
 ```

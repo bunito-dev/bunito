@@ -8,6 +8,9 @@ A workspace with three apps and one shared library.
 
 ## Run 🚀
 
+`bun run start` starts the main composed app from `src/main.ts`. Start workspace
+apps by name, or use `--all` to start every app under `apps/*`.
+
 ```bash
 cd examples/monorepo
 bun run start first
@@ -28,7 +31,7 @@ bun run start
 Build every app:
 
 ```bash
-bun run build
+bun run build --all
 ```
 
 ## What To Read 🔎

@@ -111,7 +111,7 @@ Build the examples:
 
 ```bash
 cd examples/http
-bun run build
+bun run build --all
 ```
 
 ## Repository Examples
@@ -137,6 +137,7 @@ examples/
         .env
         src/main.ts
   microservices/
+    src/main.ts
     apps/
       foo/
         .env
@@ -144,16 +145,12 @@ examples/
       bar/
         .env
         src/main.ts
-      mono/
-        .env
-        src/main.ts
   monorepo/
+    src/main.ts
     apps/
       first/
         src/main.ts
       second/
-        src/main.ts
-      mono/
         src/main.ts
     libs/
       example/

@@ -1,10 +1,11 @@
 # Microservices
 
-The `examples/microservices` workspace shows three apps:
+The `examples/microservices` workspace shows two workspace apps and one composed
+main app:
 
 - `foo`: exposes an HTTP route and handles `foo.process` messages.
 - `bar`: exposes an HTTP route and handles `bar.process` messages.
-- `mono`: imports both modules into one process.
+- `src/main.ts`: imports both modules into one process.
 
 ## Run
 
@@ -21,7 +22,13 @@ choose the ports and broker settings.
 Run the composed app in one process:
 
 ```bash
-bun run start mono
+bun run start
+```
+
+Start every workspace app under `apps/*` with:
+
+```bash
+bun run start --all
 ```
 
 ## Controller

@@ -5,6 +5,9 @@ and loads each app's `.env` file automatically.
 
 ## Commands 🚀
 
+This workspace has only `apps/*` entries, so start a selected app by name or start
+all workspace apps with `--all`:
+
 ```bash
 bun run start simple-controller
 bun run start cors-support
