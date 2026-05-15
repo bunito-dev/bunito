@@ -25,7 +25,6 @@ function createContext(
   },
 ): Context {
   const logs: unknown[][] = [];
-  const files: string[] = [];
 
   return {
     settings: {
@@ -45,7 +44,6 @@ function createContext(
         if (!/^[a-z][a-z0-9-]*$/.test(name)) {
           throw new Exception('App name must be kebab-case');
         }
-        files.push(`apps/${name}/src/main.ts`);
       },
       renderTemplate:
         (template: { name?: string }) =>
@@ -71,13 +69,16 @@ async function expectRejectedMessage(
   action: Promise<unknown>,
   message: string,
 ): Promise<void> {
+  let error: unknown;
+
   try {
     await action;
-    throw new Error('Expected action to reject');
-  } catch (error) {
-    expect(error).toBeInstanceOf(Exception);
-    expect((error as Error).message).toBe(message);
+  } catch (caught) {
+    error = caught;
   }
+
+  expect(error).toBeInstanceOf(Exception);
+  expect((error as Error).message).toBe(message);
 }
 
 function getRegisteredCommand(commandName: string) {

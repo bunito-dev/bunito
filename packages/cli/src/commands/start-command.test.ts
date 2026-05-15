@@ -10,13 +10,16 @@ async function expectRejectedMessage(
   action: Promise<unknown>,
   message: string,
 ): Promise<void> {
+  let error: unknown;
+
   try {
     await action;
-    throw new Error('Expected action to reject');
-  } catch (error) {
-    expect(error).toBeInstanceOf(Exception);
-    expect((error as Error).message).toBe(message);
+  } catch (caught) {
+    error = caught;
   }
+
+  expect(error).toBeInstanceOf(Exception);
+  expect((error as Error).message).toBe(message);
 }
 
 function getRegisteredCommand(commandName: string) {

@@ -168,16 +168,19 @@ describe('ProjectService', () => {
     expect(await Bun.file(join(dir, 'apps/api/src/app-module.ts')).exists()).toBeTrue();
     expect(await Bun.file(join(dir, 'apps/api/src/index.ts')).exists()).toBeTrue();
 
+    let error: unknown;
+
     try {
       await service.renderTemplate(() => ({
         'apps/api/src/app-module.ts': 'export {};',
       }))();
-      throw new Error('Expected duplicate template paths to fail');
-    } catch (error) {
-      expect(error).toBeInstanceOf(Exception);
-      expect((error as Error).message).toBe(
-        'File "apps/api/src/app-module.ts" already exists',
-      );
+    } catch (caught) {
+      error = caught;
     }
+
+    expect(error).toBeInstanceOf(Exception);
+    expect((error as Error).message).toBe(
+      'File "apps/api/src/app-module.ts" already exists',
+    );
   });
 });

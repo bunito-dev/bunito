@@ -30,7 +30,6 @@ describe('CLIService', () => {
   });
 
   it('runs bundled command handlers through the CLI parser', async () => {
-    const logs: unknown[][] = [];
     const created: { name: string; apps: string[] }[] = [];
     const generated: unknown[][] = [];
     const builds: unknown[] = [];
@@ -51,12 +50,10 @@ describe('CLIService', () => {
       apps: new Set(['api']),
     };
     const logger = {
-      info: (...args: unknown[]) => {
-        logs.push(args);
+      info: () => {
         return logger;
       },
-      error: (...args: unknown[]) => {
-        logs.push(args);
+      error: () => {
         return logger;
       },
       br: () => undefined,

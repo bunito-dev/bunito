@@ -105,13 +105,16 @@ describe('ProviderStore', () => {
       },
     );
 
+    let error: unknown;
+
     try {
       await store.destroyInstances();
-      throw new Error('Expected destroyInstances to reject.');
-    } catch (error) {
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toBe('Destroy failed.');
+    } catch (caught) {
+      error = caught;
     }
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe('Destroy failed.');
 
     await store.destroyInstances();
   });

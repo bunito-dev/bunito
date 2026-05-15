@@ -53,13 +53,16 @@ describe('LocalBroker', () => {
       dataDir: '/tmp/bunito-broker-test',
     });
 
+    let error: unknown;
+
     try {
       await broker.sendRequest('orders.created', encode({}));
-      throw new Error('Request should time out');
-    } catch (err) {
-      expect(err).toBeInstanceOf(Error);
-      expect((err as Error).message).toBe('Request timed out');
+    } catch (caught) {
+      error = caught;
     }
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe('Request timed out');
   });
 
   it('writes, reads, and clears filesystem transport messages', async () => {
