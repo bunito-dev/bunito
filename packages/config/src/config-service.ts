@@ -73,19 +73,27 @@ export class ConfigService {
       : readers.filter((reader) => activeReaders.has(reader.NAME));
   }
 
-  whenCI<TValue>(on: TValue, off: TValue): TValue {
+  whenCI<TValue>(on: TValue): TValue | undefined;
+  whenCI<TValue>(on: TValue, off: TValue): TValue;
+  whenCI<TValue>(on: TValue, off?: TValue): TValue | undefined {
     return this.flags.isCI ? on : off;
   }
 
-  whenProd<TValue>(on: TValue, off: TValue): TValue {
+  whenProd<TValue>(on: TValue): TValue | undefined;
+  whenProd<TValue>(on: TValue, off: TValue): TValue;
+  whenProd<TValue>(on: TValue, off?: TValue): TValue | undefined {
     return this.flags.isProd ? on : off;
   }
 
-  whenTest<TValue>(on: TValue, off: TValue): TValue {
+  whenTest<TValue>(on: TValue): TValue | undefined;
+  whenTest<TValue>(on: TValue, off: TValue): TValue;
+  whenTest<TValue>(on: TValue, off?: TValue): TValue | undefined {
     return this.flags.isTest ? on : off;
   }
 
-  whenDev<TValue>(on: TValue, off: TValue): TValue {
+  whenDev<TValue>(on: TValue): TValue | undefined;
+  whenDev<TValue>(on: TValue, off: TValue): TValue;
+  whenDev<TValue>(on: TValue, off?: TValue): TValue | undefined {
     return this.flags.isDev ? on : off;
   }
 

@@ -3,16 +3,15 @@ import type { ProviderFactoryOptions, ProviderValueOptions } from '@bunito/conta
 import type { ZodType } from 'zod';
 import type { ConfigService } from './config-service';
 
+export type ConfigContext = Partial<ConfigService>;
+
 export type ConfigBuilder<TConfig> = (
-  this: ConfigService,
-  configService: ConfigService,
+  this: ConfigContext,
+  context: ConfigContext,
 ) => MaybePromise<TConfig>;
 
 export type ConfigProvider<TConfig> =
-  | Mandatory<
-      ProviderFactoryOptions<Promise<TConfig>, [configService?: ConfigService]>,
-      'token'
-    >
+  | Mandatory<ProviderFactoryOptions<Promise<TConfig>, [context: ConfigContext]>, 'token'>
   | ProviderValueOptions<TConfig>;
 
 export type ResolveConfig<TValue> =

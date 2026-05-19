@@ -39,6 +39,7 @@ export function ProjectTemplate(options: {
         cli: 'bunito',
         build: 'bunito build',
         start: 'bunito start',
+        test: 'bunito test',
       },
       dependencies: {
         '@bunito/bunito': pkgVersion,
@@ -66,8 +67,9 @@ export function ProjectTemplate(options: {
       extends: '@bunito/bunito/tsconfig.json',
       compilerOptions: {
         paths: {
+          '@app': ['./src/index.ts'],
           '@apps/*': ['./apps/*/src/index.ts'],
-          '@libs/*': ['./libs/*/index.ts'],
+          '@libs/*': ['./libs/*/src/index.ts'],
         },
       },
     },

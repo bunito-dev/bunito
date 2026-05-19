@@ -1,7 +1,7 @@
 import type { Mandatory } from '@bunito/common';
 import type { LOG_LEVELS } from './constants';
 
-export type LoggerSettings = {
+export type LoggerState = {
   context?: string;
   timestamp?: Date;
 };
@@ -15,12 +15,12 @@ export type LogLevel = {
 export type LogArg = { context: unknown } | unknown;
 export type LogArgs<TArg0 = LogArg> = [TArg0, ...LogArg[]];
 
-export type WriteLogOptions = LoggerSettings & {
+export type LogOptions = LoggerState & {
   kind: LogLevelKind;
   args: LogArg[];
 };
 
-export type LogRecord = Mandatory<LoggerSettings, 'timestamp'> & {
+export type LogRecord = Mandatory<LoggerState, 'timestamp'> & {
   level: LogLevel;
   requestId?: number;
   message?: string;

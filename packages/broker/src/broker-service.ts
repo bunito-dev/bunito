@@ -18,6 +18,7 @@ import type {
 } from './types';
 
 @Provider({
+  global: true,
   injects: [
     BrokerConfig,
     {
@@ -42,8 +43,6 @@ export class BrokerService {
     private readonly container: Container,
     adapters: BrokerAdapter[] | null = null,
   ) {
-    logger?.setContext(BrokerService);
-
     const { adapter: name } = config;
 
     if (!adapters?.length) {

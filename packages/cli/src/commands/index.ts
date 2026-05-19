@@ -3,3 +3,4 @@ export * from './build-command';
 export * from './generate-command';
 export * from './init-command';
 export * from './start-command';
+export * from './test-command';

@@ -1,7 +1,7 @@
 import type { Fn } from '@bunito/common';
 import type { Injections, MatchedControllers, ModuleId, ModuleLike } from './compiler';
 import { ContainerCompiler } from './compiler';
-import type { ResolveProviderOptions } from './runtime';
+import type { ResolveInjectionsOptions, ResolveProviderOptions } from './runtime';
 import { ContainerRuntime } from './runtime';
 import type { ResolveToken, Token } from './utils';
 import { Id } from './utils';
@@ -37,36 +37,32 @@ export class Container {
 
   resolveProvider<TInstance>(
     token: Token<TInstance>,
-    options?: Partial<ResolveProviderOptions>,
+    options?: ResolveProviderOptions,
   ): Promise<TInstance>;
   resolveProvider<TToken extends Token>(
     token: TToken,
-    options?: Partial<ResolveProviderOptions>,
+    options?: ResolveProviderOptions,
   ): Promise<ResolveToken<TToken>>;
   resolveProvider(token: Token, options: ResolveProviderOptions = {}): Promise<unknown> {
-    return this.runtime.resolveProvider(Id.for(token), options, true);
-  }
+    const { context, moduleId } = options;
 
-  tryResolveProvider<TInstance>(
-    token: Token<TInstance>,
-    options?: Partial<ResolveProviderOptions>,
-  ): Promise<TInstance | undefined>;
-  tryResolveProvider<TToken extends Token>(
-    token: TToken,
-    options?: Partial<ResolveProviderOptions>,
-  ): Promise<ResolveToken<TToken> | undefined>;
-  tryResolveProvider(
-    token: Token,
-    options: ResolveProviderOptions = {},
-  ): Promise<unknown> {
-    return this.runtime.resolveProvider(Id.for(token), options, false);
+    return this.runtime.resolveProvider(Id.for(token), {
+      moduleId,
+      contextId: context ? Id.for(context) : undefined,
+    });
   }
 
   resolveInjections(
     injections: Injections,
-    options?: Partial<ResolveProviderOptions>,
+    options: ResolveInjectionsOptions = {},
   ): Promise<unknown[]> {
-    return this.runtime.resolveInjections(injections, options);
+    const { context, moduleId, injectionResolver } = options;
+
+    return this.runtime.resolveInjections(injections, {
+      moduleId,
+      injectionResolver,
+      contextId: context ? Id.for(context) : undefined,
+    });
   }
 
   async destroyInstances(): Promise<void> {

@@ -1,13 +1,10 @@
 import type { Any, Class, Fn, MaybePromise } from '@bunito/common';
 import type {
-  ModuleOptions,
   ProviderClassOptions,
   ProviderHandlerOptions,
   WithInjections,
 } from '../compiler';
 import type { CLASS_METADATA_KEYS } from './constants';
-
-export type ModuleMetadata = Omit<ModuleOptions, 'token'>;
 
 export type ProviderDecoratorOptionsKey = Exclude<keyof ProviderClassOptions, 'useClass'>;
 export type ProviderDecoratorOptions<TOmit extends ProviderDecoratorOptionsKey = never> =

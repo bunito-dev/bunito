@@ -18,6 +18,7 @@
       },
       "devDependencies": {
         "@bunito/cli": "workspace:*",
+        "@bunito/testing": "workspace:*",
       },
     },
     "examples/http": {
@@ -29,6 +30,7 @@
       },
       "devDependencies": {
         "@bunito/cli": "workspace:*",
+        "@bunito/testing": "workspace:*",
       },
     },
     "examples/microservices": {
@@ -40,6 +42,7 @@
       },
       "devDependencies": {
         "@bunito/cli": "workspace:*",
+        "@bunito/testing": "workspace:*",
       },
     },
     "examples/monorepo": {
@@ -49,6 +52,7 @@
       },
       "devDependencies": {
         "@bunito/cli": "workspace:*",
+        "@bunito/testing": "workspace:*",
       },
     },
     "packages/app": {
@@ -59,6 +63,7 @@
         "@bunito/config": "workspace:0.0.14",
         "@bunito/container": "workspace:0.0.14",
         "@bunito/logger": "workspace:0.0.14",
+        "@bunito/testing": "workspace:0.0.14",
       },
     },
     "packages/broker": {
@@ -83,22 +88,23 @@
       "name": "@bunito/bun",
       "version": "0.0.14",
       "dependencies": {
-        "@bunito/app": "workspace:0.0.10",
-        "@bunito/common": "workspace:0.0.10",
-        "@bunito/config": "workspace:0.0.10",
-        "@bunito/container": "workspace:0.0.10",
-        "@bunito/logger": "workspace:0.0.10",
+        "@bunito/app": "workspace:0.0.14",
+        "@bunito/common": "workspace:0.0.14",
+        "@bunito/config": "workspace:0.0.14",
+        "@bunito/container": "workspace:0.0.14",
+        "@bunito/logger": "workspace:0.0.14",
+        "@bunito/testing": "workspace:0.0.14",
       },
     },
     "packages/bunito": {
       "name": "@bunito/bunito",
       "version": "0.0.14",
       "dependencies": {
-        "@bunito/app": "workspace:0.0.10",
-        "@bunito/common": "workspace:0.0.10",
-        "@bunito/config": "workspace:0.0.10",
-        "@bunito/container": "workspace:0.0.10",
-        "@bunito/logger": "workspace:0.0.10",
+        "@bunito/app": "workspace:0.0.14",
+        "@bunito/common": "workspace:0.0.14",
+        "@bunito/config": "workspace:0.0.14",
+        "@bunito/container": "workspace:0.0.14",
+        "@bunito/logger": "workspace:0.0.14",
       },
     },
     "packages/cli": {
@@ -108,7 +114,7 @@
         "bunito": "./src/main.ts",
       },
       "dependencies": {
-        "@bunito/common": "workspace:0.0.10",
+        "@bunito/common": "workspace:0.0.14",
         "@inquirer/prompts": "8.4.2",
         "yargs": "18.0.0",
         "zod": "catalog:",
@@ -127,6 +133,7 @@
       "dependencies": {
         "@bunito/common": "workspace:0.0.14",
         "@bunito/container": "workspace:0.0.14",
+        "@bunito/testing": "workspace:0.0.14",
       },
       "devDependencies": {
         "zod": "catalog:",
@@ -146,11 +153,11 @@
       "name": "@bunito/http",
       "version": "0.0.14",
       "dependencies": {
-        "@bunito/bun": "workspace:0.0.10",
-        "@bunito/common": "workspace:0.0.10",
-        "@bunito/config": "workspace:0.0.10",
-        "@bunito/container": "workspace:0.0.10",
-        "@bunito/logger": "workspace:0.0.10",
+        "@bunito/bun": "workspace:0.0.14",
+        "@bunito/common": "workspace:0.0.14",
+        "@bunito/config": "workspace:0.0.14",
+        "@bunito/container": "workspace:0.0.14",
+        "@bunito/logger": "workspace:0.0.14",
       },
       "devDependencies": {
         "zod": "catalog:",
@@ -166,6 +173,14 @@
         "@bunito/common": "workspace:0.0.14",
         "@bunito/config": "workspace:0.0.14",
         "@bunito/container": "workspace:0.0.14",
+        "@bunito/testing": "workspace:0.0.14",
+      },
+    },
+    "packages/testing": {
+      "name": "@bunito/testing",
+      "version": "0.0.14",
+      "dependencies": {
+        "@bunito/common": "workspace:0.0.14",
       },
     },
   },
@@ -262,6 +277,8 @@
     "@bunito/http": ["@bunito/http@workspace:packages/http"],
 
     "@bunito/logger": ["@bunito/logger@workspace:packages/logger"],
+
+    "@bunito/testing": ["@bunito/testing@workspace:packages/testing"],
 
     "@docsearch/css": ["@docsearch/css@3.8.2", "", {}, "sha512-y05ayQFyUmCXze79+56v/4HpycYF3uFqB78pLPrSV5ZKAlDuIAAJNhaRi8tTdRNXh05yxX/TyNnzD6LwSM89vQ=="],
 

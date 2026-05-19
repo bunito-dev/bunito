@@ -1,7 +1,9 @@
 import type { Fn, MaybePromise } from '@bunito/common';
-import type { ModuleId } from '../compiler';
-import type { TokenLike } from '../utils';
+import type { ModuleId, ProviderId } from '../compiler';
+import type { Id, TokenLike } from '../utils';
 import type { ProviderStore } from './provider-store';
+
+export type ContextId = Id;
 
 export type InjectionResolver = (token: TokenLike, options?: unknown) => MaybePromise;
 
@@ -17,6 +19,17 @@ export type RequestState = WeakMap<symbol | object, unknown>;
 
 export type ResolveProviderOptions = {
   moduleId?: ModuleId;
+  context?: TokenLike;
+};
+
+export type ResolveInjectionsOptions = ResolveProviderOptions & {
+  injectionResolver?: InjectionResolver;
+};
+
+export type ResolveProviderRuntimeOptions = {
+  moduleId?: ModuleId;
+  providerId?: ProviderId;
+  contextId?: ContextId;
   injectionResolver?: InjectionResolver;
 };
 

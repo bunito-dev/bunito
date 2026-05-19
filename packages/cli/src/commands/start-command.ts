@@ -36,7 +36,7 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
     }
 
     const bunArgs = ['bun', `--cwd=${path}`];
-    const runArgs = ['run'];
+    const runArgs = ['run', '--feature=DEV_ONLY'];
 
     const envs: Record<string, string> = {};
 
@@ -46,6 +46,10 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
 
     if (prod) {
       envs.NODE_ENV = 'production';
+      runArgs.push('--feature=PROD_ONLY');
+    } else {
+      envs.NODE_ENV = 'development';
+      runArgs.push('--feature=DEV_ONLY', '--feature=TEST_ONLY');
     }
 
     for (const { name, path } of apps) {

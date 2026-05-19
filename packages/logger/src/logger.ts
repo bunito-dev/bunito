@@ -1,42 +1,23 @@
-import { Provider } from '@bunito/container';
+import type { ContextId } from '@bunito/container';
+import { CONTEXT_ID, Provider } from '@bunito/container';
+import type { LoggerInstance } from './logger-instance';
 import { LoggerService } from './logger-service';
-import type { LogArg, LogArgs, LoggerSettings, LogLevelKind } from './types';
-import { resolveContext } from './utils';
+import type { LogArg, LogArgs, LoggerState, LogLevelKind } from './types';
 
 @Provider({
   scope: 'transient',
   global: true,
-  injects: [LoggerService],
+  injects: [null, LoggerService, CONTEXT_ID],
 })
-export class Logger {
+export class Logger implements LoggerInstance<Logger> {
   constructor(
+    private readonly state: LoggerState = {},
     private readonly loggerService: LoggerService,
-    private readonly settings: LoggerSettings = {},
-  ) {}
-
-  setContext(...contextLike: unknown[]): this {
-    this.settings.context = resolveContext(contextLike);
-
-    return this;
-  }
-
-  startTracking(): this {
-    this.settings.timestamp = new Date();
-    return this;
-  }
-
-  stopTracking(): this {
-    this.settings.timestamp = undefined;
-    return this;
-  }
-
-  clone(...contextLike: unknown[]): Logger {
-    const { context, timestamp } = this.settings;
-
-    return new Logger(this.loggerService, {
-      context: resolveContext(contextLike) ?? context,
-      timestamp,
-    });
+    contextId: ContextId | null = null,
+  ) {
+    if (contextId) {
+      state.context = contextId.name;
+    }
   }
 
   fatal(...args: LogArgs): void {
@@ -68,17 +49,24 @@ export class Logger {
     return args[0];
   }
 
-  track(...contextLike: unknown[]): Logger {
-    const { context } = this.settings;
+  track(context?: string): Logger {
+    const { context: stateContext } = this.state;
 
-    return new Logger(this.loggerService, {
-      context: resolveContext(contextLike) ?? context,
-    }).startTracking();
+    return new Logger(
+      {
+        context:
+          stateContext && context
+            ? `${stateContext}.${context}`
+            : (context ?? stateContext),
+        timestamp: new Date(),
+      },
+      this.loggerService,
+    );
   }
 
-  protected writeLog(kind: LogLevelKind, args: LogArg[]): void {
-    this.loggerService.writeLog({
-      ...this.settings,
+  private writeLog(kind: LogLevelKind, args: LogArg[]): void {
+    this.loggerService.processLog({
+      ...this.state,
       kind,
       args,
     });

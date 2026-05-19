@@ -40,24 +40,20 @@ export class ContainerCompiler {
     [this.rootModuleId] = this.compileModule(moduleLike);
   }
 
-  getModule(moduleId: ModuleId, orThrow?: true): ModuleNode;
-  getModule(moduleId: ModuleId, orThrow: boolean): ModuleNode | undefined;
-  getModule(moduleId: ModuleId, orThrow = true): ModuleNode | undefined {
+  getModule(moduleId: ModuleId): ModuleNode {
     const result = this.modules.get(moduleId);
 
-    if (!result && orThrow) {
+    if (!result) {
       return InternalException.throw`Module ${moduleId} was not found`;
     }
 
     return result;
   }
 
-  getProvider(providerId: ProviderId, orThrow?: true): ProviderDefinition;
-  getProvider(providerId: ProviderId, orThrow: boolean): ProviderDefinition | undefined;
-  getProvider(providerId: ProviderId, orThrow = true): ProviderDefinition | undefined {
+  getProvider(providerId: ProviderId): ProviderDefinition {
     const result = this.providers.get(providerId);
 
-    if (!result && orThrow) {
+    if (!result) {
       return InternalException.throw`Provider ${providerId} was not found`;
     }
 
@@ -149,7 +145,21 @@ export class ContainerCompiler {
     parentId?: Id,
     parentStack = new Set<Id>(),
   ): [moduleId: Id, moduleNode: ModuleNode] {
-    const moduleId = Id.for(moduleLike);
+    let moduleClass: Class | undefined;
+    let moduleOptions: ModuleOptions | undefined;
+
+    if (isClass(moduleLike)) {
+      moduleClass = moduleLike;
+      moduleOptions = getClassMetadata(moduleClass, 'module');
+    } else if (isObject<ModuleOptions>(moduleLike)) {
+      moduleOptions = moduleLike;
+    }
+
+    if (!moduleOptions) {
+      return InternalException.throw`Missing @Module() metadata on ${moduleLike}`;
+    }
+
+    const moduleId = Id.for(moduleOptions.token ?? moduleLike);
 
     if (parentStack.has(moduleId)) {
       return InternalException.throw`Circular module dependency detected: ${[
@@ -167,20 +177,6 @@ export class ContainerCompiler {
       }
 
       return [moduleId, moduleNode];
-    }
-
-    let moduleClass: Class | undefined;
-    let moduleOptions: ModuleOptions | undefined;
-
-    if (isClass(moduleLike)) {
-      moduleClass = moduleLike;
-      moduleOptions = getClassMetadata(moduleClass, 'module');
-    } else if (isObject<ModuleOptions>(moduleLike)) {
-      moduleOptions = moduleLike;
-    }
-
-    if (!moduleOptions) {
-      return InternalException.throw`Missing @Module() metadata on ${moduleLike}`;
     }
 
     const {

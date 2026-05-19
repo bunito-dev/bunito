@@ -141,9 +141,9 @@ export class HTTPRouter implements ServerRouter {
       return new NotImplementedException().toResponse(defaultResponseContentType);
     }
 
-    const logger = await this.container.tryResolveProvider(Logger);
-
-    logger?.setContext(HTTPRouter);
+    const logger = await this.container.resolveProvider(Logger, {
+      context: HTTPRouter,
+    });
 
     const {
       controller: { providerId, moduleId, middleware },

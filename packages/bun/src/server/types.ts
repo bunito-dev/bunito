@@ -5,6 +5,8 @@ export type Server = Bun.Server<unknown>;
 
 export type ServerOptions = Bun.Serve.Options<unknown>;
 
+export type ServerFactory = (options: ServerOptions) => Server;
+
 export type HTTPMethod = Bun.Serve.HTTPMethod;
 
 export type ServerRequest = Request & {

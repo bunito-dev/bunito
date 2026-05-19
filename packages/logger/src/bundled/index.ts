@@ -1,2 +1,2 @@
-export * from './json-formatter';
-export * from './pretty-formatter';
+export * from './json-transport';
+export * from './pretty-transform';

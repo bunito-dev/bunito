@@ -1,97 +1,61 @@
 import type { RawObject } from '@bunito/common';
-import {
-  assignNonNullish,
-  InternalException,
-  isFn,
-  isObject,
-  isString,
-} from '@bunito/common';
+import { InternalException, isFn, isString } from '@bunito/common';
 import { ConfigService } from '../config-service';
-import type { ConfigBuilder, ConfigProvider } from '../types';
+import type { ConfigBuilder, ConfigContext, ConfigProvider } from '../types';
 
-export function defineConfig<TConfig extends RawObject>(
-  builder: ConfigBuilder<Partial<TConfig>>,
-  config: TConfig,
-): ConfigProvider<TConfig>;
 export function defineConfig<TConfig extends RawObject>(
   builder: ConfigBuilder<TConfig>,
 ): ConfigProvider<TConfig>;
 export function defineConfig<TConfig extends RawObject>(
   name: string,
-  builder: ConfigBuilder<Partial<TConfig>>,
   config: TConfig,
 ): ConfigProvider<TConfig>;
-export function defineConfig<TConfig extends RawObject>(
-  name: string,
-  configOrBuilder: TConfig | ConfigBuilder<TConfig>,
-): ConfigProvider<TConfig>;
-export function defineConfig<TConfig extends RawObject>(
-  ...args: unknown[]
-): ConfigProvider<TConfig> {
+export function defineConfig(
+  nameOrBuilder: string | ConfigBuilder<RawObject>,
+  config: RawObject = {},
+): ConfigProvider<RawObject> {
   let name: string | undefined;
-  let config: TConfig | undefined;
-  let builder: ConfigBuilder<TConfig> | undefined;
+  let builder: ConfigBuilder<RawObject> | undefined;
 
-  for (const arg of args) {
-    if (isString(arg, false)) {
-      name = arg;
-      continue;
-    }
-
-    if (isObject(arg)) {
-      config = arg as TConfig;
-      continue;
-    }
-
-    if (isFn(arg)) {
-      if (!name) {
-        name = arg.name;
-      }
-      builder = arg as ConfigBuilder<TConfig>;
-    }
+  if (isString(nameOrBuilder, false)) {
+    name = nameOrBuilder;
+  } else if (isFn(nameOrBuilder)) {
+    name = nameOrBuilder.name;
+    builder = nameOrBuilder;
   }
 
   if (!name) {
-    return InternalException.throw`Unnamed config detected`;
+    throw new InternalException('Unnamed config');
   }
 
-  const token = Symbol(`config(${name})`);
+  const token = `config(${name})`;
 
-  if (!builder) {
+  if (builder) {
     return {
       token,
-      useValue: config as TConfig,
+      useFactory: async (context: ConfigContext) => {
+        try {
+          return await builder.call(context, context);
+        } catch (err) {
+          const exception = InternalException.isInstance(err)
+            ? err
+            : new InternalException('Failed to build config', err);
+
+          throw exception.setContext(token);
+        }
+      },
+      scope: 'singleton',
+      injects: [
+        {
+          useToken: ConfigService,
+          defaultValue: {},
+        },
+      ],
     };
   }
 
   return {
     token,
-    useFactory: async (configService: ConfigService | undefined) => {
-      if (!configService) {
-        return config as TConfig;
-      }
-
-      try {
-        return assignNonNullish(
-          {
-            ...(config ?? {}),
-          } as TConfig,
-          await builder.call(configService, configService),
-        );
-      } catch (err) {
-        if (InternalException.isInstance(err)) {
-          throw err.setContext(name);
-        }
-
-        throw new InternalException('Failed to build config', err).setContext(name);
-      }
-    },
-    scope: 'singleton',
-    injects: [
-      {
-        useToken: ConfigService,
-        optional: true,
-      },
-    ],
+    useValue: config,
   };
 }

@@ -9,10 +9,13 @@ export type ModuleLike = Class | ModuleOptions;
 
 export type ModuleOptions = {
   token?: Token;
+  providers?: ProviderLike[];
+  controllers?: Class[];
+  extensions?: Class[];
   imports?: ModuleLike[];
   exports?: TokenLike[];
 } & {
-  [TKey in keyof Bunito.ModuleProviders]?: Bunito.ModuleProviders[TKey];
+  [TKey in keyof Bunito.Module]?: Bunito.Module[TKey];
 };
 
 export type ModuleNode = {
@@ -82,7 +85,7 @@ export type ProviderEntity = {
 // injections
 
 export type Injections = InjectionLike[] | Record<string, InjectionLike>;
-export type InjectionLike = TokenLike | InjectionOptions;
+export type InjectionLike = null | TokenLike | InjectionOptions;
 
 export type InjectionTokenOptions<TOptions = unknown> = {
   useToken: TokenLike;

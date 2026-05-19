@@ -1,2 +1,8 @@
-export { App } from './app';
-export { OnAppShutdown, OnAppStart } from './decorators';
+import { feature } from 'bun:bundle';
+
+export * from './app';
+export * from './decorators';
+
+if (feature('TEST_ONLY')) {
+  await import('./testing');
+}

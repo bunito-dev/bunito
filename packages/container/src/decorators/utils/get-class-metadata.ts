@@ -1,18 +1,13 @@
 import type { Fn } from '@bunito/common';
 import { isFn, isObject } from '@bunito/common';
-import type { ControllerOptions } from '../../compiler';
+import type { ControllerOptions, ModuleOptions } from '../../compiler';
 import { CLASS_METADATA_KEYS } from '../constants';
-import type {
-  ClassMetadataKind,
-  ClassPropsMetadata,
-  ModuleMetadata,
-  ProviderMetadata,
-} from '../types';
+import type { ClassMetadataKind, ClassPropsMetadata, ProviderMetadata } from '../types';
 
 export function getClassMetadata(
   target: unknown,
   kind: 'module',
-): ModuleMetadata | undefined;
+): ModuleOptions | undefined;
 export function getClassMetadata(
   target: unknown,
   kind: 'provider',

@@ -1,8 +1,9 @@
+import type { ModuleOptions } from '../compiler';
 import { CLASS_METADATA_KEYS } from './constants';
-import type { ClassDecorator, ModuleMetadata, ProviderDecoratorOptions } from './types';
+import type { ClassDecorator, ProviderDecoratorOptions } from './types';
 import { setProviderMetadataOptions } from './utils';
 
-type ModuleDecoratorOptions = ModuleMetadata &
+type ModuleDecoratorOptions = ModuleOptions &
   ProviderDecoratorOptions<'global' | 'token'>;
 
 export function Module(options: ModuleDecoratorOptions = {}): ClassDecorator {

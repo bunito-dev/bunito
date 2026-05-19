@@ -2,11 +2,14 @@
   "extends": "@bunito/bunito/tsconfig.json",
   "compilerOptions": {
     "paths": {
+      "@app": [
+        "./src/index.ts"
+      ],
       "@apps/*": [
         "./apps/*/src/index.ts"
       ],
       "@libs/*": [
-        "./libs/*/index.ts"
+        "./libs/*/src/index.ts"
       ]
     }
   }

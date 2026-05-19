@@ -21,7 +21,7 @@ export function AppTemplate(): TemplateResult {
     `,
 
     [join(PROJECT_SRC_DIR, `index.ts`)]: `
-      export * from './app-module';
+      // Add your app exports here
     `,
 
     '.env': `

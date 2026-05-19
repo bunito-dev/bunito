@@ -8,9 +8,7 @@ export class SecondService {
   constructor(
     private readonly logger: Logger,
     private readonly exampleService: ExampleService,
-  ) {
-    logger.setContext(SecondService);
-  }
+  ) {}
 
   @OnAppStart()
   onStart() {

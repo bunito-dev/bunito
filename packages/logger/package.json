@@ -37,7 +37,8 @@
   "dependencies": {
     "@bunito/common": "workspace:0.0.14",
     "@bunito/config": "workspace:0.0.14",
-    "@bunito/container": "workspace:0.0.14"
+    "@bunito/container": "workspace:0.0.14",
+    "@bunito/testing": "workspace:0.0.14"
   },
   "devDependencies": {},
   "engines": {

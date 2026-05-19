@@ -11,6 +11,7 @@ import type {
   HTTPMethod,
   RequestContext,
   Server,
+  ServerFactory,
   ServerOptions,
   ServerRequest,
   WebSocketEvent,
@@ -25,11 +26,11 @@ import type {
     },
     Container,
     {
-      useToken: ServerRouter,
-      optional: true,
+      useToken: SERVER_FACTORY_ID,
+      defaultValue: Bun.serve,
     },
     {
-      useToken: SERVER_FACTORY_ID,
+      useToken: ServerRouter,
       optional: true,
     },
   ],
@@ -46,14 +47,12 @@ export class ServerService {
     private readonly config: ResolveConfig<typeof ServerConfig>,
     private readonly logger: Logger | null,
     private readonly container: Container,
+    private readonly serverFactory: ServerFactory,
     private readonly routers: ServerRouter[],
-    private readonly serverFactory: typeof Bun.serve | null = null,
   ) {
     if (!routers?.length) {
       InternalException.throw`No server routers found`;
     }
-
-    logger?.setContext(ServerService);
   }
 
   @OnAppStart()
@@ -95,7 +94,7 @@ export class ServerService {
       options.websocket = this.createWebSocketOption();
     }
 
-    this.server = (this.serverFactory ?? Bun.serve)({
+    this.server = this.serverFactory({
       ...options,
       error: (error) => {
         this.logger?.fatal('Unhandled error', error);
@@ -106,7 +105,7 @@ export class ServerService {
       },
     });
 
-    this.logger?.debug(`Server started: ${this.server.url.toString()}`);
+    this.logger?.info(`Server started: ${this.server.url.toString()}`);
   }
 
   @OnAppShutdown()
@@ -117,7 +116,7 @@ export class ServerService {
     }
 
     await this.server.stop(true);
-    this.logger?.debug('Server stopped');
+    this.logger?.info('Server stopped');
 
     this.server = undefined;
     this.routerRoles.route = undefined;
@@ -172,9 +171,11 @@ export class ServerService {
     return await this.container.runInRequestContext(async () => {
       let response: Response | undefined;
 
-      const logger = await this.container.tryResolveProvider(Logger);
+      const logger = await this.container.resolveProvider(Logger, {
+        context: ServerService,
+      });
 
-      logger?.setContext(ServerService)?.startTracking();
+      // logger?.startTracking();
 
       const logPrefix = `${request.method} ${request.url}`;
 
@@ -223,7 +224,7 @@ export class ServerService {
     const routers = this.routerRoles.websocket;
 
     await this.container.runInRequestContext(async () => {
-      const logger = await this.container.tryResolveProvider(Logger);
+      const logger = await this.container.resolveProvider(Logger);
 
       for (const router of routers) {
         if (!isFn(router.processWebSocketEvent)) {

@@ -9,8 +9,12 @@ declare global {
   }
 
   namespace Bunito {
-    interface ModuleProviders {
+    interface Module {
       configs: import('./types').ConfigProvider<unknown>[];
+    }
+
+    interface Test {
+      ConfigModule: import('@bunito/container').ModuleOptions;
     }
   }
 }

@@ -1,11 +1,10 @@
-import { Logger, LoggerModule, Module, OnAppStart } from '@bunito/bunito';
-import { BarService } from './bar-service';
-import { FooService } from './foo-service';
+import { Logger, Module, OnAppStart } from '@bunito/bunito';
+import { BarService, FooService } from './services';
 
 @Module({
-  imports: [LoggerModule],
   providers: [FooService, BarService],
   injects: [Logger],
+  exports: [FooService, BarService],
 })
 export class AppModule {
   constructor(private readonly logger: Logger) {

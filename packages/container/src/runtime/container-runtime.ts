@@ -12,6 +12,7 @@ import { OnDestroy, OnInit, OnResolve } from '../decorators';
 import type { TokenLike } from '../utils';
 import { Id } from '../utils';
 import {
+  CONTEXT_ID,
   MODULE_ID,
   PARENT_MODULE_IDS,
   REQUEST_ID,
@@ -20,7 +21,7 @@ import {
   ROOT_MODULE_ID,
 } from './constants';
 import { ProviderStore } from './provider-store';
-import type { RequestStore, ResolveProviderOptions } from './types';
+import type { RequestStore, ResolveProviderRuntimeOptions } from './types';
 
 export class ContainerRuntime extends ProviderStore {
   private static requestCounter = 0;
@@ -50,8 +51,7 @@ export class ContainerRuntime extends ProviderStore {
 
   async resolveProvider<TInstance = unknown>(
     providerId: ProviderId,
-    options: ResolveProviderOptions = {},
-    orThrow = true,
+    options: ResolveProviderRuntimeOptions = {},
   ): Promise<TInstance | undefined> {
     let instance = await this.getInstance(providerId);
 
@@ -61,16 +61,16 @@ export class ContainerRuntime extends ProviderStore {
 
     const { rootModuleId } = this.compiler;
 
-    const { moduleId: moduleIdOption = rootModuleId } = options;
+    const {
+      moduleId: moduleIdOption = rootModuleId,
+      contextId,
+      injectionResolver,
+    } = options;
 
-    const provider = this.compiler.getProvider(providerId, orThrow);
+    const provider = this.compiler.getProvider(providerId);
 
     if (!provider) {
-      if (orThrow) {
-        InternalException.throw`Provider ${providerId} was not found`;
-      }
-
-      return;
+      return InternalException.throw`Provider ${providerId} was not found`;
     }
 
     let providerModuleId: ModuleId | undefined;
@@ -80,11 +80,7 @@ export class ContainerRuntime extends ProviderStore {
     }
 
     if (!providerModuleId) {
-      if (orThrow) {
-        InternalException.throw`Provider ${providerId} is not available in module ${moduleIdOption}`;
-      }
-
-      return;
+      return InternalException.throw`Provider ${providerId} is not available in module ${moduleIdOption}`;
     }
 
     if ('useValue' in provider.options) {
@@ -111,11 +107,7 @@ export class ContainerRuntime extends ProviderStore {
         const requestStore = this.requestStorage.getStore();
 
         if (!requestStore) {
-          if (orThrow) {
-            InternalException.throw`Provider ${providerId} is not available outside request scope`;
-          }
-
-          return;
+          return InternalException.throw`Provider ${providerId} is not available outside request scope`;
         }
 
         requestStore.providers ??= new ProviderStore();
@@ -140,8 +132,10 @@ export class ContainerRuntime extends ProviderStore {
     }
 
     const args = await this.resolveInjections(injects, {
-      ...options,
       moduleId: providerModuleId,
+      contextId,
+      providerId,
+      injectionResolver,
     });
 
     if ('useClass' in provider.options) {
@@ -185,7 +179,7 @@ export class ContainerRuntime extends ProviderStore {
       return;
     }
 
-    const { moduleId, handlers } = this.compiler.getProvider(providerId, true);
+    const { moduleId, handlers } = this.compiler.getProvider(providerId);
 
     const handlerOptions = handlers?.get(handlerDecorator);
 
@@ -199,6 +193,7 @@ export class ContainerRuntime extends ProviderStore {
       if (instance[propKey]) {
         const args = await this.resolveInjections(injects, {
           moduleId,
+          contextId: providerId,
         });
 
         await instance[propKey](...args);
@@ -214,7 +209,7 @@ export class ContainerRuntime extends ProviderStore {
 
   async resolveInjections(
     injections: Injections | undefined,
-    options: ResolveProviderOptions = {},
+    options: ResolveProviderRuntimeOptions = {},
   ): Promise<unknown[]> {
     const args: unknown[] = [];
 
@@ -238,11 +233,20 @@ export class ContainerRuntime extends ProviderStore {
   private async resolveInjection(
     pos: string,
     injection: InjectionLike,
-    options: ResolveProviderOptions,
+    options: ResolveProviderRuntimeOptions,
   ): Promise<unknown> {
+    if (injection === null) {
+      return;
+    }
+
     const { rootModuleId } = this.compiler;
 
-    const { moduleId = rootModuleId, injectionResolver } = options;
+    const {
+      moduleId = rootModuleId,
+      contextId,
+      providerId: currentProviderId,
+      injectionResolver,
+    } = options;
 
     switch (injection) {
       case MODULE_ID:
@@ -253,6 +257,9 @@ export class ContainerRuntime extends ProviderStore {
 
       case PARENT_MODULE_IDS:
         return this.compiler.getModule(moduleId).parents ?? null;
+
+      case CONTEXT_ID:
+        return contextId ?? null;
 
       case REQUEST_ID:
         return this.requestStorage.getStore()?.id ?? null;
@@ -275,82 +282,83 @@ export class ContainerRuntime extends ProviderStore {
       return injection;
     }
 
-    let token: TokenLike | undefined;
-    let tokenOptions: unknown;
-
+    let token: TokenLike = injection;
+    let value: unknown;
     let defaultValue: unknown;
 
-    if (isObject(injection)) {
-      if ('useValue' in injection) {
-        return injection.useValue;
-      }
+    try {
+      let tokenOptions: unknown;
 
-      if ('useBuilder' in injection) {
-        return injection.useBuilder(injection.options);
-      }
-
-      if ('useToken' in injection) {
-        token = injection.useToken;
-        tokenOptions = injection.options;
-
-        if ('defaultValue' in injection) {
-          defaultValue = injection.defaultValue;
-        } else if (injection.optional) {
-          defaultValue = null;
-        }
-      }
-    }
-
-    token ??= injection;
-
-    if (injectionResolver) {
-      const resolved = await injectionResolver(token, tokenOptions);
-
-      if (resolved !== undefined) {
-        return resolved;
-      }
-    }
-
-    let value: unknown;
-
-    if (isFn(token)) {
-      const providers = this.compiler.getProviders(token);
-
-      if (providers) {
-        const instances: unknown[] = [];
-
-        for (const { providerId, moduleId } of providers) {
-          instances.push(
-            await this.resolveProvider(providerId, {
-              moduleId,
-              injectionResolver,
-            }),
-          );
+      if (isObject(injection)) {
+        if ('useValue' in injection) {
+          return injection.useValue;
         }
 
-        value = instances;
-      }
-    }
+        if ('useBuilder' in injection) {
+          return injection.useBuilder(injection.options);
+        }
 
-    if (value === undefined) {
-      value = await this.resolveProvider(
-        Id.for(token),
-        {
+        if ('useToken' in injection) {
+          token = injection.useToken;
+          tokenOptions = injection.options;
+
+          if ('defaultValue' in injection) {
+            defaultValue = injection.defaultValue;
+          } else if (injection.optional) {
+            defaultValue = null;
+          }
+        }
+      }
+
+      if (injectionResolver) {
+        const resolved = await injectionResolver(token, tokenOptions);
+
+        if (resolved !== undefined) {
+          return resolved;
+        }
+      }
+
+      if (isFn(token)) {
+        const providers = this.compiler.getProviders(token);
+
+        if (providers) {
+          const instances: unknown[] = [];
+
+          for (const { providerId, moduleId } of providers) {
+            instances.push(
+              await this.resolveProvider(providerId, {
+                moduleId,
+                contextId: currentProviderId,
+                injectionResolver,
+              }),
+            );
+          }
+
+          value = instances;
+        }
+      }
+
+      if (value === undefined) {
+        value = await this.resolveProvider(Id.for(token), {
           moduleId,
+          contextId: currentProviderId,
           injectionResolver,
-        },
-        false,
-      );
+        });
+      }
+    } catch (err) {
+      if (defaultValue === undefined) {
+        throw err;
+      }
     }
 
     if (value === undefined) {
-      if (defaultValue !== undefined) {
-        return defaultValue;
+      if (defaultValue === undefined) {
+        return InternalException.throw`Injection ${Id.for(token)} at ${pos} could not be resolved`;
       }
 
-      return InternalException.throw`Injection ${Id.for(token)} at ${pos} could not be resolved`;
+      value = defaultValue;
     }
 
-    return value ?? null;
+    return value;
   }
 }
