@@ -43,7 +43,7 @@ describe('LocalBrokerConfig', () => {
 
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toBe(
-      'LocalBroker: Failed to process config LOCAL_BROKER_MODE env',
+      'config(LocalBroker): Failed to process config LOCAL_BROKER_MODE env',
     );
     expect((error as Error).cause).toBeInstanceOf(Error);
   });

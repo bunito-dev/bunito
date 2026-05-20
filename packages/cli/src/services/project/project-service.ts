@@ -118,28 +118,37 @@ export class ProjectService {
   }
 
   addApp(name: string): void {
+    const { app, apps } = this.state;
+
+    if (name === ROOT_APP_NAME) {
+      if (app) {
+        throw new Exception('Root app already exists');
+      }
+
+      this.state.app = true;
+      return;
+    }
+
     if (!isKebabCase(name)) {
       throw new Exception('App name must be kebab-case');
     }
 
-    if (this.hasApp(name)) {
+    if (apps?.has(name)) {
       throw new Exception(`App "${name}" already exists`);
     }
 
-    if (name === ROOT_APP_NAME) {
-      this.state.app = true;
-    } else {
-      this.state.apps ??= new Set();
-      this.state.apps.add(name);
-    }
+    this.state.apps ??= new Set();
+    this.state.apps.add(name);
   }
 
   addLib(name: string): void {
+    const { libs } = this.state;
+
     if (!isKebabCase(name)) {
       throw new Exception('Lib name must be kebab-case');
     }
 
-    if (this.hasLib(name)) {
+    if (libs?.has(name)) {
       throw new Exception(`Lib "${name}" already exists`);
     }
 
@@ -147,65 +156,45 @@ export class ProjectService {
     this.state.libs.add(name);
   }
 
-  hasApp(name: string): boolean {
-    const { app, apps } = this.state;
-    return (name === ROOT_APP_NAME ? app : apps?.has(name)) ?? false;
-  }
+  getApps(root: boolean, nameFilter?: Set<string> | null): App[] {
+    const { apps, path: rootPath } = this.state;
 
-  hasLib(name: string): boolean {
-    return this.state.libs?.has(name) ?? false;
-  }
+    const result: App[] = [];
 
-  getApp(): App {
-    const { name, app, path } = this.state;
-
-    if (!app) {
-      throw new Exception('Main app was not found');
+    if (root || !nameFilter) {
+      result.push({
+        name: ROOT_APP_NAME,
+        root: true,
+        path: rootPath,
+      });
     }
 
-    return {
-      name,
-      root: true,
-      path,
-    };
-  }
+    const names: string[] = [];
 
-  getApps(onlyNames?: Set<string> | null): App[] {
-    const { app, apps, path: rootPath } = this.state;
+    if (!root && !nameFilter && apps) {
+      names.push(...apps);
+    } else if (nameFilter) {
+      for (const name of nameFilter) {
+        if (!apps?.has(name)) {
+          throw new Exception(`App "${name}" was not found`);
+        }
+        names.push(name);
+      }
+    }
 
-    if (!app || !apps) {
+    for (const name of names) {
+      result.push({
+        name,
+        root: false,
+        path: join(rootPath, 'apps', name),
+      });
+    }
+
+    if (!result.length) {
       throw new Exception('No runnable apps were found');
     }
 
-    let names: string[];
-
-    if (!onlyNames) {
-      names = [ROOT_APP_NAME, ...apps];
-    } else {
-      names = [];
-
-      for (const name of onlyNames) {
-        if (!this.hasApp(name)) {
-          throw new Exception(`App "${name}" was not found`);
-        }
-      }
-
-      names.push(...onlyNames);
-    }
-
-    return names.map((name) =>
-      name === ROOT_APP_NAME
-        ? {
-            name,
-            root: true,
-            path: rootPath,
-          }
-        : {
-            name,
-            root: false,
-            path: join(rootPath, 'apps', name),
-          },
-    );
+    return result;
   }
 
   renderTemplate<ITemplate extends Template>(

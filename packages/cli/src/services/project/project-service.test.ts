@@ -53,14 +53,13 @@ describe('ProjectService', () => {
       name: 'demo',
       path: dir,
     });
-    expect(service.getApp()).toEqual({
-      root: true,
-      name: 'demo',
-      path: dir,
-    });
-    expect(() => service.getApps(undefined)).toThrow(
-      new Exception('No runnable apps were found'),
-    );
+    expect(service.getApps(true, null)).toEqual([
+      {
+        root: true,
+        name: 'root',
+        path: dir,
+      },
+    ]);
   });
 
   it('detects workspace apps and libraries', async () => {
@@ -79,14 +78,37 @@ describe('ProjectService', () => {
     expect(service.state.path).toBe(dir);
     expect(service.state.apps).toEqual(new Set(['api']));
     expect(service.state.libs).toEqual(new Set(['shared']));
-    expect(service.getApps(undefined)).toEqual([
+    expect(service.getApps(false, null)).toEqual([
+      {
+        root: true,
+        name: 'root',
+        path: dir,
+      },
       {
         root: false,
         name: 'api',
         path: join(dir, 'apps/api'),
       },
     ]);
-    expect(service.getApps(new Set(['api']))).toHaveLength(1);
+    expect(service.getApps(false, new Set(['api']))).toEqual([
+      {
+        root: false,
+        name: 'api',
+        path: join(dir, 'apps/api'),
+      },
+    ]);
+    expect(service.getApps(true, new Set(['api']))).toEqual([
+      {
+        root: true,
+        name: 'root',
+        path: dir,
+      },
+      {
+        root: false,
+        name: 'api',
+        path: join(dir, 'apps/api'),
+      },
+    ]);
   });
 
   it('reports unknown projects and app selection errors', async () => {
@@ -114,8 +136,8 @@ describe('ProjectService', () => {
     const standard = new ProjectService(await createProjectContext(dir));
     await standard.loadState();
 
-    expect(() => standard.getApps(new Set(['api']))).toThrow(
-      new Exception('No runnable apps were found'),
+    expect(() => standard.getApps(false, new Set(['api']))).toThrow(
+      new Exception('App "api" was not found'),
     );
 
     const monorepoDir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
@@ -126,7 +148,7 @@ describe('ProjectService', () => {
     const monorepo = new ProjectService(await createProjectContext(monorepoDir));
     await monorepo.loadState();
 
-    expect(() => monorepo.getApps(new Set(['admin']))).toThrow(
+    expect(() => monorepo.getApps(false, new Set(['admin']))).toThrow(
       new Exception('App "admin" was not found'),
     );
   });
@@ -140,7 +162,6 @@ describe('ProjectService', () => {
     service.addLib('shared-auth');
 
     expect(service.state.libs).toEqual(new Set(['shared-auth']));
-    expect(service.hasLib('shared-auth')).toBeTrue();
     expect(() => service.addLib('BadName')).toThrow(
       new Exception('Lib name must be kebab-case'),
     );

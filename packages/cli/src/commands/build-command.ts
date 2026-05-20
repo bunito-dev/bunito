@@ -5,7 +5,8 @@ import { CLIService } from '../services';
 import { AbstractCommand } from './abstract-command';
 
 type BuildCommandOptions = {
-  apps?: Set<string>;
+  apps: Set<string> | null;
+  root: boolean;
   disable?: ('sourcemap' | 'minify')[];
 };
 
@@ -21,11 +22,12 @@ export class BuildCommand extends AbstractCommand<BuildCommandOptions> {
 
     project.requireInitialized();
 
-    const { apps: onlyNames, disable } = this.options;
+    const { apps: onlyNames, root, disable } = this.options;
     const { path: projectPath } = state;
 
     const disabled = new Set(disable);
-    const apps = project.getApps(onlyNames);
+
+    const apps = project.getApps(root, onlyNames);
 
     for (const [index, app] of apps.entries()) {
       if (index) {
@@ -69,10 +71,16 @@ CLIService.registerCommand(BuildCommand, {
   builder: (yargs) =>
     yargs
       .positional('apps', {
-        describe: 'App names',
+        describe: 'App name(s) to build',
         array: true,
         type: 'string',
         coerce: notEmptySet<string>,
+      })
+      .option('root', {
+        alias: ['r'],
+        describe: 'Build the root app',
+        type: 'boolean',
+        default: false,
       })
       .option('disable', {
         alias: ['d'],

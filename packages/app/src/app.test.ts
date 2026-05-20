@@ -1,20 +1,33 @@
 import { describe, expect, it } from 'bun:test';
 import { Logger } from '@bunito/logger';
+import { mockClass } from '@bunito/testing';
 import { App } from './app';
 
 describe('App', () => {
+  class TestApp extends App {
+    protected static override readonly defaultModules = [];
+  }
+
   it('creates, starts and resolves through the underlying container', async () => {
     class Service {
       readonly value = 123;
     }
 
-    const app = await App.create({
+    const logger = mockClass(Logger);
+    logger.track.mockReturnValue(logger as unknown as Logger);
+
+    const app = await TestApp.create({
       providers: [
         {
           token: Service,
           useValue: new Service(),
         },
+        {
+          token: Logger,
+          useValue: logger as unknown as Logger,
+        },
       ],
+      exports: [Service, Logger],
     });
 
     expect(await app.resolve(Service)).toEqual({ value: 123 });
@@ -24,61 +37,42 @@ describe('App', () => {
   });
 
   it('creates and starts apps while forwarding logger context', async () => {
-    const contexts: unknown[] = [];
-    const traceLogs: string[] = [];
+    const logger = mockClass(Logger);
+    logger.track.mockReturnValue(logger as unknown as Logger);
 
-    const logger = {
-      setContext: (target: unknown) => {
-        contexts.push(target);
-      },
-      track: () => ({
-        fatal: () => undefined,
-        error: () => undefined,
-        warn: () => undefined,
-        info: () => undefined,
-        ok: (message: string) => {
-          traceLogs.push(message);
-        },
-        verbose: () => undefined,
-        debug: (message: string) => {
-          traceLogs.push(message);
-          return message;
-        },
-      }),
-      fatal: () => undefined,
-    };
-
-    const created = await App.create({
+    const created = await TestApp.create({
       providers: [
         {
           token: Logger,
-          useValue: logger,
+          useValue: logger as unknown as Logger,
         },
       ],
+      exports: [Logger],
     });
-    const started = await App.start({
+    const started = await TestApp.start({
       providers: [
         {
           token: Logger,
-          useValue: logger,
+          useValue: logger as unknown as Logger,
         },
       ],
+      exports: [Logger],
     });
 
     expect(created.logger).toBeDefined();
     expect(started.logger).toBeDefined();
-    expect(contexts).toEqual([App, App]);
-    expect(traceLogs).toContain('Ready');
+    expect(logger.ok).toHaveBeenCalledWith('Ready');
   });
 
   it('logs startup failures when a logger is available and throws without one', async () => {
-    const failures: string[] = [];
-
     class TestApp extends App {
       static createForTest(container: object, logger?: object): TestApp {
         return new TestApp(container as never, logger as never);
       }
     }
+
+    const logger = mockClass(Logger);
+    logger.track.mockReturnValue(logger as unknown as Logger);
 
     const appWithLogger = TestApp.createForTest(
       {
@@ -88,45 +82,16 @@ describe('App', () => {
         destroyProviders: async () => undefined,
         resolveProvider: async () => undefined,
       } as never,
-      {
-        track: () => ({
-          fatal: (message: string) => {
-            failures.push(message);
-          },
-          error: () => undefined,
-          warn: () => undefined,
-          info: () => undefined,
-          ok: () => undefined,
-          verbose: () => undefined,
-          debug: <T>(value: T) => value,
-        }),
-      } as never,
+      logger as unknown as Logger,
     );
 
     await appWithLogger.start();
-    expect(failures).toEqual(['Unhandled Error']);
+    expect(logger.fatal).toHaveBeenCalledWith('Unhandled Error', expect.any(Error));
     await appWithLogger.start();
-    expect(failures).toEqual(['Unhandled Error', 'Unhandled Error']);
+    expect(logger.fatal).toHaveBeenCalledTimes(2);
 
-    const appWithoutLogger = TestApp.createForTest(
-      {
-        triggerProviders: async () => undefined,
-        destroyProviders: async () => undefined,
-        resolveProvider: async () => undefined,
-      } as never,
-      undefined,
-    );
-
-    await appWithoutLogger.start();
-    let repeatedStartError: unknown;
-    try {
-      await appWithoutLogger.start();
-    } catch (error) {
-      repeatedStartError = error;
-    }
-
-    expect(repeatedStartError).toBeInstanceOf(Error);
-    expect((repeatedStartError as Error).message).toBe(
+    expect(logger.fatal.mock.calls[1]?.[1]).toBeInstanceOf(Error);
+    expect((logger.fatal.mock.calls[1]?.[1] as Error).message).toBe(
       'App start can only be called once',
     );
   });

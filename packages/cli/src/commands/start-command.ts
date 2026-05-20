@@ -7,6 +7,7 @@ import { AbstractCommand } from './abstract-command';
 
 type StartCommandOptions = {
   apps: Set<string> | null;
+  root: boolean;
   watch?: boolean;
   prod?: boolean;
 } & StartProcessOptions;
@@ -23,10 +24,10 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
 
     project.requireInitialized();
 
-    const { apps: onlyNames, prod, label, watch } = this.options;
+    const { apps: onlyNames, root, prod, label, watch } = this.options;
     const { path } = state;
 
-    const apps = project.getApps(onlyNames);
+    const apps = project.getApps(root, onlyNames);
 
     const bunArgs = ['bun', `--cwd=${path}`];
     const runArgs = ['run', '--feature=RUNTIME_ONLY'];
@@ -72,15 +73,20 @@ CLIService.registerCommand(StartCommand, {
   describe: 'Start the app(s)',
   builder: (yargs) =>
     yargs
-      .example('$0 start', 'Start all apps')
+      .example('$0 start', 'Start the main app')
       .example('$0 start foo', 'Start the foo app')
       .example('$0 start foo bar', 'Start the foo and the bar apps')
       .positional('apps', {
-        nullable: true,
-        describe: 'App(s) names to run',
+        describe: 'App name(s) to start',
         array: true,
         type: 'string',
         coerce: notEmptySet<string>,
+      })
+      .option('root', {
+        alias: ['r'],
+        describe: 'Start the root app',
+        type: 'boolean',
+        default: false,
       })
       .option('watch', {
         alias: ['w'],

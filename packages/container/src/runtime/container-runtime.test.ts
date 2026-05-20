@@ -236,10 +236,7 @@ describe('ContainerRuntime', () => {
     const valueToken = await runtime.resolveProvider<number>(Id.for('value-token'), {
       moduleId: childModuleId,
     });
-    const missing = await runtime.resolveProvider(Id.for('missing'), {}, false);
-
     expect(valueToken).toBe(42);
-    expect(missing).toBeUndefined();
 
     let missingProviderError: unknown;
     try {
@@ -270,7 +267,7 @@ describe('ContainerRuntime', () => {
       missingInjectionError = error;
     }
     expect(missingInjectionError).toBeInstanceOf(Error);
-    expect((missingInjectionError as Error).message).toContain('could not be resolved');
+    expect((missingInjectionError as Error).message).toContain('was not found');
 
     runtime.setInstance(
       Id.for('manual'),

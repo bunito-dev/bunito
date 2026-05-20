@@ -411,7 +411,6 @@ describe('HTTPRouter', () => {
   it('serializes handler errors and serializer failures', async () => {
     const moduleId = Id.unique('Module');
     const providerId = Id.unique('Controller');
-    const logger = createLogger();
     const createErrorContainer = (middleware: unknown) => ({
       locateComponents: () => ({
         moduleId,
@@ -445,12 +444,17 @@ describe('HTTPRouter', () => {
           },
         ],
       }),
-      tryResolveProvider: () => logger,
-      resolveProvider: () => ({
-        handle: () => {
-          throw new Error('Missing');
-        },
-      }),
+      tryResolveProvider: () => undefined,
+      resolveProvider: (token: unknown) =>
+        token === Logger
+          ? {
+              warn: () => undefined,
+            }
+          : {
+              handle: () => {
+                throw new Error('Missing');
+              },
+            },
     });
     const serializedRouter = new HTTPRouter(
       {

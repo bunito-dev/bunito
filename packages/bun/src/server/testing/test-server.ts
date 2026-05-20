@@ -3,7 +3,11 @@ import type { MockedObject } from '@bunito/testing';
 import type { Server } from '../types';
 
 export class TestServer implements MockedObject<Partial<Server>> {
-  url = new URL('http://testing');
+  url: URL;
+
+  constructor() {
+    this.url = new URL('http://testing');
+  }
 
   fetch = mock(async () => {
     return new Response('ok');
@@ -17,7 +21,5 @@ export class TestServer implements MockedObject<Partial<Server>> {
     return 0;
   });
 
-  stop = mock(async () => {
-    //
-  });
+  stop = mock(async () => undefined);
 }

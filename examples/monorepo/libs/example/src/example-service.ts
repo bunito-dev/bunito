@@ -2,12 +2,10 @@ import { Logger, Provider } from '@bunito/bunito';
 
 @Provider({
   injects: [
-    [
-      {
-        useToken: Logger,
-        optional: true,
-      },
-    ],
+    {
+      useToken: Logger,
+      optional: true,
+    },
   ],
 })
 export class ExampleService {

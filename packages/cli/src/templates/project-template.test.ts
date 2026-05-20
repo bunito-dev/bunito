@@ -30,7 +30,7 @@ describe('ProjectTemplate', () => {
     expect(result['tsconfig.json']).not.toContain('"baseUrl"');
     expect(result['tsconfig.json']).toContain('"@apps/*"');
     expect(result['tsconfig.json']).toContain('./apps/*/src/index.ts');
-    expect(result['tsconfig.json']).toContain('./libs/*/index.ts');
+    expect(result['tsconfig.json']).toContain('./libs/*/src/index.ts');
     expect(result['tsconfig.json']).not.toContain('"engines"');
   });
 });

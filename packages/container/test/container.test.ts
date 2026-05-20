@@ -37,7 +37,6 @@ describe('Container (integration)', () => {
     const container = new Container(RootModule);
     const exportedFromRoot = await container.resolveProvider(ExportedService);
     const exportedAgain = await container.resolveProvider(ExportedService);
-    const privateFromRoot = await container.tryResolveProvider(PrivateService);
     let privateFromRootError: unknown;
     try {
       await container.resolveProvider(PrivateService);
@@ -50,7 +49,6 @@ describe('Container (integration)', () => {
 
     expect(exportedFromRoot).toBeInstanceOf(ExportedService);
     expect(exportedAgain).toBe(exportedFromRoot);
-    expect(privateFromRoot).toBeUndefined();
     expect(privateFromRootError).toBeInstanceOf(Error);
     expect(privateFromFeature).toBeInstanceOf(PrivateService);
   });

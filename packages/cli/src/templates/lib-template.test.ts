@@ -7,15 +7,20 @@ describe('LibTemplate', () => {
     const result = renderTemplate(LibTemplate, { name: 'shared-auth' });
 
     expect(Object.keys(result).sort()).toEqual([
-      'libs/shared-auth/index.ts',
-      'libs/shared-auth/shared-auth-module.ts',
-      'libs/shared-auth/shared-auth-service.ts',
+      'src/index.ts',
+      'src/shared-auth-module.test.ts',
+      'src/shared-auth-module.ts',
+      'src/shared-auth-service.test.ts',
+      'src/shared-auth-service.ts',
+      'test/shared-auth.spec.ts',
     ]);
-    expect(result['libs/shared-auth/shared-auth-module.ts']).toContain(
+    expect(result['src/shared-auth-module.ts']).toContain(
       'export class SharedAuthModule',
     );
-    expect(result['libs/shared-auth/shared-auth-service.ts']).toContain(
+    expect(result['src/shared-auth-service.ts']).toContain(
       'export class SharedAuthService',
     );
+    expect(result['src/index.ts']).toContain("export * from './shared-auth-module'");
+    expect(result['test/shared-auth.spec.ts']).toContain('@libs/shared-auth');
   });
 });

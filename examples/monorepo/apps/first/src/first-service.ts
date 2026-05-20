@@ -12,6 +12,6 @@ export class FirstService {
 
   @OnAppStart()
   onStart() {
-    this.logger.debug('onStart() called:', this.exampleService.example());
+    this.logger.debug('onStart() called:', this.exampleService?.example());
   }
 }

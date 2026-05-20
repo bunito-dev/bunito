@@ -76,18 +76,25 @@ describe('CLIService', () => {
           created.push({ name: state.name, apps: [name] });
           state.apps.add(name);
         },
-        getApp: () => ({
-          name: state.name,
-          main: true,
-          path: '/repo',
-        }),
-        getApps: (names?: Set<string>) => [
-          {
-            name: names?.values().next().value ?? 'api',
-            main: false,
-            path: '/repo/apps/api',
-          },
-        ],
+        getApps: (root?: boolean, names?: Set<string> | null) => {
+          const apps = [
+            {
+              name: names?.values().next().value ?? 'api',
+              root: false,
+              path: '/repo/apps/api',
+            },
+          ];
+
+          if (root) {
+            apps.unshift({
+              name: 'root',
+              root: true,
+              path: '/repo',
+            });
+          }
+
+          return apps;
+        },
         renderTemplate:
           (template: { name?: string }, options: unknown) =>
           async (...paths: string[]) => {
@@ -170,6 +177,7 @@ describe('CLIService', () => {
           '--cwd=/repo',
           '--env-file=/repo/apps/api/.env',
           'run',
+          '--feature=RUNTIME_ONLY',
           '--watch',
           '/repo/apps/api/src/main.ts',
         ],
