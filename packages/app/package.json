@@ -1,12 +1,13 @@
 {
   "name": "@bunito/app",
   "version": "0.0.14",
-  "description": "Application bootstrap and lifecycle utilities for bunito.",
+  "description": "Application bootstrap, lifecycle coordination, and app-level hooks for bunito.",
   "keywords": [
     "bunito",
     "app",
     "bootstrap",
     "lifecycle",
+    "modules",
     "framework"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",

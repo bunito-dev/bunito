@@ -46,13 +46,13 @@ export class BrokerService {
     const { adapter: name } = config;
 
     if (!adapters?.length) {
-      throw new InternalException('No adapters are available');
+      throw new InternalException('No broker adapters are available');
     }
 
     const adapter = name ? adapters.find(({ NAME }) => name === NAME) : adapters.at(0);
 
     if (!adapter) {
-      throw new InternalException(`Adapter ${name} is not supported`);
+      throw new InternalException(`Broker adapter "${name}" is not supported`);
     }
 
     this.adapter = adapter;

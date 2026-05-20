@@ -67,24 +67,24 @@ export class BuildCommand extends AbstractCommand<BuildCommandOptions> {
 CLIService.registerCommand(BuildCommand, {
   command: 'build [apps...]',
   aliases: ['b'],
-  describe: 'Build the app(s)',
+  describe: 'Build discovered apps',
   builder: (yargs) =>
     yargs
       .positional('apps', {
-        describe: 'App name(s) to build',
+        describe: 'Workspace app names to build',
         array: true,
         type: 'string',
         coerce: notEmptySet<string>,
       })
       .option('root', {
         alias: ['r'],
-        describe: 'Build the root app',
+        describe: 'Include the root app',
         type: 'boolean',
         default: false,
       })
       .option('disable', {
         alias: ['d'],
-        describe: 'Disable',
+        describe: 'Disable build features',
         type: 'string',
         array: true,
         choices: ['sourcemap', 'minify'],

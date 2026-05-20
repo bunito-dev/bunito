@@ -5,7 +5,8 @@
 
 Logger module for bunito applications.
 
-It provides injectable logging, trace helpers, and JSON/pretty output extensions.
+It provides injectable loggers, request-aware trace helpers, configurable log
+levels, and JSON or pretty output transports.
 
 ## Installation 📦
 
@@ -26,7 +27,7 @@ class Worker {
   constructor(private readonly logger: Logger) {}
 
   run(): void {
-    this.logger.setContext(Worker).info('Worker started');
+    this.logger.track('Worker').info('Worker started');
   }
 }
 

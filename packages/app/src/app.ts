@@ -72,12 +72,12 @@ export class App {
           break;
       }
     } catch (err) {
-      trace.fatal('Unhandled Error', err);
+      trace.fatal('Unhandled error', err);
     }
 
     this[action] = async () => {
       const err = new InternalException(`App ${action} can only be called once`);
-      this.logger.fatal('Unhandled Error', err);
+      this.logger.fatal('Unhandled error', err);
     };
   }
 }

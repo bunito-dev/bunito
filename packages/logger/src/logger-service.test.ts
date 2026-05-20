@@ -82,6 +82,6 @@ describe('LoggerService', () => {
           () => undefined,
           [],
         ),
-    ).toThrow(new InternalException('Logger transport missing is not supported'));
+    ).toThrow(new InternalException('Logger transport "missing" is not supported'));
   });
 });

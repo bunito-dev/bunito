@@ -3,6 +3,12 @@
 [![NPM Version][npm-img]][npm-url]
 [![License MIT][license-img]][license-url]
 
+Testing helpers, mock utilities, and shared test context factories for bunito
+packages.
+
+It provides the global `Test` context, `defineTestFactory()`, and small mock/spy
+helpers used by package tests.
+
 ## Installation 📦
 
 ```bash
@@ -12,7 +18,25 @@ bun add @bunito/testing
 ## Usage ✨
 
 ```ts
-import { Test, TestUtils } from '@bunito/testing';
+import { Test, defineTestFactory, mockClass } from '@bunito/testing';
+
+class Service {
+  run(): string {
+    return 'ok';
+  }
+}
+
+declare global {
+  namespace Bunito {
+    interface Test {
+      service: Service;
+    }
+  }
+}
+
+defineTestFactory('service', () => mockClass(Service));
+
+const service = Test.service;
 ```
 
 ## License

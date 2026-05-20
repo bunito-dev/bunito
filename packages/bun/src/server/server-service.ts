@@ -51,7 +51,7 @@ export class ServerService {
     private readonly routers: ServerRouter[],
   ) {
     if (!routers?.length) {
-      InternalException.throw`No server routers found`;
+      InternalException.throw`No server routers were found`;
     }
   }
 
@@ -152,11 +152,11 @@ export class ServerService {
         const { headers, ...data } = options ?? {};
 
         if (upgraded) {
-          return InternalException.throw`Already upgraded`;
+          return InternalException.throw`Request has already been upgraded`;
         }
 
         if (!this.routerRoles.websocket) {
-          return InternalException.throw`Upgrade not supported`;
+          return InternalException.throw`WebSocket upgrade is not supported`;
         }
 
         upgraded = server.upgrade(request, {
@@ -192,7 +192,7 @@ export class ServerService {
         }
 
         if (output !== undefined) {
-          return InternalException.throw`Router ${router} returned invalid response`;
+          return InternalException.throw`Router ${router} returned an invalid response`;
         }
 
         if (upgraded) {

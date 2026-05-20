@@ -1,12 +1,13 @@
 {
   "name": "@bunito/container",
   "version": "0.0.14",
-  "description": "Dependency injection container, modules, providers, and lifecycle hooks for bunito.",
+  "description": "Dependency injection container with modules, providers, scopes, and lifecycle hooks.",
   "keywords": [
     "bunito",
     "dependency-injection",
     "container",
     "modules",
+    "providers",
     "typescript"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",

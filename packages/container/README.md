@@ -5,8 +5,8 @@
 
 Dependency injection container for bunito.
 
-It provides modules, providers, scopes, injections, lifecycle hooks, components,
-and extensions.
+It provides modules, providers, scopes, injections, indexed extensions, request
+contexts, and provider lifecycle hooks.
 
 ## Installation 📦
 

@@ -91,7 +91,7 @@ describe('NatsBroker', () => {
     }
 
     expect(() => broker.subscribe('orders.*', () => {})).toThrow(
-      'Nats connection is not available',
+      'NATS connection is not available',
     );
     expect(requestError).toBeInstanceOf(InternalException);
     expect(eventError).toBeInstanceOf(InternalException);

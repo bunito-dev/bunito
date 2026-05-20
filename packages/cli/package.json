@@ -1,12 +1,13 @@
 {
   "name": "@bunito/cli",
   "version": "0.0.14",
-  "description": "Command-line tools for running bunito projects.",
+  "description": "Command-line tools for initializing, generating, running, and building bunito projects.",
   "keywords": [
     "bunito",
     "cli",
     "bun",
-    "typescript",
+    "scaffold",
+    "workspace",
     "framework"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",

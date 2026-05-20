@@ -91,7 +91,7 @@ export class InitCommand extends AbstractCommand<InitCommandOptions> {
 CLIService.registerCommand(InitCommand, {
   priority: 1000,
   command: 'init [project]',
-  describe: 'Initialize a new project',
+  describe: 'Initialize a bunito project',
   builder: (yargs) =>
     yargs
       .positional('project', {
@@ -100,7 +100,7 @@ CLIService.registerCommand(InitCommand, {
         required: true,
       })
       .option('app', {
-        describe: 'Create an app',
+        describe: 'Create workspace app',
         type: 'string',
         alias: 'a',
         array: true,

@@ -3,10 +3,10 @@
 [![NPM Version][npm-img]][npm-url]
 [![License MIT][license-img]][license-url]
 
-Main application entrypoint for bunito.
+Convenience entrypoint for core bunito application APIs.
 
-Use this package for the core application APIs: `App`, modules, providers,
-configuration, and logging.
+Use this package for application bootstrap, modules, providers, shared utilities,
+configuration, and logging APIs that most apps import first.
 
 ## Installation 📦
 

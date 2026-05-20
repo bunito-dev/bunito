@@ -107,7 +107,7 @@ Add scripts to `package.json`:
 }
 ```
 
-The CLI discovers the main app from `src/main.ts` automatically.
+The CLI discovers the root app from `src/main.ts` automatically.
 If you add a `.env` file next to `package.json`, the CLI loads it before starting
 the app.
 

@@ -39,9 +39,9 @@ class AppModule {}
 
 Each app has its own `apps/<name>/src/main.ts`, so it can be started separately.
 
-## Main App
+## Root App
 
-The main app in `src/main.ts` composes both app modules:
+The root app in `src/main.ts` composes both app modules:
 
 ```ts
 import { Module } from '@bunito/bunito';
@@ -66,9 +66,15 @@ bun run start second
 bun run start
 ```
 
-Start or build every workspace app under `apps/*`:
+Start or build every discovered app:
 
 ```bash
-bun run start --all
-bun run build --all
+bun run start
+bun run build
+```
+
+Run only the composed root app:
+
+```bash
+bun run start --root
 ```

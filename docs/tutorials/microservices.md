@@ -1,7 +1,7 @@
 # Microservices
 
 The `examples/microservices` workspace shows two workspace apps and one composed
-main app:
+root app:
 
 - `foo`: exposes an HTTP route and handles `foo.process` messages.
 - `bar`: exposes an HTTP route and handles `bar.process` messages.
@@ -19,16 +19,16 @@ bun run start bar
 In another terminal, call either HTTP endpoint. The `.env` files in each app
 choose the ports and broker settings.
 
-Run the composed app in one process:
+Run the composed root app in one process:
+
+```bash
+bun run start --root
+```
+
+Start every discovered app with:
 
 ```bash
 bun run start
-```
-
-Start every workspace app under `apps/*` with:
-
-```bash
-bun run start --all
 ```
 
 ## Controller

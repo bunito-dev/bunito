@@ -38,7 +38,7 @@ export class BodyParser implements Middleware<BodyParserOptions> {
           context.body = await request.json();
       }
     } catch {
-      throw new BadRequestException('Invalid Body');
+      throw new BadRequestException('Invalid request body');
     }
   }
 }

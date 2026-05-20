@@ -3,9 +3,10 @@
 [![NPM Version][npm-img]][npm-url]
 [![License MIT][license-img]][license-url]
 
-Command-line tools for creating, running, and building bunito projects.
+Command-line tools for initializing, generating, running, and building bunito
+projects.
 
-It provides the `bunito` binary. The CLI discovers the main app from `src/main.ts`,
+It provides the `bunito` binary. The CLI discovers the root app from `src/main.ts`,
 workspace apps from `apps/*/src/main.ts`, and libraries from `libs/*/index.ts`; no
 project config file is required.
 
@@ -30,16 +31,19 @@ bunito --help
 bunito init my-app
 bunito init my-workspace --app api --app worker
 bunito start
-bunito start --all
+bunito start api worker
+bunito start api --root
 bunito build
-bunito build --all
+bunito build api worker
+bunito build api --root
 bunito generate app worker
 bunito generate lib shared
 ```
 
-`start` and `build` target the main app by default. Pass app names or `--all` to run
-workspace apps. The CLI loads `.env` for the main app and `apps/<name>/.env` for
-workspace apps.
+`start` and `build` target every discovered app by default. Pass app names to
+target selected workspace apps, and add `--root` when the root app should be
+included with that selection. The CLI loads `.env` for the root app and
+`apps/<name>/.env` for workspace apps.
 
 ## License
 

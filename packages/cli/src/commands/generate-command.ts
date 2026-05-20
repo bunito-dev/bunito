@@ -86,17 +86,17 @@ CLIService.registerCommand(GenerateCommand, {
   priority: 100,
   command: 'generate <element> [name]',
   aliases: ['g'],
-  describe: 'Generate a new app or library',
+  describe: 'Generate an app or library',
   builder: (yargs) =>
     yargs
       .positional('element', {
-        describe: 'Element kind',
+        describe: 'Resource type',
         type: 'string',
         choices: ['app', 'lib'],
         required: true,
       })
       .positional('name', {
-        describe: 'Element name',
+        describe: 'Resource name',
         type: 'string',
       }),
 });

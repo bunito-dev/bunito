@@ -1,13 +1,14 @@
 {
   "name": "@bunito/http",
   "version": "0.0.14",
-  "description": "HTTP module, controllers, routing, middleware, and exceptions for bunito.",
+  "description": "HTTP module with controllers, routing, middleware, CORS, validation, and exceptions.",
   "keywords": [
     "bunito",
     "http",
     "routing",
     "controllers",
-    "middleware"
+    "middleware",
+    "cors"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",

@@ -25,13 +25,15 @@ cd examples/basics
 bun run start
 ```
 
-`bun run start` starts the main app from `src/main.ts`. In workspaces that expose
-apps under `apps/*`, pass an app name or use `--all`:
+`bun run start` starts every discovered app. In workspaces that expose apps under
+`apps/*`, pass app names to run only those apps, or add `--root` to include the
+root app from `src/main.ts` when using app names:
 
 ```bash
 cd examples/http
 bun run start simple-controller
-bun run start --all
+cd ../microservices
+bun run start foo bar --root
 ```
 
 Multi-app examples read app-local `.env` files such as

@@ -80,7 +80,7 @@ export class NatsBroker implements BrokerAdapter<NatsBrokerContext> {
 
   private getConnection(): NatsConnection {
     if (!this.connection) {
-      throw new InternalException('Nats connection is not available');
+      throw new InternalException('NATS connection is not available');
     }
 
     return this.connection;

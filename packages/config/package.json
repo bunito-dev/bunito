@@ -1,11 +1,12 @@
 {
   "name": "@bunito/config",
   "version": "0.0.14",
-  "description": "Configuration module, environment parsing, and secret lookup for bunito.",
+  "description": "Configuration module with environment parsing, typed config factories, and secret lookup.",
   "keywords": [
     "bunito",
     "config",
     "environment",
+    "configuration",
     "secrets",
     "typescript"
   ],

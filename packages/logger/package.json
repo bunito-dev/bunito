@@ -1,11 +1,12 @@
 {
   "name": "@bunito/logger",
   "version": "0.0.14",
-  "description": "Logger module and JSON/pretty logging extensions for bunito.",
+  "description": "Logger module with injectable loggers, trace helpers, and JSON or pretty transports.",
   "keywords": [
     "bunito",
     "logger",
     "logging",
+    "transport",
     "json",
     "pretty"
   ],

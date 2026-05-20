@@ -8,8 +8,8 @@ A workspace with three apps and one shared library.
 
 ## Run 🚀
 
-`bun run start` starts the main composed app from `src/main.ts`. Start workspace
-apps by name, or use `--all` to start every app under `apps/*`.
+`bun run start` starts every discovered app. Pass workspace app names to narrow
+the run, or use `--root` to run only the composed root app from `src/main.ts`.
 
 ```bash
 cd examples/monorepo
@@ -19,13 +19,13 @@ bun run start first
 Run every app:
 
 ```bash
-bun run start --all
+bun run start
 ```
 
-Run the main app:
+Run the root app:
 
 ```bash
-bun run start
+bun run start --root
 ```
 
 ## What To Read 🔎

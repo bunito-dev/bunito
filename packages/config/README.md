@@ -5,8 +5,8 @@
 
 Configuration module for bunito applications.
 
-It provides config factories, environment parsing, typed value formatting, and
-secret lookup through pluggable extensions.
+It provides typed config factories, environment parsing, value formatting, runtime
+flags, and secret lookup through pluggable readers.
 
 ## Installation 📦
 

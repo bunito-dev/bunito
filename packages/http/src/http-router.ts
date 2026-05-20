@@ -95,7 +95,7 @@ export class HTTPRouter implements ServerRouter {
         }
 
         if (!isMiddleware) {
-          InternalException.throw`${instance} is not a valid Middleware`;
+          InternalException.throw`${instance} is not a valid middleware`;
           return;
         }
 

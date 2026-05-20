@@ -16,6 +16,6 @@ describe('main', () => {
     expect(code).toBe(0);
     expect(stderr).toBe('');
     expect(stdout).toContain('bunito <command>');
-    expect(stdout).toContain('Start the app(s)');
+    expect(stdout).toContain('Start discovered apps');
   });
 });

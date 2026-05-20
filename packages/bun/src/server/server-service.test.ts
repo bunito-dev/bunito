@@ -99,7 +99,7 @@ describe('ServerService', () => {
   it('rejects missing routers', () => {
     expect(() => {
       createService([]);
-    }).toThrow('No server routers found');
+    }).toThrow('No server routers were found');
   });
 
   it('starts, routes requests, reports missing routes, and stops', async () => {
@@ -267,10 +267,10 @@ describe('ServerService', () => {
 
     expect(invalidResponseError).toBeInstanceOf(InternalException);
     expect((invalidResponseError as Error).message).toContain(
-      'returned invalid response',
+      'returned an invalid response',
     );
     expect(upgradeError).toBeInstanceOf(InternalException);
-    expect((upgradeError as Error).message).toBe('Upgrade not supported');
+    expect((upgradeError as Error).message).toBe('WebSocket upgrade is not supported');
   });
 
   it('rejects duplicate websocket upgrades', async () => {
@@ -312,7 +312,7 @@ describe('ServerService', () => {
     }
 
     expect(error).toBeInstanceOf(InternalException);
-    expect((error as Error).message).toBe('Already upgraded');
+    expect((error as Error).message).toBe('Request has already been upgraded');
   });
 
   it('upgrades websocket requests and dispatches websocket events', async () => {

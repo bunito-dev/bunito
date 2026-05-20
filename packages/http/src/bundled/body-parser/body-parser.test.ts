@@ -141,6 +141,6 @@ describe('BodyParser', () => {
     }
 
     expect(error).toBeInstanceOf(BadRequestException);
-    expect((error as Error).message).toBe('Invalid Body');
+    expect((error as Error).message).toBe('Invalid request body');
   });
 });

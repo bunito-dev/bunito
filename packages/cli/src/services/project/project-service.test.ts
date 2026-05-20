@@ -37,7 +37,7 @@ async function writePackage(dir: string): Promise<void> {
 }
 
 describe('ProjectService', () => {
-  it('detects projects with a main app', async () => {
+  it('detects projects with a root app', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
     await writePackage(dir);
     await mkdir(join(dir, 'src'), { recursive: true });
@@ -120,7 +120,7 @@ describe('ProjectService', () => {
     await standard.loadState();
 
     expect(() => standard.getApps(false, new Set(['api']))).toThrow(
-      new Exception('App "api" was not found'),
+      new Exception('Workspace app "api" was not found'),
     );
 
     const monorepoDir = await mkdtemp(join(tmpdir(), 'bunito-project-'));
@@ -132,7 +132,7 @@ describe('ProjectService', () => {
     await monorepo.loadState();
 
     expect(() => monorepo.getApps(false, new Set(['admin']))).toThrow(
-      new Exception('App "admin" was not found'),
+      new Exception('Workspace app "admin" was not found'),
     );
   });
 
@@ -146,10 +146,10 @@ describe('ProjectService', () => {
 
     expect(service.state.libs).toEqual(new Set(['shared-auth']));
     expect(() => service.addLib('BadName')).toThrow(
-      new Exception('Lib name must be kebab-case'),
+      new Exception('Library name must be kebab-case'),
     );
     expect(() => service.addLib('shared-auth')).toThrow(
-      new Exception('Lib "shared-auth" already exists'),
+      new Exception('Library "shared-auth" already exists'),
     );
   });
 

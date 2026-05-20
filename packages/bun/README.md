@@ -3,10 +3,10 @@
 [![NPM Version][npm-img]][npm-url]
 [![License MIT][license-img]][license-url]
 
-Bun-specific integrations for bunito applications.
+Bun server and secrets integrations for bunito applications.
 
-It provides Bun platform modules, including server and secret integrations used by
-higher-level packages such as `@bunito/http`.
+It provides platform modules used by higher-level packages, including Bun HTTP
+server integration and Bun secrets support for configuration readers.
 
 ## Installation 📦
 
@@ -17,12 +17,12 @@ bun add @bunito/bun
 ## Usage ✨
 
 ```ts
-import { SecretsModule } from '@bunito/bun';
+import { SecretsModule, ServerModule } from '@bunito/bun';
 import { ConfigModule } from '@bunito/config';
 import { Module } from '@bunito/container';
 
 @Module({
-  imports: [ConfigModule, SecretsModule],
+  imports: [ConfigModule, SecretsModule, ServerModule],
 })
 class AppModule {}
 ```

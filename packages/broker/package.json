@@ -1,12 +1,13 @@
 {
   "name": "@bunito/broker",
   "version": "0.0.14",
-  "description": "Message broker module, adapters, and decorators for Bunito",
+  "description": "Broker module, message decorators, request/reply APIs, and local or NATS adapters for bunito.",
   "keywords": [
     "bunito",
     "broker",
-    "messages",
+    "messaging",
     "microservices",
+    "request-reply",
     "nats"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",

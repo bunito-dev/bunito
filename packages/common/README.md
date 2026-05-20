@@ -3,7 +3,8 @@
 [![NPM Version][npm-img]][npm-url]
 [![License MIT][license-img]][license-url]
 
-Shared exceptions, predicates, types, and small utilities for bunito packages.
+Shared exceptions, predicates, type helpers, and small utilities for bunito
+packages.
 
 This package is framework-agnostic and is used by the rest of the bunito workspace.
 

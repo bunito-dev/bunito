@@ -20,31 +20,31 @@ bunx @bunito/cli --help
 A bunito project is any directory, or parent directory, whose `package.json`
 depends on `@bunito/bunito`.
 
-The CLI supports one main app and optional workspace apps:
+The CLI supports one root app and optional workspace apps:
 
-- main app: `src/main.ts`
+- root app: `src/main.ts`
 - workspace apps: `apps/<name>/src/main.ts`
 - shared libraries: `libs/<name>/index.ts`
 
 Optional environment files are discovered automatically:
 
-- main app: `.env`
+- root app: `.env`
 - workspace apps: `apps/<name>/.env`
 
 ## Commands
 
-Start the main app:
+Start every discovered app:
 
 ```bash
 bunito start
 ```
 
-Start selected workspace apps or every workspace app:
+Start selected workspace apps, or include the root app with a selected set:
 
 ```bash
 bunito start simple-controller
 bunito start json-middleware multiple-apis
-bunito start --all
+bunito start simple-controller --root
 ```
 
 Useful start flags:
@@ -55,13 +55,13 @@ bunito start --prod
 bunito start --label name
 ```
 
-Build the main app into `out/main.js`, or build selected workspace apps into
-`out/<name>/main.js`:
+Build every discovered app, selected workspace apps, or selected apps plus the
+root app:
 
 ```bash
 bunito build
-bunito build simple-controller --minify --sourcemap
-bunito build --all
+bunito build simple-controller --disable minify --disable sourcemap
+bunito build simple-controller --root
 ```
 
 Generate files:
@@ -93,11 +93,11 @@ Each example workspace keeps scripts small:
 }
 ```
 
-Run all workspace apps in a multi-app example:
+Run all discovered apps in a multi-app example:
 
 ```bash
 cd examples/http
-bun run start --all
+bun run start
 ```
 
 Run one example app:
@@ -111,7 +111,7 @@ Build the examples:
 
 ```bash
 cd examples/http
-bun run build --all
+bun run build
 ```
 
 ## Repository Examples
@@ -158,8 +158,8 @@ examples/
 ```
 
 `.env` files are app-local. For example, `examples/http/apps/json-middleware/.env`
-sets the port for only the `json-middleware` app. The CLI always passes the matching
-`.env` file when it starts an app.
+sets the port for only the `json-middleware` app. The CLI always passes the
+matching `.env` file when it starts an app.
 
 The tutorials explain those apps step by step:
 

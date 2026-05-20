@@ -67,11 +67,11 @@ describe('BrokerService', () => {
 
     expect(
       () => new BrokerService({ adapter: undefined }, null, container, null),
-    ).toThrow('No adapters are available');
+    ).toThrow('No broker adapters are available');
     expect(
       () =>
         new BrokerService({ adapter: 'missing' }, null, container, [new TestAdapter()]),
-    ).toThrow('Adapter missing is not supported');
+    ).toThrow('Broker adapter "missing" is not supported');
   });
 
   it('connects adapters, subscribes located handlers, and resolves handler injections', async () => {

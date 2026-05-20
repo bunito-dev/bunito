@@ -12,14 +12,14 @@ default, configured through app-local `.env` files.
 
 ## Commands 🚀
 
-`bun run start` starts the main composed app from `src/main.ts`. Start `foo` and
-`bar` by name for separate processes, or use `--all` to start all workspace apps:
+`bun run start` starts every discovered app. Pass `foo` and `bar` to run only the
+separate workspace apps, or use `--root` when you want only the composed root app:
 
 ```bash
+bun run start
 bun run start foo
 bun run start bar
-bun run start --all
-bun run start
+bun run start --root
 ```
 
 Run those commands from `examples/microservices`.

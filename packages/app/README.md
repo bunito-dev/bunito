@@ -3,10 +3,10 @@
 [![NPM Version][npm-img]][npm-url]
 [![License MIT][license-img]][license-url]
 
-Application bootstrap and lifecycle utilities for bunito.
+Application bootstrap, lifecycle coordination, and app-level hooks for bunito.
 
-It creates container-backed applications, starts them, and coordinates app
-startup handlers.
+It creates container-backed applications, resolves providers through the app, and
+coordinates startup and shutdown lifecycle handlers.
 
 ## Installation 📦
 

@@ -1,12 +1,13 @@
 {
   "name": "@bunito/bunito",
   "version": "0.0.14",
-  "description": "Main application entrypoint for the Bun-first bunito framework.",
+  "description": "Convenience entrypoint for bunito application, container, config, and logger APIs.",
   "keywords": [
     "bunito",
     "bun",
     "framework",
     "dependency-injection",
+    "modules",
     "typescript"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",

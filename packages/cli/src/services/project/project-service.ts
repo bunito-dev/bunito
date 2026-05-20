@@ -18,7 +18,7 @@ export class ProjectService {
 
   get state(): ProjectState {
     if (!this.stateLoaded) {
-      throw new Exception('Project state have not been loaded');
+      throw new Exception('Project state has not been loaded');
     }
 
     return this.stateLoaded;
@@ -145,11 +145,11 @@ export class ProjectService {
     const { libs } = this.state;
 
     if (!isKebabCase(name)) {
-      throw new Exception('Lib name must be kebab-case');
+      throw new Exception('Library name must be kebab-case');
     }
 
     if (libs?.has(name)) {
-      throw new Exception(`Lib "${name}" already exists`);
+      throw new Exception(`Library "${name}" already exists`);
     }
 
     this.state.libs ??= new Set();
@@ -169,7 +169,7 @@ export class ProjectService {
           path: rootPath,
         });
       } else if (root) {
-        throw new Exception('Root app does not exist');
+        throw new Exception('Root app was not found');
       }
     }
 
@@ -180,7 +180,7 @@ export class ProjectService {
     } else if (nameFilter) {
       for (const name of nameFilter) {
         if (!apps?.has(name)) {
-          throw new Exception(`App "${name}" was not found`);
+          throw new Exception(`Workspace app "${name}" was not found`);
         }
         names.push(name);
       }
@@ -195,7 +195,7 @@ export class ProjectService {
     }
 
     if (!result.length) {
-      throw new Exception('No runnable apps were found');
+      throw new Exception('No runnable apps found');
     }
 
     return result;
@@ -260,6 +260,6 @@ export class ProjectService {
       return true;
     }
 
-    throw new Exception(['Project entry must be a file:', entryFile.name]);
+    throw new Exception(['Project entrypoint must be a file:', entryFile.name]);
   }
 }

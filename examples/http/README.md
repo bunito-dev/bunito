@@ -5,14 +5,15 @@ and loads each app's `.env` file automatically.
 
 ## Commands 🚀
 
-This workspace has only `apps/*` entries, so start a selected app by name or start
-all workspace apps with `--all`:
+This workspace has only `apps/*` entries. Run all HTTP apps with no arguments, or
+pass app names to run a smaller set:
 
 ```bash
+bun run start
 bun run start simple-controller
 bun run start cors-support
-bun run start --all
-bun run build --all
+bun run build
+bun run build simple-controller
 ```
 
 Run those commands from `examples/http`.

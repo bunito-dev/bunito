@@ -70,39 +70,40 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
 CLIService.registerCommand(StartCommand, {
   command: 'start [apps...]',
   aliases: ['s'],
-  describe: 'Start the app(s)',
+  describe: 'Start discovered apps',
   builder: (yargs) =>
     yargs
-      .example('$0 start', 'Start the main app')
-      .example('$0 start foo', 'Start the foo app')
-      .example('$0 start foo bar', 'Start the foo and the bar apps')
+      .example('$0 start', 'Start every discovered app')
+      .example('$0 start foo', 'Start the foo workspace app')
+      .example('$0 start foo bar', 'Start the foo and bar workspace apps')
+      .example('$0 start --root', 'Include the root app')
       .positional('apps', {
-        describe: 'App name(s) to start',
+        describe: 'Workspace app names to start',
         array: true,
         type: 'string',
         coerce: notEmptySet<string>,
       })
       .option('root', {
         alias: ['r'],
-        describe: 'Start the root app',
+        describe: 'Include the root app',
         type: 'boolean',
         default: false,
       })
       .option('watch', {
         alias: ['w'],
-        describe: 'Watch for changes',
+        describe: 'Restart on file changes',
         default: false,
         type: 'boolean',
       })
       .option('prod', {
         alias: ['p'],
-        describe: 'Run in production mode',
+        describe: 'Set NODE_ENV to production',
         default: false,
         type: 'boolean',
       })
       .option('label', {
         alias: ['l'],
-        describe: 'Process label',
+        describe: 'Process label style',
         type: 'string',
         default: 'full',
         choices: ['name', 'pid', 'full'],

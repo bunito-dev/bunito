@@ -86,7 +86,7 @@ describe('App', () => {
     );
 
     await appWithLogger.start();
-    expect(logger.fatal).toHaveBeenCalledWith('Unhandled Error', expect.any(Error));
+    expect(logger.fatal).toHaveBeenCalledWith('Unhandled error', expect.any(Error));
     await appWithLogger.start();
     expect(logger.fatal).toHaveBeenCalledTimes(2);
 

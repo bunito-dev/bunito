@@ -3,9 +3,9 @@
 [![NPM Version][npm-img]][npm-url]
 [![License MIT][license-img]][license-url]
 
-Broker support for bunito applications. The package provides a `BrokerModule`,
-message-handler decorators, request/event publishing through `BrokerService`, and
-local or NATS-backed adapters.
+Messaging support for bunito applications. The package provides `BrokerModule`,
+message-handler decorators, request/reply and event publishing through
+`BrokerService`, plus local and NATS-backed adapters.
 
 ## Installation 📦
 

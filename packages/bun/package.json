@@ -1,13 +1,13 @@
 {
   "name": "@bunito/bun",
   "version": "0.0.14",
-  "description": "Bun-specific integrations for bunito applications.",
+  "description": "Bun server and secrets integrations for bunito applications.",
   "keywords": [
     "bunito",
     "bun",
-    "framework",
+    "server",
     "secrets",
-    "config"
+    "http"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",

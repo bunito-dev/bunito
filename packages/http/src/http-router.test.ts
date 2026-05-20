@@ -507,7 +507,7 @@ describe('HTTPRouter', () => {
           } as never,
           [new InvalidMiddleware() as never],
         ),
-    ).toThrow('is not a valid Middleware');
+    ).toThrow('is not a valid middleware');
 
     expect(
       () =>

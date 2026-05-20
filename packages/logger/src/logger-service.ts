@@ -25,7 +25,7 @@ export class LoggerService {
 
     if (!transport) {
       throw new InternalException(
-        `Logger transport ${config.transport} is not supported`,
+        `Logger transport "${config.transport}" is not supported`,
       );
     }
 
