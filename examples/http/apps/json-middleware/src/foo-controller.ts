@@ -18,7 +18,6 @@ import { FooBody, FooParams } from './schemas';
 @UseMiddleware(BodyParser, { parser: 'json' })
 export class FooController {
   constructor(private readonly logger: Logger) {
-    logger.setContext(FooController);
     logger.debug('created');
   }
 

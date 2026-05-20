@@ -25,11 +25,11 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
     project.requireInitialized();
 
     const { apps: onlyNames, root, prod, label, watch } = this.options;
-    const { path } = state;
+    const { path: rootPath } = state;
 
     const apps = project.getApps(root, onlyNames);
 
-    const bunArgs = ['bun', `--cwd=${path}`];
+    const bunArgs = ['bun', `--cwd=${rootPath}`];
     const runArgs = ['run', '--feature=RUNTIME_ONLY'];
 
     const envs: Record<string, string> = {};

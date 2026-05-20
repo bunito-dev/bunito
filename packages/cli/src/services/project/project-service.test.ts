@@ -80,29 +80,12 @@ describe('ProjectService', () => {
     expect(service.state.libs).toEqual(new Set(['shared']));
     expect(service.getApps(false, null)).toEqual([
       {
-        root: true,
-        name: 'root',
-        path: dir,
-      },
-      {
         root: false,
         name: 'api',
         path: join(dir, 'apps/api'),
       },
     ]);
     expect(service.getApps(false, new Set(['api']))).toEqual([
-      {
-        root: false,
-        name: 'api',
-        path: join(dir, 'apps/api'),
-      },
-    ]);
-    expect(service.getApps(true, new Set(['api']))).toEqual([
-      {
-        root: true,
-        name: 'root',
-        path: dir,
-      },
       {
         root: false,
         name: 'api',

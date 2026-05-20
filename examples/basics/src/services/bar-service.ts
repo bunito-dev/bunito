@@ -12,8 +12,6 @@ import {
 })
 export class BarService {
   constructor(private readonly logger: Logger) {
-    logger.setContext(BarService);
-
     this.logger.debug('created');
   }
 

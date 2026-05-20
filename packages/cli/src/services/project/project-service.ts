@@ -157,16 +157,20 @@ export class ProjectService {
   }
 
   getApps(root: boolean, nameFilter?: Set<string> | null): App[] {
-    const { apps, path: rootPath } = this.state;
+    const { app, apps, path: rootPath } = this.state;
 
     const result: App[] = [];
 
     if (root || !nameFilter) {
-      result.push({
-        name: ROOT_APP_NAME,
-        root: true,
-        path: rootPath,
-      });
+      if (app) {
+        result.push({
+          name: ROOT_APP_NAME,
+          root: true,
+          path: rootPath,
+        });
+      } else if (root) {
+        throw new Exception('Root app does not exist');
+      }
     }
 
     const names: string[] = [];

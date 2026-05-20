@@ -9,7 +9,6 @@ import { BarParams } from './schemas';
 })
 export class BarController {
   constructor(private readonly logger: Logger) {
-    logger.setContext(BarController);
     logger.debug('created');
   }
 

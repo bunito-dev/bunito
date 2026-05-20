@@ -5,7 +5,6 @@ import { Logger, Provider } from '@bunito/bunito';
 })
 export class FooService {
   constructor(private readonly logger: Logger) {
-    logger.setContext(FooService);
     logger.debug('created');
   }
 

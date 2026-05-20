@@ -24,7 +24,6 @@ export class FooService {
   }) {
     // Object injects keep constructor arguments named when a provider has several dependencies.
     const { logger, barService } = options;
-    logger.setContext(FooService);
 
     this.logger = logger;
     this.logger.debug('created');

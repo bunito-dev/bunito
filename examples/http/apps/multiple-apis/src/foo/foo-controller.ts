@@ -8,7 +8,6 @@ import { FooParams } from './schemas';
 })
 export class FooController {
   constructor(private readonly logger: Logger) {
-    logger.setContext(FooController);
     logger.debug('created');
   }
 

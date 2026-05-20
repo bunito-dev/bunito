@@ -1,10 +1,10 @@
-import { LoggerModule, Module } from '@bunito/bunito';
+import { Module } from '@bunito/bunito';
 import { HTTPModule, JSONSerializer, UseCORS, UseMiddleware } from '@bunito/http';
 import { AppController } from './app-controller';
 import { FooModule } from './foo';
 
 @Module({
-  imports: [LoggerModule, HTTPModule, FooModule],
+  imports: [HTTPModule, FooModule],
   controllers: [AppController],
 })
 @UseMiddleware(JSONSerializer)

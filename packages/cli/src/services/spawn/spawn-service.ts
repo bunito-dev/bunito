@@ -13,8 +13,25 @@ export class SpawnService {
 
   private readonly processes: ProcessRunning[] = [];
 
-  // biome-ignore lint/complexity/noUselessConstructor: Bun coverage counts generated constructors as uncovered.
-  constructor() {}
+  private readonly defaultEnvs: Record<string, string | undefined>;
+
+  constructor() {
+    this.defaultEnvs = Object.fromEntries(
+      Object.entries(process.env).filter(([key]) => {
+        switch (key) {
+          case 'PATH':
+          case 'USER':
+          case 'TZ':
+          case 'LANG':
+          case 'PWD':
+            return true;
+
+          default:
+            return key.startsWith('npm_') || key.startsWith('BUN_');
+        }
+      }),
+    );
+  }
 
   addProcess(options: ProcessOptions): void {
     const { name, args, envs = {} } = options;
@@ -26,7 +43,7 @@ export class SpawnService {
         stderr: 'pipe',
         stdin: 'inherit',
         env: {
-          ...process.env,
+          ...this.defaultEnvs,
           ...envs,
         },
       }),

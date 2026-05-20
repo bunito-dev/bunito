@@ -11,7 +11,6 @@ export class FooController {
     private readonly logger: Logger,
     private readonly fooProvider: FooService,
   ) {
-    logger.setContext(FooController);
     logger.debug('created');
   }
 

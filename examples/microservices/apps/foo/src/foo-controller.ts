@@ -9,9 +9,7 @@ export class FooController {
   constructor(
     private readonly logger: Logger,
     private readonly brokerService: BrokerService,
-  ) {
-    logger.setContext(FooController);
-  }
+  ) {}
 
   @Get('/', {
     injects: [Query],

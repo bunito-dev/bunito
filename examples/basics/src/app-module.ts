@@ -7,9 +7,7 @@ import { BarService, FooService } from './services';
   exports: [FooService, BarService],
 })
 export class AppModule {
-  constructor(private readonly logger: Logger) {
-    this.logger.setContext(AppModule);
-  }
+  constructor(private readonly logger: Logger) {}
 
   @OnAppStart()
   onStart(): void {
