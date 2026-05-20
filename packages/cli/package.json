@@ -36,6 +36,11 @@
     "README.md",
     "LICENSE"
   ],
+  "scripts": {
+    "demo:cli": "bun run src/main.ts -C ../../demo",
+    "demo:init": "bun demo:cli init demo --app=app1 --app=app2",
+    "demo:g": "bun demo:cli g lib a"
+  },
   "dependencies": {
     "@bunito/common": "workspace:0.0.14",
     "@inquirer/prompts": "8.4.2",

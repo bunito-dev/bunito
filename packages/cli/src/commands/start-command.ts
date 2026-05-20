@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { notEmptySet } from '../common';
 import type { Context } from '../context';
-import type { ProjectApp, StartProcessOptions } from '../services';
-import { CLIService, PROJECT_ENTRY_FILE, PROJECT_ENVS_FILE } from '../services';
+import type { StartProcessOptions } from '../services';
+import { CLIService } from '../services';
 import { AbstractCommand } from './abstract-command';
 
 type StartCommandOptions = {
-  apps?: Set<string>;
-  all?: boolean;
+  apps: Set<string> | null;
   watch?: boolean;
   prod?: boolean;
 } & StartProcessOptions;
@@ -24,19 +23,13 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
 
     project.requireInitialized();
 
-    const { apps: onlyNames, all, prod, label, watch } = this.options;
+    const { apps: onlyNames, prod, label, watch } = this.options;
     const { path } = state;
 
-    let apps: ProjectApp[];
-
-    if (all || onlyNames) {
-      apps = project.getApps(onlyNames);
-    } else {
-      apps = [project.getApp()];
-    }
+    const apps = project.getApps(onlyNames);
 
     const bunArgs = ['bun', `--cwd=${path}`];
-    const runArgs = ['run', '--feature=DEV_ONLY'];
+    const runArgs = ['run', '--feature=RUNTIME_ONLY'];
 
     const envs: Record<string, string> = {};
 
@@ -46,18 +39,16 @@ export class StartCommand extends AbstractCommand<StartCommandOptions> {
 
     if (prod) {
       envs.NODE_ENV = 'production';
-      runArgs.push('--feature=PROD_ONLY');
     } else {
       envs.NODE_ENV = 'development';
-      runArgs.push('--feature=DEV_ONLY', '--feature=TEST_ONLY');
     }
 
     for (const { name, path } of apps) {
       const args = [
         ...bunArgs,
-        `--env-file=${join(path, PROJECT_ENVS_FILE)}`,
+        `--env-file=${join(path, '.env')}`,
         ...runArgs,
-        join(path, PROJECT_ENTRY_FILE),
+        join(path, 'src', 'main.ts'),
       ];
 
       spawn.addProcess({
@@ -81,38 +72,33 @@ CLIService.registerCommand(StartCommand, {
   describe: 'Start the app(s)',
   builder: (yargs) =>
     yargs
-      .example('$0 start', 'Start the main app')
+      .example('$0 start', 'Start all apps')
       .example('$0 start foo', 'Start the foo app')
       .example('$0 start foo bar', 'Start the foo and the bar apps')
       .positional('apps', {
         nullable: true,
-        describe: 'App names',
+        describe: 'App(s) names to run',
         array: true,
         type: 'string',
         coerce: notEmptySet<string>,
       })
-      .option('all', {
-        describe: 'Start all workspace apps',
-        default: false,
-        type: 'boolean',
-        alias: 'a',
-      })
       .option('watch', {
+        alias: ['w'],
         describe: 'Watch for changes',
         default: false,
         type: 'boolean',
-        alias: 'w',
       })
       .option('prod', {
+        alias: ['p'],
         describe: 'Run in production mode',
         default: false,
         type: 'boolean',
-        alias: 'p',
       })
       .option('label', {
-        describe: 'App label format',
-        default: 'full',
+        alias: ['l'],
+        describe: 'Process label',
         type: 'string',
+        default: 'full',
         choices: ['name', 'pid', 'full'],
       }),
 });

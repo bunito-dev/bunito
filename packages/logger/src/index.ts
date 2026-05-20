@@ -9,6 +9,6 @@ export * from './logger-module';
 export * from './logger-service';
 export * from './types';
 
-if (feature('TEST_ONLY')) {
+if (!feature('RUNTIME_ONLY')) {
   await import('./testing');
 }

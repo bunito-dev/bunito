@@ -39,13 +39,15 @@ export function ProjectTemplate(options: {
         cli: 'bunito',
         build: 'bunito build',
         start: 'bunito start',
-        test: 'bunito test',
+        test: 'bun test',
+        coverage: 'bun run test --coverage',
       },
       dependencies: {
         '@bunito/bunito': pkgVersion,
       },
       devDependencies: {
         '@bunito/cli': pkgVersion,
+        '@bunito/testing': pkgVersion,
       },
       engines: bunVersion
         ? {
@@ -55,7 +57,7 @@ export function ProjectTemplate(options: {
     },
 
     'README.md': `
-      # ${name}
+      # \`${name}\`
       
       ## Installation
       ${'```bash'}

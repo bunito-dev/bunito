@@ -7,8 +7,8 @@ export type ProjectState = {
   libs?: Set<string>;
 };
 
-export type ProjectApp = {
+export type App = {
   name: string;
-  main: boolean;
+  root: boolean;
   path: string;
 };

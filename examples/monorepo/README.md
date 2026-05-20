@@ -28,12 +28,6 @@ Run the main app:
 bun run start
 ```
 
-Build every app:
-
-```bash
-bun run build --all
-```
-
 ## What To Read 🔎
 
 - `libs/example`: shared module and provider exported for apps.

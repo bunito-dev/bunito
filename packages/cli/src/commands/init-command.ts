@@ -1,7 +1,7 @@
 import { input } from '@inquirer/prompts';
 import { Exception, notEmptySet } from '../common';
 import type { Context } from '../context';
-import { CLIService, PROJECT_APPS_DIR } from '../services';
+import { CLIService } from '../services';
 import { AppTemplate, ProjectTemplate } from '../templates';
 import { AbstractCommand } from './abstract-command';
 
@@ -72,9 +72,11 @@ export class InitCommand extends AbstractCommand<InitCommandOptions> {
 
     fileNames.push(...(await project.renderTemplate(AppTemplate)()));
 
-    for (const app of apps) {
+    for (const name of apps) {
       fileNames.push(
-        ...(await project.renderTemplate(AppTemplate)(PROJECT_APPS_DIR, app)),
+        ...(await project.renderTemplate(AppTemplate, {
+          name,
+        })('apps', name)),
       );
     }
 

@@ -1,20 +1,12 @@
 import { join } from 'node:path';
 import { notEmptySet } from '../common';
 import type { Context } from '../context';
-import type { ProjectApp } from '../services';
-import {
-  CLIService,
-  PROJECT_ENTRY_FILE,
-  PROJECT_OUT_DIR,
-  PROJECT_TSCONFIG_FILE,
-} from '../services';
+import { CLIService } from '../services';
 import { AbstractCommand } from './abstract-command';
 
 type BuildCommandOptions = {
   apps?: Set<string>;
-  all?: boolean;
-  minify?: boolean;
-  sourcemap?: boolean;
+  disable?: ('sourcemap' | 'minify')[];
 };
 
 export class BuildCommand extends AbstractCommand<BuildCommandOptions> {
@@ -29,16 +21,11 @@ export class BuildCommand extends AbstractCommand<BuildCommandOptions> {
 
     project.requireInitialized();
 
-    const { apps: onlyNames, all, minify, sourcemap } = this.options;
+    const { apps: onlyNames, disable } = this.options;
     const { path: projectPath } = state;
 
-    let apps: ProjectApp[];
-
-    if (all || onlyNames) {
-      apps = project.getApps(onlyNames);
-    } else {
-      apps = [project.getApp()];
-    }
+    const disabled = new Set(disable);
+    const apps = project.getApps(onlyNames);
 
     for (const [index, app] of apps.entries()) {
       if (index) {
@@ -51,17 +38,16 @@ export class BuildCommand extends AbstractCommand<BuildCommandOptions> {
       } = await Bun.build({
         root: projectPath,
         target: 'bun',
-        minify,
+        minify: !disabled.has('minify'),
+        features: ['RUNTIME_ONLY'],
         packages: 'bundle',
-        sourcemap: sourcemap ? 'inline' : 'none',
-        entrypoints: [join(app.path, PROJECT_ENTRY_FILE)],
-        tsconfig: join(app.path, PROJECT_TSCONFIG_FILE),
+        sourcemap: disabled.has('sourcemap') ? 'none' : 'inline',
+        entrypoints: [join(app.path, 'src', 'main.ts')],
+        tsconfig: join(projectPath, 'tsconfig.json'),
       });
 
       if (success && output) {
-        const outPath = app.main
-          ? join(PROJECT_OUT_DIR)
-          : join(PROJECT_OUT_DIR, app.name);
+        const outPath = app.root ? join('out') : join('out', app.name);
 
         await fs.ensurePath(projectPath, outPath);
 
@@ -88,22 +74,11 @@ CLIService.registerCommand(BuildCommand, {
         type: 'string',
         coerce: notEmptySet<string>,
       })
-      .option('all', {
-        describe: 'Build all workspace apps',
-        default: false,
-        type: 'boolean',
-        alias: 'a',
-      })
-      .option('sourcemap', {
-        describe: 'Build with inline source maps',
-        default: false,
-        type: 'boolean',
-        alias: 's',
-      })
-      .option('minify', {
-        describe: 'Minify the output',
-        default: false,
-        type: 'boolean',
-        alias: 'm',
+      .option('disable', {
+        alias: ['d'],
+        describe: 'Disable',
+        type: 'string',
+        array: true,
+        choices: ['sourcemap', 'minify'],
       }),
 });

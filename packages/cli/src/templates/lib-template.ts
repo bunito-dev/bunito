@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { toPascalCase } from '../common';
-import { PROJECT_LIBS_DIR } from '../services';
 import type { TemplateResult } from './types';
 
 export function LibTemplate(options: { name: string }): TemplateResult {
@@ -8,30 +7,67 @@ export function LibTemplate(options: { name: string }): TemplateResult {
 
   const classPrefix = name ? toPascalCase(name) : undefined;
 
-  const rootPath = join(PROJECT_LIBS_DIR, name);
+  const moduleName = `${name}-module`;
+  const moduleClass = `${classPrefix}Module`;
+  const serviceName = `${name}-service`;
+  const serviceClass = `${classPrefix}Service`;
 
   return {
-    [join(rootPath, `${name}-service.ts`)]: `
+    [join('src', `${moduleName}.ts`)]: `
+      import { Module } from '@bunito/bunito';
+      import { ${serviceClass} } from './${serviceName}';
+      
+      @Module({
+        providers: [${serviceClass}],
+        exports: [${serviceClass}],
+      })
+      export class ${moduleClass} {}
+    `,
+
+    [join('src', `${moduleName}.test.ts`)]: `
+      import { describe, expect, test } from 'bun:test';
+      import { ${moduleClass} } from './${moduleName}';
+      
+      describe('${moduleClass}', () => {
+        test.todo('add integration tests', () => {
+          expect(${moduleClass}).toBeDefined();
+        });
+      });
+    `,
+
+    [join('src', `${serviceName}.ts`)]: `
       import { Provider } from '@bunito/bunito';
       
       @Provider()
-      export class ${classPrefix}Service {}
+      export class ${serviceClass} {}
     `,
 
-    [join(rootPath, `${name}-module.ts`)]: `
-      import { Module } from '@bunito/bunito';
-      import { ${classPrefix}Service } from './${name}-service';
+    [join('src', `${serviceName}.test.ts`)]: `
+      import { describe, expect, test } from 'bun:test';
+      import { ${serviceClass} } from './${serviceName}';
       
-      @Module({
-        providers: [${classPrefix}Service],
-        exports: [${classPrefix}Service],
-      })
-      export class ${classPrefix}Module {}
+      describe('${serviceClass}', () => {
+        test.todo('add integration tests', () => {
+          expect(${serviceClass}).toBeDefined();
+        });
+      });
     `,
 
-    [join(rootPath, `index.ts`)]: `
-      export * from './${name}-module';
-      export * from './${name}-service';
+    [join('src', `index.ts`)]: `
+      export * from './${moduleName}';
+      export * from './${serviceName}';
+    `,
+
+    [join('test', `${name}.spec.ts`)]: `
+      import { describe, expect, test } from 'bun:test';
+      import { ${moduleClass}, ${serviceClass} } from '@libs/${name}';
+      
+      describe('${name}', () => {
+        test.todo('add integration tests', () => {
+          expect(${moduleClass}).toBeDefined();
+          expect(${serviceClass}).toBeDefined();
+        });
+      });
     `,
   };
 }

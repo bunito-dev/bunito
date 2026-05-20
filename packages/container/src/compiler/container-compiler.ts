@@ -188,10 +188,6 @@ export class ContainerCompiler {
 
     const moduleProvidersLike = Object.values(moduleProviders).flat(1) as ProviderLike[];
 
-    if (!moduleImports && !moduleExports && !moduleProvidersLike.length) {
-      return InternalException.throw`Module ${moduleLike} must declare imports, exports, or providers`;
-    }
-
     moduleNode = {};
 
     if (parentId) {

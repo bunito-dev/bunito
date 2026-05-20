@@ -7,6 +7,6 @@ export * from './server-router';
 export * from './server-service';
 export * from './types';
 
-if (feature('TEST_ONLY')) {
+if (!feature('RUNTIME_ONLY')) {
   await import('./testing');
 }

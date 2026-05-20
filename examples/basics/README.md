@@ -10,12 +10,6 @@ cd examples/basics
 bun run start
 ```
 
-## Build 🏗️
-
-```bash
-bun run build
-```
-
 ## What To Read 🔎
 
 - `src/app-module.ts`: imports `LoggerModule` and registers providers.

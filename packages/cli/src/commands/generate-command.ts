@@ -1,6 +1,6 @@
 import { input } from '@inquirer/prompts';
 import type { Context } from '../context';
-import { CLIService, PROJECT_APPS_DIR } from '../services';
+import { CLIService, ROOT_APP_NAME } from '../services';
 import { AppTemplate, LibTemplate } from '../templates';
 import { AbstractCommand } from './abstract-command';
 
@@ -33,9 +33,19 @@ export class GenerateCommand extends AbstractCommand<GenerateCommandOptions> {
           });
         }
 
+        if (!name) {
+          return;
+        }
+
         project.addApp(name);
 
-        const files = await project.renderTemplate(AppTemplate)(PROJECT_APPS_DIR, name);
+        const root = name === ROOT_APP_NAME;
+
+        const template = project.renderTemplate(AppTemplate, {
+          name: !root ? name : undefined,
+        });
+
+        const files = root ? await template() : await template('apps', name);
 
         logger.info(`App "${name}" generated with files:`, ...files);
 
@@ -50,11 +60,15 @@ export class GenerateCommand extends AbstractCommand<GenerateCommandOptions> {
           });
         }
 
+        if (!name) {
+          return;
+        }
+
         project.addLib(name);
 
         const files = await project.renderTemplate(LibTemplate, {
           name,
-        })();
+        })('libs', name);
 
         logger.info(`Library "${name}" generated with files:`, ...files);
 

@@ -20,8 +20,6 @@ bun run start foo
 bun run start bar
 bun run start --all
 bun run start
-bun run build
-bun run build --all
 ```
 
 Run those commands from `examples/microservices`.

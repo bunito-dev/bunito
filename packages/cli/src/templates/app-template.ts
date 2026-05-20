@@ -1,31 +1,54 @@
 import { join } from 'node:path';
-import { PROJECT_SRC_DIR } from '../services';
 import type { TemplateResult } from './types';
 
-export function AppTemplate(): TemplateResult {
+export function AppTemplate(options: { name?: string } = {}): TemplateResult {
+  const { name } = options;
+
   return {
-    [join(PROJECT_SRC_DIR, `app-module.ts`)]: `
-      import { LoggerModule, Module } from '@bunito/bunito';
+    [join('src', `app-module.ts`)]: `
+      import { Module } from '@bunito/bunito';
       
       @Module({
-        imports: [LoggerModule],
+        imports: [],
       })
       export class AppModule {}
     `,
 
-    [join(PROJECT_SRC_DIR, `main.ts`)]: `
+    [join('src', `app-module.test.ts`)]: `
+      import { describe, expect, test } from 'bun:test';
+      import { AppModule } from './app-module';
+      
+      describe('AppModule', () => {
+        test.todo('add unit tests', () => {
+          expect(AppModule).toBeDefined();
+        });
+      });
+    `,
+
+    [join('src', `index.ts`)]: `
+      export * from './app-module';
+    `,
+
+    [join('src', `main.ts`)]: `
       import { App } from '@bunito/bunito';
       import { AppModule } from './app-module';
       
       await App.start(AppModule);
     `,
 
-    [join(PROJECT_SRC_DIR, `index.ts`)]: `
-      // Add your app exports here
+    [join('test', `app.spec.ts`)]: `
+      import { describe, expect, test } from 'bun:test';
+      import { AppModule } from '@app${name ? `s/${name}` : ''}';
+      
+      describe('App', () => {
+        test.todo('add integration tests', () => {
+          expect(AppModule).toBeDefined();
+        });
+      });
     `,
 
     '.env': `
-      # Add your environment variables here
+     # Add your environment variables here
     `,
   };
 }

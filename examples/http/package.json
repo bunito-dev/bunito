@@ -3,10 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "cli": "bunito",
-    "build": "bunito build",
-    "start": "bunito start",
-    "test": "bunito test"
+    "start": "bunito start"
   },
   "dependencies": {
     "@bunito/bunito": "workspace:*",
@@ -14,8 +11,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@bunito/cli": "workspace:*",
-    "@bunito/testing": "workspace:*"
+    "@bunito/cli": "workspace:*"
   },
   "engines": {
     "bun": ">=1.3.10"

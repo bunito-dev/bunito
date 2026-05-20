@@ -3,14 +3,8 @@ import { Exception, isKebabCase } from '../../common';
 import type { Context } from '../../context';
 import type { Template } from '../../templates';
 import { renderTemplate } from '../../templates';
-import {
-  PROJECT_APPS_DIR,
-  PROJECT_ENTRY_FILE,
-  PROJECT_INDEX_FILE,
-  PROJECT_LIBS_DIR,
-  PROJECT_PKG_DEPT,
-} from './constants';
-import type { ProjectApp, ProjectState } from './types';
+import { PROJECT_PKG_DEPT, ROOT_APP_NAME } from './constants';
+import type { App, ProjectState } from './types';
 
 export class ProjectService {
   private stateLoaded: ProjectState | undefined;
@@ -71,23 +65,15 @@ export class ProjectService {
       return;
     }
 
-    const entryStats = await fs.getFile(path, PROJECT_ENTRY_FILE).tryStat();
-
-    if (entryStats) {
-      if (!entryStats.isFile()) {
-        throw new Exception(`Project entry "${PROJECT_ENTRY_FILE}" must be a file`);
-      }
-
+    if (await this.appExistsAt(path)) {
       this.stateLoaded.app = true;
     }
 
-    const appDirs = await fs.readDir(path, PROJECT_APPS_DIR);
+    const appDirs = await fs.readDir(path, 'apps');
 
     if (appDirs) {
       for (const appDir of appDirs) {
-        const entryStats = await fs.getFile(appDir.name, PROJECT_ENTRY_FILE).tryStat();
-
-        if (!entryStats?.isFile()) {
+        if (!(await this.appExistsAt(appDir.name))) {
           continue;
         }
 
@@ -96,11 +82,11 @@ export class ProjectService {
       }
     }
 
-    const libsDirs = await fs.readDir(path, PROJECT_LIBS_DIR);
+    const libsDirs = await fs.readDir(path, 'libs');
 
     if (libsDirs) {
       for (const libDir of libsDirs) {
-        const indexStats = await fs.getFile(libDir.name, PROJECT_INDEX_FILE).tryStat();
+        const indexStats = await fs.getFile(libDir.name, 'index.ts').tryStat();
 
         if (!indexStats?.isFile()) {
           continue;
@@ -140,8 +126,12 @@ export class ProjectService {
       throw new Exception(`App "${name}" already exists`);
     }
 
-    this.state.apps ??= new Set();
-    this.state.apps.add(name);
+    if (name === ROOT_APP_NAME) {
+      this.state.app = true;
+    } else {
+      this.state.apps ??= new Set();
+      this.state.apps.add(name);
+    }
   }
 
   addLib(name: string): void {
@@ -157,16 +147,16 @@ export class ProjectService {
     this.state.libs.add(name);
   }
 
-  hasApp(name?: string): boolean {
+  hasApp(name: string): boolean {
     const { app, apps } = this.state;
-    return name ? (apps?.has(name) ?? false) : !!app;
+    return (name === ROOT_APP_NAME ? app : apps?.has(name)) ?? false;
   }
 
   hasLib(name: string): boolean {
     return this.state.libs?.has(name) ?? false;
   }
 
-  getApp(): ProjectApp {
+  getApp(): App {
     const { name, app, path } = this.state;
 
     if (!app) {
@@ -175,27 +165,27 @@ export class ProjectService {
 
     return {
       name,
-      main: true,
+      root: true,
       path,
     };
   }
 
-  getApps(onlyNames: Set<string> | undefined): ProjectApp[] {
-    const { apps, path: rootPath } = this.state;
+  getApps(onlyNames?: Set<string> | null): App[] {
+    const { app, apps, path: rootPath } = this.state;
 
-    if (!apps) {
+    if (!app || !apps) {
       throw new Exception('No runnable apps were found');
     }
 
     let names: string[];
 
     if (!onlyNames) {
-      names = [...apps];
+      names = [ROOT_APP_NAME, ...apps];
     } else {
       names = [];
 
       for (const name of onlyNames) {
-        if (!apps.has(name)) {
+        if (!this.hasApp(name)) {
           throw new Exception(`App "${name}" was not found`);
         }
       }
@@ -203,13 +193,19 @@ export class ProjectService {
       names.push(...onlyNames);
     }
 
-    return names.map((name) => {
-      return {
-        name,
-        main: false,
-        path: join(rootPath, PROJECT_APPS_DIR, name),
-      };
-    });
+    return names.map((name) =>
+      name === ROOT_APP_NAME
+        ? {
+            name,
+            root: true,
+            path: rootPath,
+          }
+        : {
+            name,
+            root: false,
+            path: join(rootPath, 'apps', name),
+          },
+    );
   }
 
   renderTemplate<ITemplate extends Template>(
@@ -254,5 +250,23 @@ export class ProjectService {
 
       return result;
     };
+  }
+
+  private async appExistsAt(appPath: string): Promise<boolean> {
+    const { fs } = this.context;
+
+    const entryFile = fs.getFile(appPath, 'src', 'main.ts');
+
+    const entryStats = await entryFile.tryStat();
+
+    if (!entryStats) {
+      return false;
+    }
+
+    if (entryStats.isFile()) {
+      return true;
+    }
+
+    throw new Exception(['Project entry must be a file:', entryFile.name]);
   }
 }
