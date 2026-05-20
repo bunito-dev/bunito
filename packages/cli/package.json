@@ -1,6 +1,6 @@
 {
   "name": "@bunito/cli",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Command-line tools for initializing, generating, running, and building bunito projects.",
   "keywords": [
     "bunito",
@@ -43,7 +43,7 @@
     "demo:g": "bun demo:cli g lib a"
   },
   "dependencies": {
-    "@bunito/common": "workspace:0.0.14",
+    "@bunito/common": "workspace:0.0.15",
     "@inquirer/prompts": "8.4.2",
     "yargs": "18.0.0",
     "zod": "catalog:"
