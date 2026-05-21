@@ -41,8 +41,10 @@ import { Logger, OnAppShutdown, OnAppStart, OnDestroy, OnInit, Provider } from '
   injects: [Logger],
 })
 class BarService {
-  constructor(private readonly logger: Logger) {
-    logger.setContext(BarService);
+  private readonly logger: Logger;
+
+  constructor(logger: Logger) {
+    this.logger = logger.track('BarService');
   }
 
   @OnInit()
@@ -89,9 +91,8 @@ class FooService {
 
   constructor(options: { logger: Logger; barService: BarService }) {
     const { logger, barService } = options;
-    logger.setContext(FooService);
 
-    this.logger = logger;
+    this.logger = logger.track('FooService');
     this.barService = barService;
   }
 
@@ -115,8 +116,10 @@ import { App, Logger, LoggerModule, Module, OnAppStart } from '@bunito/bunito';
   injects: [Logger],
 })
 class AppModule {
-  constructor(private readonly logger: Logger) {
-    this.logger.setContext(AppModule);
+  private readonly logger: Logger;
+
+  constructor(logger: Logger) {
+    this.logger = logger.track('AppModule');
   }
 
   @OnAppStart()

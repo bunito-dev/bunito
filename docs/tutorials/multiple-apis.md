@@ -19,9 +19,7 @@ const FooParams = z.object({
   scope: 'singleton',
 })
 class FooController {
-  constructor(private readonly logger: Logger) {
-    logger.setContext(FooController);
-  }
+  constructor(private readonly logger: Logger) {}
 
   @Get('/:foo', {
     injects: [Params(FooParams)],
@@ -63,9 +61,7 @@ const BarParams = z.object({
   scope: 'singleton',
 })
 class BarController {
-  constructor(private readonly logger: Logger) {
-    logger.setContext(BarController);
-  }
+  constructor(private readonly logger: Logger) {}
 
   @Get('/:bar', {
     injects: [Params(BarParams)],

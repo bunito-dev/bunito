@@ -26,9 +26,7 @@ import { Logger, Provider } from '@bunito/bunito';
   injects: [Logger],
 })
 class FooProvider {
-  constructor(private readonly logger: Logger) {
-    this.logger.setContext(FooProvider);
-  }
+  constructor(private readonly logger: Logger) {}
 
   foo(): string {
     return 'bar';

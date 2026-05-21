@@ -23,6 +23,8 @@ workspace:
 - `packages/bun`: Bun-specific integrations, currently including server integration
   and config secrets backed by Bun secrets
 - `packages/common`: shared exceptions, predicates, type helpers, and small utilities
+- `packages/testing`: shared test context factories, mock helpers, spies, and
+  testing exceptions used by package tests
 - `packages/cli`: `bunito` command-line entrypoint used by the example workspace
 - `examples`: private workspaces with runnable applications showing the current API
 
@@ -87,6 +89,11 @@ Current examples and run commands are listed in `examples/README.md`.
 - `@bunito/common`
   - Has no workspace dependencies
   - Owns base exception classes, type helpers, predicates, and utility functions
+- `@bunito/testing`
+  - Depends on `@bunito/common`
+  - Owns `Test`, `TestException`, `defineTestFactory`, `mockClass`, and
+    `spyOnObject`
+  - Intended for package tests and testing helpers, not runtime application code
 - `@bunito/cli`
   - Depends on `@bunito/common`, `@inquirer/prompts`, `yargs`, and `zod`
   - Exposes the `bunito` binary used by the example workspace package scripts
@@ -198,8 +205,8 @@ Notes:
 Important areas:
 
 - `packages/container/src/container.ts`
-- `packages/container/src/container-compiler.ts`
-- `packages/container/src/container-runtime.ts`
+- `packages/container/src/compiler/*`
+- `packages/container/src/runtime/*`
 - `packages/container/src/decorators/*`
 - `packages/container/src/utils/*`
 - `packages/container/src/types.ts`
@@ -239,8 +246,9 @@ Important areas:
 - `packages/logger/src/logger-service.ts`
 - `packages/logger/src/logger-module.ts`
 - `packages/logger/src/logger-config.ts`
-- `packages/logger/src/json/*`
-- `packages/logger/src/pretty/*`
+- `packages/logger/src/extensions/*`
+- `packages/logger/src/bundled/json-transport/*`
+- `packages/logger/src/bundled/pretty-transform/*`
 
 Notes:
 
@@ -248,6 +256,23 @@ Notes:
 - keep public `Logger` behavior stable because examples and application code resolve
   and inject it directly
 - when changing formats, check both JSON and pretty extensions
+
+### `@bunito/testing`
+
+Important areas:
+
+- `packages/testing/src/test.ts`
+- `packages/testing/src/test-exception.ts`
+- `packages/testing/src/utils/*`
+- package-local `src/testing/*` helpers in framework packages
+
+Notes:
+
+- use `@bunito/testing` helpers in package tests where they keep assertions smaller
+- keep testing helpers out of runtime examples and application-facing docs unless a
+  page explicitly documents testing
+- shared factories should stay deterministic because they are reused across package
+  suites
 
 ### `@bunito/app`
 
@@ -342,10 +367,11 @@ Important areas:
 Notes:
 
 - the `bunito` binary is used by the `examples` workspace scripts
-- the CLI discovers the main app from `src/main.ts`, workspace apps from
+- the CLI discovers the root app from `src/main.ts`, workspace apps from
   `apps/*/src/main.ts`, and libraries from `libs/*/index.ts`
-- `start` and `build` target the main app by default; named apps or `--all` target
-  workspace apps
+- `start` and `build` target every discovered app by default
+- named apps narrow the target list to workspace apps; `--root` includes the root
+  app with a selected set
 - when CLI behavior changes, validate at least one
   `cd examples/http && bun run start <app>` command
 
@@ -395,6 +421,8 @@ The project documentation is being developed as a VitePress site in `docs/`.
 - Root and package README files should give quick orientation, not full documentation
 - Documentation pages should reflect the current examples documented in
   `examples/README.md`
+- When package responsibilities change, update the root README, package README,
+  package `description`/`keywords`, and this file together
 - Avoid placeholder docs; if a page exists, give it useful draft content or remove it
 - `specs/` is currently mostly scaffolding except for ADR folders and template files
 - there is no `TODO.md` in the repository; do not point docs there

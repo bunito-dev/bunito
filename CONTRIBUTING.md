@@ -20,18 +20,20 @@ and VitePress.
 
 Framework packages live in `packages/*`:
 
-- `@bunito/bunito`: application bootstrap and public convenience entrypoint
-- `@bunito/app`: application bootstrap and lifecycle coordination
-- `@bunito/container`: dependency injection, modules, providers, scopes, lifecycle,
-  components, and extensions
-- `@bunito/config`: configuration module, config factories, env parsing, and secrets
-- `@bunito/logger`: logger module, logger service, and JSON/pretty extensions
-- `@bunito/http`: HTTP module, controllers, routes, injections, middleware, JSON
-  support, and HTTP exceptions
-- `@bunito/broker`: broker module, message handlers, broker injections, local and
-  NATS adapters
-- `@bunito/bun`: Bun-specific server and secret integrations
-- `@bunito/common`: framework-agnostic exceptions, predicates, types, and utilities
+- `@bunito/bunito`: public convenience entrypoint for application, container,
+  config, and logger APIs
+- `@bunito/app`: application bootstrap, lifecycle coordination, and app hooks
+- `@bunito/container`: dependency injection, modules, providers, scopes, lifecycle
+  hooks, request contexts, and indexed extensions
+- `@bunito/config`: typed config factories, env parsing, runtime flags, and secrets
+- `@bunito/logger`: injectable loggers, logger service, and JSON/pretty transports
+- `@bunito/http`: HTTP module, controllers, routes, injections, middleware, CORS,
+  validation helpers, and HTTP exceptions
+- `@bunito/broker`: broker module, message handlers, broker injections,
+  request/reply APIs, and local or NATS adapters
+- `@bunito/bun`: Bun server and secrets integrations
+- `@bunito/common`: framework-agnostic exceptions, predicates, type helpers, and utilities
+- `@bunito/testing`: test context factories and mock helpers for bunito packages
 - `@bunito/cli`: `bunito` command-line entrypoint
 
 Runnable example workspaces live in `examples/*` and are documented in

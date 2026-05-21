@@ -14,8 +14,10 @@ import { Logger, LoggerModule, Module, Provider } from '@bunito/bunito';
   injects: [Logger],
 })
 class UsersService {
-  constructor(private readonly logger: Logger) {
-    this.logger.setContext(UsersService);
+  private readonly logger: Logger;
+
+  constructor(logger: Logger) {
+    this.logger = logger.track('UsersService');
   }
 
   findAll(): string[] {
@@ -32,8 +34,8 @@ class UsersService {
 class AppModule {}
 ```
 
-The logger is intentionally injectable. A service can set its context once and keep
-logging calls local to the behavior it owns.
+The logger is intentionally injectable. A service can create a tracked logger once
+and keep logging calls local to the behavior it owns.
 
 ## Config Values
 
@@ -45,9 +47,11 @@ provider token:
 import { ConfigModule, defineConfig, Module, Provider } from '@bunito/bunito';
 import type { ResolveConfig } from '@bunito/bunito';
 
-const ServerConfig = defineConfig('server', (config) => ({
-  port: config.getEnv('PORT', 'port') ?? 3000,
-}));
+const ServerConfig = defineConfig(function ServerConfig({ getEnv }) {
+  return {
+    port: getEnv?.('PORT', 'port') ?? 3000,
+  };
+});
 
 @Provider({
   injects: [ServerConfig],

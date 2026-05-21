@@ -35,7 +35,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.15"
+    "@bunito/common": "workspace:0.0.15",
+    "@bunito/container": "workspace:0.0.15"
   },
   "devDependencies": {},
   "engines": {

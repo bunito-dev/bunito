@@ -19,16 +19,17 @@ Start with the examples guide: [`examples/`](./examples/README.md).
 
 ## Packages 📦
 
-- [`@bunito/cli`](./packages/cli/README.md): command-line tools for running bunito projects
-- [`@bunito/bunito`](./packages/bunito/README.md): main application entrypoint
-  - [`@bunito/app`](./packages/app/README.md): application bootstrap and lifecycle
-  - [`@bunito/container`](./packages/container/README.md): dependency injection, modules, providers, and lifecycle
-  - [`@bunito/config`](./packages/config/README.md): configuration and secrets
-  - [`@bunito/logger`](./packages/logger/README.md): logging and logger output extensions
-  - [`@bunito/common`](./packages/common/README.md): shared exceptions, predicates, types, and utilities
-- [`@bunito/broker`](./packages/broker/README.md): message handlers, broker adapters, and request/reply messaging
-- [`@bunito/bun`](./packages/bun/README.md): Bun-specific server and secret integrations
-- [`@bunito/http`](./packages/http/README.md): HTTP controllers, routing, middleware, and exceptions
+- [`@bunito/cli`](./packages/cli/README.md): initialize, generate, run, and build bunito projects
+- [`@bunito/bunito`](./packages/bunito/README.md): convenience entrypoint for core application APIs
+  - [`@bunito/app`](./packages/app/README.md): application bootstrap, lifecycle coordination, and app hooks
+  - [`@bunito/container`](./packages/container/README.md): dependency injection, modules, providers, scopes, and lifecycle hooks
+  - [`@bunito/config`](./packages/config/README.md): typed config factories, environment parsing, and secrets
+  - [`@bunito/logger`](./packages/logger/README.md): injectable loggers, trace helpers, and output transports
+  - [`@bunito/common`](./packages/common/README.md): shared exceptions, predicates, type helpers, and utilities
+- [`@bunito/broker`](./packages/broker/README.md): broker decorators, request/reply APIs, and local or NATS adapters
+- [`@bunito/bun`](./packages/bun/README.md): Bun server and secrets integrations
+- [`@bunito/http`](./packages/http/README.md): HTTP controllers, routing, middleware, CORS, validation, and exceptions
+- [`@bunito/testing`](./packages/testing/README.md): test context factories and mock helpers for bunito packages
 
 ## Development 🛠️
 

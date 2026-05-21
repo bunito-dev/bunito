@@ -13,7 +13,7 @@ The framework is intentionally split into focused packages. Start with
 `@bunito/http` or `@bunito/broker` when the application needs them.
 
 The fastest way to learn the API is to run one of the repository examples, then
-read the matching tutorial. The snippets below show the same main-app project shape
+read the matching tutorial. The snippets below show the same root-app project shape
 the CLI expects.
 
 ## Run the CLI
@@ -69,9 +69,7 @@ import { Logger, LoggerModule, Module, Provider } from '@bunito/bunito';
   injects: [Logger],
 })
 class HelloService {
-  constructor(private readonly logger: Logger) {
-    this.logger.setContext(HelloService);
-  }
+  constructor(private readonly logger: Logger) {}
 
   hello(): string {
     this.logger.debug('hello() called');

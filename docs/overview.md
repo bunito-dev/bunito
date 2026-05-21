@@ -128,15 +128,22 @@ handling and business behavior in normal methods.
 
 The framework is split into packages so applications can stay small:
 
-- `@bunito/bunito`: app, modules, providers, config, logger, and common re-exports
-  - `@bunito/app`: app bootstrap and app lifecycle primitives
-  - `@bunito/container`: dependency injection, modules, providers, scopes, and controllers
-  - `@bunito/config`: config factories, environment values, and secrets
-  - `@bunito/logger`: injectable logger and output extensions
-  - `@bunito/common`: shared exceptions, predicates, types, and utilities
-- `@bunito/broker`: message handlers, local/NATS adapters, and request/reply APIs
-- `@bunito/bun`: Bun-specific integrations
-- `@bunito/http`: routes, middleware, request injections, CORS, response handling, and HTTP exceptions
+- `@bunito/bunito`: the convenience entrypoint for app, container, config, logger,
+  and common APIs
+- `@bunito/app`: application bootstrap, lifecycle coordination, and app hooks
+- `@bunito/container`: dependency injection, modules, providers, scopes, request
+  contexts, and indexed extensions
+- `@bunito/config`: typed config factories, environment parsing, runtime flags, and
+  secret lookup
+- `@bunito/logger`: injectable loggers, trace helpers, and JSON/pretty transports
+- `@bunito/common`: shared exceptions, predicates, type helpers, and utilities
+- `@bunito/http`: controllers, routing decorators, middleware, CORS, validation,
+  response handling, and HTTP exceptions
+- `@bunito/broker`: message handlers, broker injections, local/NATS adapters, and
+  request/reply APIs
+- `@bunito/bun`: Bun-specific server and secrets integrations
+- `@bunito/testing`: shared test context factories, mock helpers, spies, and
+  testing exceptions for package tests
 
 ## Examples
 

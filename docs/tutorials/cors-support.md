@@ -93,9 +93,7 @@ import { Get, Method, OnRequest, UseCORS } from '@bunito/http';
   methods: ['GET'],
 })
 class FooController {
-  constructor(private readonly logger: Logger) {
-    logger.setContext(FooController);
-  }
+  constructor(private readonly logger: Logger) {}
 
   @Get()
   getFoo(): Response {
