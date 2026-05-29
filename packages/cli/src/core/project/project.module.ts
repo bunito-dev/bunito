@@ -1,10 +1,9 @@
 import { Module } from '@bunito/container';
-import { IOModule } from '../io';
-import { ProcessModule } from '../process';
+import { SystemModule } from '../system';
 import { ProjectService } from './project.service';
 
 @Module({
-  imports: [IOModule, ProcessModule],
+  imports: [SystemModule],
   providers: [ProjectService],
   exports: [ProjectService],
 })

@@ -1,26 +1,56 @@
 import { cp, mkdir, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import process from 'node:process';
 import { Provider } from '@bunito/container';
 import { input } from '@inquirer/prompts';
-import { ProcessService } from '../process';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import { takeFirst } from '../../common';
 import { PKG_INFO_FILE, PKG_INFO_SCHEMA } from './constants';
-import type { File, PkgInfo } from './types';
-@Provider({
-  injects: [ProcessService, null],
-})
-export class IOService {
-  constructor(
-    private readonly processService: ProcessService,
-    private readonly prompt = input,
-  ) {}
+import type { PkgInfo, SystemFile } from './types';
 
-  getFile(path: string, ...paths: string[]): File {
-    const file = Bun.file(join(path, ...paths)) as File;
+@Provider({
+  injects: [null, null, null],
+})
+export class SystemService {
+  readonly cwd: string;
+
+  readonly readonly: boolean;
+
+  constructor(
+    readonly argv = hideBin(process.argv),
+    cwd = process.cwd(),
+    private readonly prompt = input,
+  ) {
+    const args = yargs(this.argv)
+      .help(false)
+      .version(false)
+      .option({
+        cwd: {
+          type: 'string',
+          alias: 'C',
+          coerce: takeFirst<string>,
+        },
+        readonly: {
+          type: 'boolean',
+          default: false,
+        },
+      })
+      .parse();
+
+    const parsed: Partial<Awaited<typeof args>> = args instanceof Promise ? {} : args;
+
+    this.cwd = parsed.cwd ?? cwd;
+    this.readonly = parsed.readonly ?? false;
+  }
+
+  getFile(path: string, ...paths: string[]): SystemFile {
+    const file = Bun.file(join(path, ...paths)) as SystemFile;
 
     const write = file.write.bind(file);
 
-    file.write = async (...args: Parameters<File['write']>) => {
-      if (this.processService.readonly) {
+    file.write = async (...args: Parameters<SystemFile['write']>) => {
+      if (this.readonly) {
         return 0;
       }
 
@@ -47,14 +77,14 @@ export class IOService {
     });
   }
 
-  async readDir(path: string, ...paths: string[]): Promise<File[] | undefined> {
+  async readDir(path: string, ...paths: string[]): Promise<SystemFile[] | undefined> {
     const file = this.getFile(path, ...paths);
 
     if (!(await file.tryStat())?.isDirectory()) {
       return;
     }
 
-    const files: File[] = [];
+    const files: SystemFile[] = [];
     const names = await readdir(file.name);
 
     for (const name of names) {
@@ -90,7 +120,7 @@ export class IOService {
   }
 
   async ensurePath(path: string, ...paths: string[]): Promise<void> {
-    if (this.processService.readonly) {
+    if (this.readonly) {
       return;
     }
 

@@ -1,18 +1,18 @@
 import { join } from 'node:path';
 import { Logger } from '@bunito/logger';
 import { notEmptySet } from '../../common';
-import { IOService, ProjectService } from '../../core';
+import { ProjectService, SystemService } from '../../core';
 import { Command } from '../command';
 import type { CommandBuilt } from '../types';
 import type { BuildOptions } from './types';
 
 @Command<BuildOptions>({
-  injects: [Logger, IOService, ProjectService],
+  injects: [Logger, SystemService, ProjectService],
 })
 export class BuildCommand implements Command<BuildOptions> {
   constructor(
     private readonly logger: Logger,
-    private readonly ioService: IOService,
+    private readonly systemService: SystemService,
     private readonly projectService: ProjectService,
   ) {}
 
@@ -32,12 +32,9 @@ export class BuildCommand implements Command<BuildOptions> {
     for (const app of apps) {
       const logger = this.logger.track();
 
-      if (apps.length > 1) {
-        logger.usePrefix(app.name);
-      }
-
+      logger.usePrefix(app.prefix);
       logger.track();
-      logger.info('building...');
+      logger.info('Building App...');
 
       const {
         success,
@@ -54,14 +51,14 @@ export class BuildCommand implements Command<BuildOptions> {
       });
 
       if (success && output) {
-        await this.ioService.ensurePath(projectPath, app.outPath);
+        await this.systemService.ensurePath(projectPath, app.outPath);
 
         const content = await output.text();
 
-        const file = this.ioService.getFile(projectPath, app.outFile);
+        const file = this.systemService.getFile(projectPath, app.outFile);
         await file.write(content);
 
-        logger.info(`completed:`, app.outFile);
+        logger.info([app.outFile]);
       }
     }
   }

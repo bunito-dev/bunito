@@ -4,16 +4,16 @@ import { AbstractException } from '@bunito/common';
 import { optional, Provider } from '@bunito/container';
 import { Logger } from '@bunito/logger';
 import yargs from 'yargs';
-import { ProcessService } from '../core';
+import { SystemService } from '../core';
 import { Command } from './command';
 
 @Provider({
-  injects: [optional(Logger), ProcessService, Command],
+  injects: [optional(Logger), SystemService, Command],
 })
 export class CommandService {
   constructor(
     private readonly logger: Logger | null,
-    private readonly processService: ProcessService,
+    private readonly systemService: SystemService,
     private readonly commands: Command[],
   ) {
     //
@@ -21,7 +21,7 @@ export class CommandService {
 
   @OnAppStart()
   async runCommand(): Promise<void> {
-    const { argv } = this.processService;
+    const { argv } = this.systemService;
 
     let args = yargs(argv)
       .scriptName('bunito')

@@ -1,15 +1,15 @@
 import { notEmptySet } from '../../common';
-import { CLIException, IOService, ProjectService } from '../../core';
+import { CLIException, ProjectService, SystemService } from '../../core';
 import { Command } from '../command';
 import type { CommandBuilt } from '../types';
 import type { InitOptions } from './types';
 
 @Command<InitOptions>({
-  injects: [IOService, ProjectService],
+  injects: [SystemService, ProjectService],
 })
 export class InitCommand implements Command<InitOptions> {
   constructor(
-    private readonly ioService: IOService,
+    private readonly systemService: SystemService,
     private readonly projectService: ProjectService,
   ) {}
 
@@ -23,7 +23,7 @@ export class InitCommand implements Command<InitOptions> {
     let { project: name, app: appNames } = options;
 
     if (!name) {
-      name = await this.ioService.readInput({
+      name = await this.systemService.readInput({
         message: 'Project name',
         required: true,
         prefill: 'tab',
@@ -37,7 +37,7 @@ export class InitCommand implements Command<InitOptions> {
 
     if (appNames === null) {
       for (let index = 1; ; index++) {
-        const app = await this.ioService.readInput({
+        const app = await this.systemService.readInput({
           message: `App name #${index}`,
           required: false,
           default: '',

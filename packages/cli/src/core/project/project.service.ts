@@ -2,21 +2,17 @@ import { basename, join, sep } from 'node:path';
 import { OnInit, Provider } from '@bunito/container';
 import { isKebabCase } from '../../common';
 import { CLIException } from '../cli';
-import { IOService } from '../io';
-import { ProcessService } from '../process';
+import { SystemService } from '../system';
 import { PROJECT_PKG_DEPT, ROOT_APP_NAME } from './constants';
 import type { AppOptions, AppState, ProjectState } from './types';
 
 @Provider({
-  injects: [IOService, ProcessService],
+  injects: [SystemService],
 })
 export class ProjectService {
   private loadedState: ProjectState | undefined;
 
-  constructor(
-    private readonly ioService: IOService,
-    private readonly processService: ProcessService,
-  ) {}
+  constructor(private readonly systemService: SystemService) {}
 
   get state(): ProjectState {
     if (!this.loadedState) {
@@ -28,7 +24,7 @@ export class ProjectService {
 
   @OnInit()
   async loadState(): Promise<void> {
-    const { cwd } = this.processService;
+    const { cwd } = this.systemService;
 
     const paths = cwd.split(sep);
 
@@ -39,7 +35,7 @@ export class ProjectService {
     while (paths.length > 1) {
       path = paths.join(sep);
 
-      const pkgInfo = await this.ioService.readPkgInfo(path);
+      const pkgInfo = await this.systemService.readPkgInfo(path);
 
       if (pkgInfo?.dependencies[PROJECT_PKG_DEPT]) {
         name = pkgInfo.name;
@@ -65,17 +61,17 @@ export class ProjectService {
       return;
     }
 
-    let checkStats = await this.ioService.getFile(path, 'src', 'main.ts').tryStat();
+    let checkStats = await this.systemService.getFile(path, 'src', 'main.ts').tryStat();
 
     if (checkStats?.isFile()) {
       this.loadedState.root = true;
     }
 
-    const appDirs = await this.ioService.readDir(path, 'apps');
+    const appDirs = await this.systemService.readDir(path, 'apps');
 
     if (appDirs) {
       for (const appDir of appDirs) {
-        checkStats = await this.ioService
+        checkStats = await this.systemService
           .getFile(appDir.name, 'src', 'main.ts')
           .tryStat();
 
@@ -88,11 +84,11 @@ export class ProjectService {
       }
     }
 
-    const libsDirs = await this.ioService.readDir(path, 'libs');
+    const libsDirs = await this.systemService.readDir(path, 'libs');
 
     if (libsDirs) {
       for (const libDir of libsDirs) {
-        checkStats = await this.ioService
+        checkStats = await this.systemService
           .getFile(libDir.name, 'src', 'index.ts')
           .tryStat();
 
@@ -163,8 +159,12 @@ export class ProjectService {
 
     const result: AppState[] = [];
 
+    let prefixWidth = 0;
+
     if (includeRoot) {
       if (root) {
+        prefixWidth = Math.max(prefixWidth, ROOT_APP_NAME.length);
+
         result.push(
           await this.buildApp({
             name: ROOT_APP_NAME,
@@ -182,6 +182,8 @@ export class ProjectService {
           throw new CLIException(`App ${name} not found`);
         }
 
+        prefixWidth = Math.max(prefixWidth, name.length);
+
         result.push(
           await this.buildApp({
             name,
@@ -195,6 +197,12 @@ export class ProjectService {
       throw new CLIException('No apps found');
     }
 
+    if (result.length > 1) {
+      for (const app of result) {
+        app.prefix = app.name.padEnd(prefixWidth, '_');
+      }
+    }
+
     return result;
   }
 
@@ -205,6 +213,7 @@ export class ProjectService {
     const outPath = join('out', root ? '' : name);
 
     return {
+      prefix: '',
       ...options,
       entryFile: join(appPath, 'src', 'main.ts'),
       envsFile: join(appPath, '.env'),
