@@ -1,0 +1,6 @@
+import { Module } from '@bunito/bunito';
+
+@Module({
+  imports: [],
+})
+export class <%= it.moduleClass %> {}

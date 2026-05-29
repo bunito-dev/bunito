@@ -1,0 +1,4 @@
+import { Provider } from '@bunito/bunito';
+
+@Provider()
+export class <%= it.serviceClass %> {}

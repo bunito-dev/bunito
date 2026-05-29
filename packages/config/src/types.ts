@@ -1,7 +1,7 @@
 import type { Fn, Mandatory, MaybePromise } from '@bunito/common';
 import type { ProviderFactoryOptions, ProviderValueOptions } from '@bunito/container';
 import type { ZodType } from 'zod';
-import type { ConfigService } from './config-service';
+import type { ConfigService } from './config.service';
 
 export type ConfigContext = Partial<ConfigService>;
 

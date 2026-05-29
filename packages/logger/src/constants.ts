@@ -3,7 +3,7 @@ export const LOG_LEVELS = {
   ERROR: 50,
   WARN: 40,
   INFO: 30,
-  OK: 30,
+  OK: 25,
   DEBUG: 20,
   VERBOSE: 0,
 } as const;

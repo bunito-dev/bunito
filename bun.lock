@@ -110,12 +110,18 @@
         "bunito": "./src/main.ts",
       },
       "dependencies": {
+        "@bunito/app": "workspace:0.0.15",
         "@bunito/common": "workspace:0.0.15",
+        "@bunito/config": "workspace:0.0.15",
+        "@bunito/container": "workspace:0.0.15",
+        "@bunito/logger": "workspace:0.0.15",
         "@inquirer/prompts": "8.4.2",
+        "eta": "4.6.0",
         "yargs": "18.0.0",
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@bunito/testing": "workspace:0.0.15",
         "@types/yargs": "17.0.35",
       },
     },
@@ -548,6 +554,8 @@
     "escalade": ["escalade@3.2.0", "", {}, "sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA=="],
 
     "estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
+
+    "eta": ["eta@4.6.0", "", {}, "sha512-lW6is4T1NFOYnmqGZIfvixqj7A7sSvScF+DN8EK6K58xI5MZ5UvYe0GjopxOXQtZvUn4eDdVuZ8XSoYWTMEKwA=="],
 
     "fast-string-truncated-width": ["fast-string-truncated-width@3.0.3", "", {}, "sha512-0jjjIEL6+0jag3l2XWWizO64/aZVtpiGE3t0Zgqxv0DPuxiMjvB3M24fCyhZUO4KomJQPj3LTSUnDP3GpdwC0g=="],
 

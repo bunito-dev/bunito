@@ -1,1 +1,1 @@
-export * from './second-module';
+export * from './second.module';

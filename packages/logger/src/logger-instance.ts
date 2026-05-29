@@ -1,6 +1,8 @@
 import type { LogArgs } from './types';
 
 export interface LoggerInstance<TInstance = unknown> {
+  usePrefix(prefix: string): void;
+
   fatal(...args: LogArgs): void;
 
   error(...args: LogArgs): void;

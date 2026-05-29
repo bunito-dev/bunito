@@ -9,5 +9,5 @@ export type {
 export {
   AbstractException,
   InternalException,
-  Utils,
+  utils,
 } from '@bunito/common';

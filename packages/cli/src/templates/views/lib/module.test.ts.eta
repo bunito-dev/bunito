@@ -1,0 +1,8 @@
+import { describe, expect, test } from 'bun:test';
+import { <%= it.moduleClass %> } from './<%= it.moduleName %>';
+
+describe('<%= it.moduleClass %>', () => {
+  test.todo('add unit tests', () => {
+    expect(<%= it.moduleClass %>).toBeDefined();
+  });
+});

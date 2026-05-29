@@ -1,7 +1,7 @@
 import './globals';
 
-export { BrokerModule } from './broker-module';
-export { BrokerService } from './broker-service';
+export { BrokerModule } from './broker.module';
+export { BrokerService } from './broker.service';
 export type { LocalBrokerContext, NatsBrokerContext } from './bundled';
 export {
   LocalBrokerModule,

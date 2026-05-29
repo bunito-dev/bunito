@@ -1,9 +1,9 @@
 import type { ModuleId, ProviderId, WithInjections } from '@bunito/container';
 
-export type BrokerMessage<TContext = unknown> = {
+export type BrokerMessage<TContext = unknown, TPayload = Uint8Array> = {
   kind: 'request' | 'event';
   topic: string;
-  payload: Uint8Array;
+  payload: TPayload;
   context: TContext;
 };
 

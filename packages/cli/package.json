@@ -39,12 +39,18 @@
   ],
   "scripts": {},
   "dependencies": {
+    "@bunito/app": "workspace:0.0.15",
     "@bunito/common": "workspace:0.0.15",
+    "@bunito/config": "workspace:0.0.15",
+    "@bunito/container": "workspace:0.0.15",
+    "@bunito/logger": "workspace:0.0.15",
     "@inquirer/prompts": "8.4.2",
+    "eta": "4.6.0",
     "yargs": "18.0.0",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@bunito/testing": "workspace:0.0.15",
     "@types/yargs": "17.0.35"
   },
   "engines": {

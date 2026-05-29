@@ -1,8 +1,9 @@
-import { App } from '@bunito/bunito';
-import { AppModule } from './app-module';
-import { BarService, FooService } from './services';
+import { createApp } from '@bunito/bunito';
+import { BarService } from './bar.service';
+import { FooService } from './foo.service';
+import { MainModule } from './main.module';
 
-const app = await App.create(AppModule);
+const app = await createApp(MainModule);
 
 // Providers can also be resolved manually when an app needs direct access.
 const bar = await app.resolve(BarService);

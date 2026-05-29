@@ -2,11 +2,11 @@ import { feature } from 'bun:bundle';
 import './globals';
 
 export * from './constants';
-export * from './extensions';
+export * from './log-transport';
 export * from './logger';
+export * from './logger.module';
+export * from './logger.service';
 export * from './logger-instance';
-export * from './logger-module';
-export * from './logger-service';
 export * from './types';
 
 if (!feature('RUNTIME_ONLY')) {

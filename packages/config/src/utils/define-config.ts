@@ -1,6 +1,6 @@
 import type { RawObject } from '@bunito/common';
 import { InternalException, isFn, isString } from '@bunito/common';
-import { ConfigService } from '../config-service';
+import { ConfigService } from '../config.service';
 import type { ConfigBuilder, ConfigContext, ConfigProvider } from '../types';
 
 export function defineConfig<TConfig extends RawObject>(

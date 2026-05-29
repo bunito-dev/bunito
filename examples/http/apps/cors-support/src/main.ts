@@ -1,4 +1,4 @@
-import { App } from '@bunito/bunito';
-import { AppModule } from './app-module';
+import { startApp } from '@bunito/bunito';
+import { MainModule } from './main.module';
 
-await App.start(AppModule);
+await startApp(MainModule);

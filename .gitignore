@@ -8,6 +8,7 @@ node_modules
 # dotenv
 .env*
 !.env*.sample
+!.env*.eta
 
 # output
 artifacts
@@ -20,3 +21,6 @@ dist
 .eslintcache
 .cache
 *.tsbuildinfo
+
+# development
+draft

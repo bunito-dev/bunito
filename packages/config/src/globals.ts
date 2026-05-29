@@ -12,9 +12,5 @@ declare global {
     interface Module {
       configs: import('./types').ConfigProvider<unknown>[];
     }
-
-    interface Test {
-      ConfigModule: import('@bunito/container').ModuleOptions;
-    }
   }
 }

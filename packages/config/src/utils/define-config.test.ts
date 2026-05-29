@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { InternalException } from '@bunito/common';
-import { ConfigService } from '../config-service';
+import { ConfigService } from '../config.service';
 import type { ConfigProvider } from '../types';
 import { defineConfig } from './define-config';
 

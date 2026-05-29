@@ -1,4 +1,4 @@
-import type { HTTPException } from '../../http-exception';
+import type { HTTPException } from '../../http.exception';
 import { Middleware } from '../../middleware';
 
 @Middleware()

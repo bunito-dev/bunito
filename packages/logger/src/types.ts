@@ -2,6 +2,7 @@ import type { Mandatory } from '@bunito/common';
 import type { LOG_LEVELS } from './constants';
 
 export type LoggerState = {
+  prefix?: string;
   context?: string;
   timestamp?: Date;
 };

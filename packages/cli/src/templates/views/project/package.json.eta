@@ -1,0 +1,22 @@
+{
+  "name": "<%= it.name %>",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "cli": "bunito",
+    "start": "bunito start",
+    "build": "bunito build",
+    "test": "bun test",
+    "coverage": "bun test --coverage"
+  },
+  "dependencies": {
+    "@bunito/bunito": "<%= it.pkgVersion %>"
+  },
+  "devDependencies": {
+    "@bunito/cli": "<%= it.pkgVersion %>",
+    "@bunito/testing": "<%= it.pkgVersion %>"
+  },
+  "engines": {
+    "bun": "<%= it.bunVersion %>"
+  }
+}

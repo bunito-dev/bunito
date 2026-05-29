@@ -1,2 +1,2 @@
 export * from './json-serializer';
-export * from './json-serializer-module';
+export * from './json-serializer.module';

@@ -1,19 +1,19 @@
 import type { Buffer } from 'node:buffer';
 import type { RawObject } from '@bunito/common';
 
-export type Server = Bun.Server<unknown>;
+export type BunServer = Bun.Server<unknown>;
 
-export type ServerOptions = Bun.Serve.Options<unknown>;
+export type BunServerOptions = Bun.Serve.Options<unknown>;
 
-export type ServerFactory = (options: ServerOptions) => Server;
+export type BunServerFactory = (options: BunServerOptions) => BunServer;
 
-export type HTTPMethod = Bun.Serve.HTTPMethod;
-
-export type ServerRequest = Request & {
+export type BunRequest = Request & {
   params?: RawObject<string>;
 };
 
-export type ServerWebSocket = Bun.ServerWebSocket<unknown>;
+export type BunWebSocket = Bun.ServerWebSocket<unknown>;
+
+export type HTTPMethod = Bun.Serve.HTTPMethod;
 
 export type WebSocketEvent =
   | {

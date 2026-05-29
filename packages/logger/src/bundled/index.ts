@@ -1,2 +1,2 @@
-export * from './json-transport';
-export * from './pretty-transform';
+export * from './json-logger';
+export * from './pretty-logger';

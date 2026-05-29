@@ -1,0 +1,8 @@
+import { describe, expect, test } from 'bun:test';
+import { <%= it.serviceClass %> } from './<%= it.serviceName %>';
+
+describe('<%= it.serviceClass %>', () => {
+  test.todo('add unit tests', () => {
+    expect(<%= it.serviceClass %>).toBeDefined();
+  });
+});

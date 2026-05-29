@@ -1,6 +1,6 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { Logger } from './logger';
-import type { LoggerService } from './logger-service';
+import type { LoggerService } from './logger.service';
 
 describe('Logger', () => {
   it('writes all log levels and returns debug values', () => {

@@ -1,5 +1,11 @@
-export * from './secrets-config-reader';
-export * from './secrets-module';
-export * from './secrets-service';
+import { feature } from 'bun:bundle';
+
+export * from './bun-secrets.config-reader';
+export * from './bun-secrets.module';
+export * from './bun-secrets.service';
 export * from './types';
 export * from './utils';
+
+if (!feature('RUNTIME_ONLY')) {
+  await import('./testing');
+}

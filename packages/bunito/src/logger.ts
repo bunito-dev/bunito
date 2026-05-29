@@ -1,1 +1,2 @@
-export { Logger, LoggerModule } from '@bunito/logger';
+export type { LogRecord } from '@bunito/logger';
+export { Logger, LoggerModule, LogTransport } from '@bunito/logger';

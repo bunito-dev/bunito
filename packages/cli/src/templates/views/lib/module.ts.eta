@@ -1,0 +1,8 @@
+import { Module } from '@bunito/bunito';
+import { <%= it.serviceClass %> } from './<%= it.serviceName %>';
+
+@Module({
+  providers: [<%= it.serviceClass %>],
+  exports: [<%= it.serviceClass %>],
+})
+export class <%= it.moduleClass %> {}

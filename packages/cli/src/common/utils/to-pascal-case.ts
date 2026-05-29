@@ -1,4 +1,4 @@
-import { RESERVED_NAMES } from '../constants';
+import { RESERVED_NAMES } from './constants';
 import { extractWords } from './extract-words';
 
 export function toPascalCase(input: string): string {

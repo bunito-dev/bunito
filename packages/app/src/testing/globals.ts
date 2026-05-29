@@ -1,7 +1,8 @@
 declare global {
   namespace Bunito {
     interface Test {
-      App: typeof import('../app').App;
+      createApp: import('../types').AppFactory;
+      startApp: import('../types').AppFactory;
     }
   }
 }

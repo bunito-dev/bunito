@@ -10,8 +10,8 @@ export class Container {
   private readonly compiler: ContainerCompiler;
   private readonly runtime: ContainerRuntime;
 
-  constructor(moduleLike: ModuleLike) {
-    this.compiler = new ContainerCompiler(moduleLike);
+  constructor(rootModule: ModuleLike) {
+    this.compiler = new ContainerCompiler(rootModule);
     this.runtime = new ContainerRuntime(this.compiler);
 
     this.setInstance(Container, this);
@@ -27,11 +27,9 @@ export class Container {
     this.runtime.setInstance(Id.for(token), instance);
   }
 
-  getInstance<TInstance>(token: Token<TInstance>): Promise<TInstance | undefined>;
   getInstance<TToken extends Token>(
     token: TToken,
-  ): Promise<ResolveToken<TToken> | undefined>;
-  getInstance(token: Token): Promise<unknown> {
+  ): Promise<ResolveToken<TToken> | undefined> {
     return this.runtime.getInstance(Id.for(token));
   }
 

@@ -3,7 +3,7 @@ import type { ResolveConfig } from '@bunito/config';
 import type { NatsConnection } from '@nats-io/transport-node';
 import { BrokerAdapter } from '../../broker-adapter';
 import type { BrokerMessageHandler } from '../../types';
-import { NatsBrokerConfig } from './nats-broker-config';
+import { NatsBrokerConfig } from './nats-broker.config';
 import type { NatsBrokerContext } from './types';
 
 @BrokerAdapter<NatsBrokerContext>({

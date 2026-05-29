@@ -1,10 +1,7 @@
-import { BrokerModule, LocalBrokerModule, NatsBrokerModule } from '@bunito/broker';
-import { App } from '@bunito/bunito';
-import { HTTPModule } from '@bunito/http';
-import { AppController } from './app-controller';
-import { BarModule } from './bar-module';
+import { startApp } from '@bunito/bunito';
+import { ExampleModule } from '@libs/example';
+import { BarModule } from './bar.module';
 
-await App.start({
-  imports: [BrokerModule, LocalBrokerModule, NatsBrokerModule, HTTPModule, BarModule],
-  controllers: [AppController],
+await startApp({
+  imports: [ExampleModule.forRoot('bar'), BarModule],
 });

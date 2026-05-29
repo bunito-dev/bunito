@@ -1,0 +1,12 @@
+# `<%= it.name %>`
+
+> TODO: add description
+
+## Usage
+```ts
+import { <%= it.moduleClass %>, <%= it.serviceClass %> } from '@libs/<%= it.name %>';
+
+// TODO: add usage
+
+```
+

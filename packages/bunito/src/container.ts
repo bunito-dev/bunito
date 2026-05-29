@@ -11,11 +11,13 @@ export type {
 export {
   Container,
   Controller,
+  Id,
   MODULE_ID,
   Module,
   OnDestroy,
   OnInit,
   OnResolve,
+  optional,
   Provider,
   REQUEST_ID,
   REQUEST_ID_GETTER,

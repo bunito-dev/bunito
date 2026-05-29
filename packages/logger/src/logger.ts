@@ -1,7 +1,7 @@
 import type { ContextId } from '@bunito/container';
 import { CONTEXT_ID, Provider } from '@bunito/container';
+import { LoggerService } from './logger.service';
 import type { LoggerInstance } from './logger-instance';
-import { LoggerService } from './logger-service';
 import type { LogArg, LogArgs, LoggerState, LogLevelKind } from './types';
 
 @Provider({
@@ -18,6 +18,10 @@ export class Logger implements LoggerInstance<Logger> {
     if (contextId) {
       state.context = contextId.name;
     }
+  }
+
+  usePrefix(prefix?: string): void {
+    this.state.prefix = prefix;
   }
 
   fatal(...args: LogArgs): void {
@@ -50,7 +54,7 @@ export class Logger implements LoggerInstance<Logger> {
   }
 
   track(context?: string): Logger {
-    const { context: stateContext } = this.state;
+    const { context: stateContext, prefix } = this.state;
 
     return new Logger(
       {
@@ -59,6 +63,7 @@ export class Logger implements LoggerInstance<Logger> {
             ? `${stateContext}.${context}`
             : (context ?? stateContext),
         timestamp: new Date(),
+        prefix,
       },
       this.loggerService,
     );

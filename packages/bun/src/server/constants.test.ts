@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'bun:test';
 import { Id } from '@bunito/container';
-import { HTTP_METHODS, SERVER_FACTORY_ID } from './constants';
+import { BUN_SERVER_FACTORY_ID, HTTP_METHODS } from './constants';
 
 describe('server constants', () => {
   it('exports the server factory id and supported HTTP methods', () => {
-    expect(SERVER_FACTORY_ID).toBeInstanceOf(Id);
-    expect(SERVER_FACTORY_ID.toString()).toBe('SERVER_FACTORY_ID');
+    expect(BUN_SERVER_FACTORY_ID).toBeInstanceOf(Id);
+    expect(BUN_SERVER_FACTORY_ID.toString()).toBe('SERVER_FACTORY_ID');
     expect(HTTP_METHODS).toEqual([
       'GET',
       'POST',

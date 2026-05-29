@@ -36,8 +36,8 @@ export class ContainerCompiler {
 
   private readonly providerIds = new Map<ProviderKey, Set<ProviderId>>();
 
-  constructor(moduleLike: ModuleLike) {
-    [this.rootModuleId] = this.compileModule(moduleLike);
+  constructor(rootModule: ModuleLike) {
+    [this.rootModuleId] = this.compileModule(rootModule);
   }
 
   getModule(moduleId: ModuleId): ModuleNode {

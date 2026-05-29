@@ -1,0 +1,2 @@
+export * from './<%= it.moduleName %>';
+export * from './<%= it.serviceName %>';

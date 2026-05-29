@@ -22,8 +22,8 @@ export {
   UnauthorizedException,
   ValidationFailedException,
 } from './exceptions';
-export { HTTPException } from './http-exception';
-export { HTTPModule } from './http-module';
+export { HTTPException } from './http.exception';
+export { HTTPModule } from './http.module';
 export { Body, Context, CustomInjection, Method, Params, Query } from './injections';
 export type { MiddlewareContext } from './middleware';
 export { Middleware } from './middleware';

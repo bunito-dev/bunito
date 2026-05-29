@@ -7,7 +7,7 @@ import { InternalException } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import { BrokerAdapter } from '../../broker-adapter';
 import type { BrokerMessage, BrokerMessageHandler } from '../../types';
-import { LocalBrokerConfig } from './local-broker-config';
+import { LocalBrokerConfig } from './local-broker.config';
 import type {
   LocalBrokerContext,
   LocalBrokerRequestCallback,
@@ -225,11 +225,11 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
 
     const content = await file.json();
 
-    const { payload, ...common } = content as BrokerMessage<LocalBrokerContext>;
+    const { payload, ...common } = content as BrokerMessage<LocalBrokerContext, string>;
 
     return {
       ...common,
-      payload: Uint8Array.from(payload),
+      payload: Uint8Array.fromHex(payload),
     };
   }
 
@@ -253,7 +253,7 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
       JSON.stringify(
         {
           ...common,
-          payload: Array.from(payload),
+          payload: payload.toHex(),
         },
         null,
         2,

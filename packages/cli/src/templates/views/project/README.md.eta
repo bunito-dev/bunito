@@ -1,0 +1,7 @@
+# <%= it.name %>
+
+## Installation
+```
+bun install
+```
+
