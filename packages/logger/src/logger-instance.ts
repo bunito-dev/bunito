@@ -1,7 +1,7 @@
 import type { LogArgs } from './types';
 
 export interface LoggerInstance<TInstance = unknown> {
-  usePrefix(prefix: string): void;
+  usePrefix(prefix: string): TInstance;
 
   fatal(...args: LogArgs): void;
 
@@ -17,5 +17,7 @@ export interface LoggerInstance<TInstance = unknown> {
 
   debug<TArg0>(...args: LogArgs<TArg0>): TArg0;
 
-  track(context?: string): TInstance;
+  clone(): TInstance;
+
+  track(): TInstance;
 }

@@ -20,8 +20,9 @@ export class Logger implements LoggerInstance<Logger> {
     }
   }
 
-  usePrefix(prefix?: string): void {
+  usePrefix(prefix?: string): this {
     this.state.prefix = prefix;
+    return this;
   }
 
   fatal(...args: LogArgs): void {
@@ -53,17 +54,23 @@ export class Logger implements LoggerInstance<Logger> {
     return args[0];
   }
 
-  track(context?: string): Logger {
-    const { context: stateContext, prefix } = this.state;
+  clone(): Logger {
+    return new Logger(
+      {
+        ...this.state,
+      },
+      this.loggerService,
+    );
+  }
+
+  track(): Logger {
+    const { context, prefix } = this.state;
 
     return new Logger(
       {
-        context:
-          stateContext && context
-            ? `${stateContext}.${context}`
-            : (context ?? stateContext),
-        timestamp: new Date(),
+        context,
         prefix,
+        timestamp: new Date(),
       },
       this.loggerService,
     );

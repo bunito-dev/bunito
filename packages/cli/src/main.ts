@@ -10,7 +10,7 @@ await startApp({
   providers: [
     CLILogTransport,
     overwriteConfigEnvs({
-      LOG_LEVEL: 'INFO',
+      LOG_LEVEL: 'verbose',
       LOG_TRANSPORT: 'cli',
     }),
   ],

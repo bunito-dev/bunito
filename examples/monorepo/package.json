@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "cli": "bunito g app --name test",
+    "init": "bunito init demo -C ../demo --app a",
     "help": "bunito --help",
     "start": "bunito start",
     "build": "bunito build"

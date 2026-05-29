@@ -4,7 +4,7 @@ import type { PKG_INFO_SCHEMA } from './constants';
 
 export type PkgInfo = z.infer<typeof PKG_INFO_SCHEMA>;
 
-export type SystemFile = Bun.BunFile &
+export type File = Bun.BunFile &
   Readonly<{
     name: string;
     tryStat: () => Promise<Stats | undefined>;

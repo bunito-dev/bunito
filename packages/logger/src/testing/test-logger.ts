@@ -23,7 +23,7 @@ export class TestLogger implements SpiedObject<LoggerInstance> {
     TestLogger.instances.getOrInsertComputed(contextId, () => this);
   }
 
-  usePrefix: Mock<LoggerInstance['usePrefix']> = mock();
+  usePrefix: Mock<LoggerInstance['usePrefix']> = mock(() => this);
 
   fatal: Mock<LoggerInstance['fatal']> = mock();
 
@@ -38,6 +38,10 @@ export class TestLogger implements SpiedObject<LoggerInstance> {
   verbose: Mock<LoggerInstance['verbose']> = mock();
 
   debug: Mock<LoggerInstance['debug']> = mock();
+
+  clone: Mock<LoggerInstance['track']> = mock(() => {
+    return this;
+  });
 
   track: Mock<LoggerInstance['track']> = mock(() => {
     return this;

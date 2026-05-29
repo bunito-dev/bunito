@@ -1,22 +1,24 @@
 import { join } from 'node:path';
 import { Logger } from '@bunito/logger';
 import { notEmptySet } from '../../common';
-import { ProjectService, SystemService } from '../../core';
+import { IOService, ProjectService } from '../../core';
 import { Command } from '../command';
 import type { CommandBuilt } from '../types';
 import type { BuildOptions } from './types';
 
 @Command<BuildOptions>({
-  injects: [Logger, SystemService, ProjectService],
+  injects: [Logger, IOService, ProjectService],
 })
 export class BuildCommand implements Command<BuildOptions> {
   constructor(
     private readonly logger: Logger,
-    private readonly systemService: SystemService,
+    private readonly ioService: IOService,
     private readonly projectService: ProjectService,
   ) {}
 
   async run(options: BuildOptions): Promise<void> {
+    this.projectService.requireInitialized();
+
     const { app: appNames, root: includeRoot, apps: includeApps, disable } = options;
 
     const disabled = new Set(disable);
@@ -30,10 +32,8 @@ export class BuildCommand implements Command<BuildOptions> {
     const { path: projectPath } = this.projectService.state;
 
     for (const app of apps) {
-      const logger = this.logger.track();
+      const logger = this.logger.track().usePrefix(app.prefix);
 
-      logger.usePrefix(app.prefix);
-      logger.track();
       logger.info('Building App...');
 
       const {
@@ -51,11 +51,9 @@ export class BuildCommand implements Command<BuildOptions> {
       });
 
       if (success && output) {
-        await this.systemService.ensurePath(projectPath, app.outPath);
-
         const content = await output.text();
 
-        const file = this.systemService.getFile(projectPath, app.outFile);
+        const file = this.ioService.getFile(projectPath, app.outFile);
         await file.write(content);
 
         logger.info([app.outFile]);

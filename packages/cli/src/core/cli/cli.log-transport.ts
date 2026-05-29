@@ -1,8 +1,9 @@
 import type { InspectColor } from 'node:util';
 import { styleText } from 'node:util';
-import { inspectName } from '@bunito/common';
+import { isString } from '@bunito/common';
 import type { LogRecord } from '@bunito/logger';
 import { LogTransport } from '@bunito/logger';
+import { CLIException } from './cli.exception';
 import { PREFIX_COLOR } from './constants';
 
 @LogTransport()
@@ -12,7 +13,15 @@ export class CLILogTransport implements LogTransport {
   readonly NAME = 'cli';
 
   write(options: LogRecord): void {
-    const { message, data } = options;
+    const { level, message, data, error } = options;
+
+    switch (level.kind) {
+      case 'OK':
+        return;
+
+      default:
+    }
+
     let { prefix = '' } = options;
 
     let lines: string[] = [];
@@ -20,23 +29,51 @@ export class CLILogTransport implements LogTransport {
     if (prefix) {
       const { prefixColors } = CLILogTransport;
 
-      let color = prefixColors.get(prefix);
+      let prefixColor = prefixColors.get(prefix);
 
-      if (!color) {
-        color = PREFIX_COLOR[prefixColors.size % PREFIX_COLOR.length] ?? 'gray';
-
-        CLILogTransport.prefixColors.set(prefix, color);
+      if (!prefixColor) {
+        prefixColor = PREFIX_COLOR[prefixColors.size % PREFIX_COLOR.length] ?? 'gray';
+        CLILogTransport.prefixColors.set(prefix, prefixColor);
       }
 
-      prefix = styleText(color, prefix);
+      prefix = styleText(prefixColor, prefix);
     }
 
-    if (message) {
-      lines.push(...message.split('\n'));
+    let instructions: string[] | undefined;
+
+    if (error) {
+      if (CLIException.isInstance(error)) {
+        lines.push(styleText('red', error.message));
+        ({ instructions } = error);
+      } else {
+        lines.push(
+          ...Bun.inspect(error, {
+            colors: true,
+          })
+            .trim()
+            .split('\n')
+            .map((line) => `${styleText('redBright', '•')} ${line}`),
+        );
+      }
+    } else if (message) {
+      lines.push(message);
     }
 
-    if (data) {
-      lines.push(...data.map((item) => inspectName(item)));
+    if (data && Array.isArray(data[0])) {
+      for (const instruction of data[0]) {
+        if (!isString(instruction)) {
+          continue;
+        }
+
+        instructions ??= [];
+        instructions.push(instruction);
+      }
+    }
+
+    if (instructions) {
+      lines.push(
+        ...instructions.map((instruction) => styleText(['white', 'italic'], instruction)),
+      );
     }
 
     if (prefix) {

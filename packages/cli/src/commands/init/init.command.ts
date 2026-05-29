@@ -1,15 +1,18 @@
+import { Logger } from '@bunito/logger';
 import { notEmptySet } from '../../common';
-import { CLIException, ProjectService, SystemService } from '../../core';
+import { CLIException, IOService, ProjectService } from '../../core';
+import { AppTemplate, ProjectTemplate } from '../../templates';
 import { Command } from '../command';
 import type { CommandBuilt } from '../types';
 import type { InitOptions } from './types';
 
 @Command<InitOptions>({
-  injects: [SystemService, ProjectService],
+  injects: [Logger, IOService, ProjectService],
 })
 export class InitCommand implements Command<InitOptions> {
   constructor(
-    private readonly systemService: SystemService,
+    private readonly logger: Logger,
+    private readonly ioService: IOService,
     private readonly projectService: ProjectService,
   ) {}
 
@@ -17,13 +20,13 @@ export class InitCommand implements Command<InitOptions> {
     const { state } = this.projectService;
 
     if (state.initialized) {
-      throw new CLIException('Project is already initialized');
+      throw new CLIException('Project already initialized at:', state.path);
     }
 
     let { project: name, app: appNames } = options;
 
     if (!name) {
-      name = await this.systemService.readInput({
+      name = await this.ioService.readInput({
         message: 'Project name',
         required: true,
         prefill: 'tab',
@@ -37,7 +40,7 @@ export class InitCommand implements Command<InitOptions> {
 
     if (appNames === null) {
       for (let index = 1; ; index++) {
-        const app = await this.systemService.readInput({
+        const app = await this.ioService.readInput({
           message: `App name #${index}`,
           required: false,
           default: '',
@@ -57,13 +60,33 @@ export class InitCommand implements Command<InitOptions> {
       }
     }
 
-    // render root
-    // render apps
+    const pkgInfo = await this.ioService.readPkgInfo();
+    const pkgVersion = pkgInfo?.version ?? '0.0.0';
+    const bunVersion = pkgInfo?.engines?.bun ?? '>=1.3.10';
+
+    const files = await this.projectService.renderTemplate(ProjectTemplate, {
+      name,
+      pkgVersion,
+      bunVersion,
+    })();
+
+    files.push(
+      ...(await this.projectService.renderTemplate(AppTemplate, {
+        name,
+        root: true,
+      })()),
+    );
+
     for (const name of apps) {
-      //
+      files.push(
+        ...(await this.projectService.renderTemplate(AppTemplate, {
+          name,
+          root: false,
+        })('apps', name)),
+      );
     }
 
-    console.log('InitCommand', options);
+    this.logger.info('Project initialized:', files);
   }
 
   build(): CommandBuilt {

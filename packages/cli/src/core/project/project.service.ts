@@ -1,18 +1,25 @@
 import { basename, join, sep } from 'node:path';
 import { OnInit, Provider } from '@bunito/container';
-import { isKebabCase } from '../../common';
+import { Eta } from 'eta';
+import { isKebabCase, ROOT_PATH } from '../../common';
+import type { TemplateFactory } from '../../templates';
 import { CLIException } from '../cli';
-import { SystemService } from '../system';
+import { IOService } from '../io';
 import { PROJECT_PKG_DEPT, ROOT_APP_NAME } from './constants';
 import type { AppOptions, AppState, ProjectState } from './types';
 
 @Provider({
-  injects: [SystemService],
+  injects: [IOService, null],
 })
 export class ProjectService {
   private loadedState: ProjectState | undefined;
 
-  constructor(private readonly systemService: SystemService) {}
+  constructor(
+    private readonly ioService: IOService,
+    private readonly templateEngine: Eta = new Eta({
+      views: join(ROOT_PATH, 'src', 'templates', 'views'),
+    }),
+  ) {}
 
   get state(): ProjectState {
     if (!this.loadedState) {
@@ -24,7 +31,7 @@ export class ProjectService {
 
   @OnInit()
   async loadState(): Promise<void> {
-    const { cwd } = this.systemService;
+    const { cwd } = this.ioService;
 
     const paths = cwd.split(sep);
 
@@ -35,7 +42,7 @@ export class ProjectService {
     while (paths.length > 1) {
       path = paths.join(sep);
 
-      const pkgInfo = await this.systemService.readPkgInfo(path);
+      const pkgInfo = await this.ioService.readPkgInfo(path);
 
       if (pkgInfo?.dependencies[PROJECT_PKG_DEPT]) {
         name = pkgInfo.name;
@@ -61,17 +68,17 @@ export class ProjectService {
       return;
     }
 
-    let checkStats = await this.systemService.getFile(path, 'src', 'main.ts').tryStat();
+    let checkStats = await this.ioService.getFile(path, 'src', 'main.ts').tryStat();
 
     if (checkStats?.isFile()) {
       this.loadedState.root = true;
     }
 
-    const appDirs = await this.systemService.readDir(path, 'apps');
+    const appDirs = await this.ioService.readDir(path, 'apps');
 
     if (appDirs) {
       for (const appDir of appDirs) {
-        checkStats = await this.systemService
+        checkStats = await this.ioService
           .getFile(appDir.name, 'src', 'main.ts')
           .tryStat();
 
@@ -84,11 +91,11 @@ export class ProjectService {
       }
     }
 
-    const libsDirs = await this.systemService.readDir(path, 'libs');
+    const libsDirs = await this.ioService.readDir(path, 'libs');
 
     if (libsDirs) {
       for (const libDir of libsDirs) {
-        checkStats = await this.systemService
+        checkStats = await this.ioService
           .getFile(libDir.name, 'src', 'index.ts')
           .tryStat();
 
@@ -102,7 +109,14 @@ export class ProjectService {
     }
   }
 
+  requireInitialized(): void {
+    if (!this.state.initialized) {
+      throw new CLIException('Project is not initialized');
+    }
+  }
+
   initialize(name: string): void {
+    this.state.initialized = true;
     this.state.name = name;
     this.state.root = true;
   }
@@ -132,16 +146,25 @@ export class ProjectService {
     this.state.apps.add(name);
   }
 
+  addLib(name: string): void {
+    if (!isKebabCase(name)) {
+      throw new CLIException(`Lib name ${name} is not kebab-case`);
+    }
+
+    if (this.state.libs?.has(name)) {
+      throw new CLIException(`Lib ${name} already exists`);
+    }
+
+    this.state.libs ??= new Set();
+    this.state.libs.add(name);
+  }
+
   async getApps(options: {
     includeRoot: boolean;
     includeApps: boolean;
     appNames: Set<string> | null;
   }): Promise<AppState[]> {
-    const { root, apps, initialized } = this.state;
-
-    if (!initialized) {
-      throw new CLIException('Project is not initialized');
-    }
+    const { root, apps } = this.state;
 
     if (options.includeApps && options.appNames) {
       throw new CLIException('Cannot include both apps and specific apps');
@@ -219,6 +242,31 @@ export class ProjectService {
       envsFile: join(appPath, '.env'),
       outPath,
       outFile: join(outPath, 'main.js'),
+    };
+  }
+
+  renderTemplate<Template extends TemplateFactory>(
+    template: Template,
+    ...args: Parameters<typeof template>
+  ): (...paths: string[]) => Promise<string[]> {
+    return async (...paths) => {
+      const result: string[] = [];
+
+      const { path: projectPath } = this.state;
+
+      const basePath = join(...paths);
+      const rootPath = join(projectPath, basePath);
+
+      for (const [filePath, { view, params = {} }] of Object.entries(template(...args))) {
+        const content = await this.templateEngine.renderAsync(`${view}.eta`, params);
+        const file = this.ioService.getFile(rootPath, filePath);
+
+        await file.write(content);
+
+        result.push(join(basePath, filePath));
+      }
+
+      return result;
     };
   }
 }

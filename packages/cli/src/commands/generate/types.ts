@@ -1,4 +1,4 @@
 export type GenerateOptions = {
-  element?: 'app' | 'lib';
+  resource?: 'app' | 'lib';
   name?: string;
 };

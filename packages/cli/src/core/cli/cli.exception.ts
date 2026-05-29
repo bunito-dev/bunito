@@ -1,9 +1,15 @@
 import { AbstractException } from '@bunito/common';
 
 export class CLIException extends AbstractException {
-  constructor(message?: string) {
+  readonly instructions: string[] | undefined;
+
+  constructor(message?: string, ...instructions: string[]) {
     super(message);
 
     this.name = 'CLIException';
+
+    if (instructions.length) {
+      this.instructions = instructions;
+    }
   }
 }

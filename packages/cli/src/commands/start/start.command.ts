@@ -11,7 +11,9 @@ export class StartCommand implements Command<StartOptions> {
   constructor(private readonly projectService: ProjectService) {}
 
   async run(options: StartOptions): Promise<void> {
-    const { app: appNames, root: includeRoot, apps: includeApps, watch, prod } = options;
+    this.projectService.requireInitialized();
+
+    const { app: appNames, root: includeRoot, apps: includeApps } = options;
 
     const apps = await this.projectService.getApps({
       appNames,

@@ -13,13 +13,13 @@ export const LoggerConfig = defineConfig<{
       getEnv?.('LOG_LEVEL', 'uppercase', (value: string): LogLevelKind => {
         const level = value as LogLevelKind;
 
-        if (!LOG_LEVELS[level]) {
+        if (LOG_LEVELS[level] === undefined) {
           throw new InternalException(`Invalid log level: ${level}`);
         }
 
         return level;
       }) ??
-      this.whenProd?.('OK') ??
+      this.whenProd?.('INFO') ??
       'DEBUG',
     transport: getEnv?.('LOG_TRANSPORT', 'lowercase') ?? whenProd?.('json') ?? 'pretty',
     exitOnFatal: getEnv?.('EXIT_ON_FATAL', 'boolean') ?? true,

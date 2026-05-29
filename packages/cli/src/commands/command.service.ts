@@ -1,19 +1,18 @@
 import process from 'node:process';
 import { OnAppStart } from '@bunito/app';
-import { AbstractException } from '@bunito/common';
 import { optional, Provider } from '@bunito/container';
 import { Logger } from '@bunito/logger';
 import yargs from 'yargs';
-import { SystemService } from '../core';
+import { IOService } from '../core';
 import { Command } from './command';
 
 @Provider({
-  injects: [optional(Logger), SystemService, Command],
+  injects: [optional(Logger), IOService, Command],
 })
 export class CommandService {
   constructor(
     private readonly logger: Logger | null,
-    private readonly systemService: SystemService,
+    private readonly ioService: IOService,
     private readonly commands: Command[],
   ) {
     //
@@ -21,7 +20,7 @@ export class CommandService {
 
   @OnAppStart()
   async runCommand(): Promise<void> {
-    const { argv } = this.systemService;
+    const { argv } = this.ioService;
 
     let args = yargs(argv)
       .scriptName('bunito')
@@ -54,16 +53,15 @@ export class CommandService {
       })
       .fail((msg, err, yargs) => {
         if (Error.isError(err)) {
-          if (err instanceof AbstractException) {
-            this.logger?.error(err.message);
-          } else {
-            this.logger?.error(err.message);
-          }
+          this.logger?.error(err);
         } else if (msg) {
           this.logger?.error(msg);
         } else {
           this.logger?.error('An unexpected CLI error occurred.');
         }
+
+        this.logger?.info(' ');
+
         yargs.showHelp('log');
         process.exit(2);
       })
