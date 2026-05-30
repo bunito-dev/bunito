@@ -1,5 +1,5 @@
 import { Logger } from '@bunito/logger';
-import { notEmptySet } from '../../common';
+import { notEmptySet, toPascalCase } from '../../common';
 import { CLIException, IOService, ProjectService } from '../../core';
 import { AppTemplate, ProjectTemplate } from '../../templates';
 import { Command } from '../command';
@@ -64,29 +64,31 @@ export class InitCommand implements Command<InitOptions> {
     const pkgVersion = pkgInfo?.version ?? '0.0.0';
     const bunVersion = pkgInfo?.engines?.bun ?? '>=1.3.10';
 
-    const files = await this.projectService.renderTemplate(ProjectTemplate, {
+    let files = await this.projectService.renderTemplate(ProjectTemplate, {
       name,
       pkgVersion,
       bunVersion,
     })();
 
-    files.push(
-      ...(await this.projectService.renderTemplate(AppTemplate, {
-        name,
-        root: true,
-      })()),
-    );
+    this.logger.ok('Project initialized:', files);
+
+    files = await this.projectService.renderTemplate(AppTemplate, {
+      name,
+      root: true,
+    })();
+
+    this.logger.ok('Root app created:', files);
 
     for (const name of apps) {
-      files.push(
-        ...(await this.projectService.renderTemplate(AppTemplate, {
-          name,
-          root: false,
-        })('apps', name)),
-      );
+      files = await this.projectService.renderTemplate(AppTemplate, {
+        name,
+        root: false,
+      })('apps', name);
+
+      this.logger.ok(`${toPascalCase(name)} app created:`, files);
     }
 
-    this.logger.info('Project initialized:', files);
+    await this.projectService.synchronize();
   }
 
   build(): CommandBuilt {

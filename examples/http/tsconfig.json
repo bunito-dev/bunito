@@ -2,14 +2,20 @@
   "extends": "@bunito/bunito/tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app": [
-        "./src/index.ts"
+      "@apps/simple-controller": [
+        "./apps/simple-controller/src/index.ts"
       ],
-      "@apps/*": [
-        "./apps/*/src/index.ts"
+      "@apps/cors-support": [
+        "./apps/cors-support/src/index.ts"
       ],
-      "@libs/*": [
-        "./libs/*/src/index.ts"
+      "@apps/json-middleware": [
+        "./apps/json-middleware/src/index.ts"
+      ],
+      "@apps/multiple-apis": [
+        "./apps/multiple-apis/src/index.ts"
+      ],
+      "@libs/example": [
+        "./libs/example/src/index.ts"
       ]
     }
   }

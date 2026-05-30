@@ -1,19 +1,32 @@
+import { join } from 'node:path';
 import { notEmptySet } from '../../common';
-import { ProjectService } from '../../core';
+import { ProjectService, RunnerService } from '../../core';
 import { Command } from '../command';
 import type { CommandBuilt } from '../types';
 import type { StartOptions } from './types';
 
 @Command<StartOptions>({
-  injects: [ProjectService],
+  injects: [ProjectService, RunnerService],
 })
 export class StartCommand implements Command<StartOptions> {
-  constructor(private readonly projectService: ProjectService) {}
+  constructor(
+    private readonly projectService: ProjectService,
+    private readonly runnerService: RunnerService,
+  ) {}
 
-  async run(options: StartOptions): Promise<void> {
+  async run(options: StartOptions): Promise<number> {
     this.projectService.requireInitialized();
 
-    const { app: appNames, root: includeRoot, apps: includeApps } = options;
+    const {
+      app: appNames,
+      root: includeRoot,
+      apps: includeApps,
+      watch,
+      prod,
+      label: labelStyle,
+    } = options;
+
+    const { path: rootPath } = this.projectService.state;
 
     const apps = await this.projectService.getApps({
       appNames,
@@ -21,7 +34,43 @@ export class StartCommand implements Command<StartOptions> {
       includeApps,
     });
 
-    console.log('apps', apps);
+    const bunEnv = prod ? 'production' : 'development';
+    const bunArgs = ['bun', `--cwd=${rootPath}`];
+    const runArgs = ['run', '--feature=RUNTIME_ONLY', '--silent', '--no-env-file'];
+
+    const envs: Record<string, string> = {
+      NODE_ENV: bunEnv,
+      BUN_ENV: bunEnv,
+    };
+
+    const envFiles = (envFile: string) => {
+      return [
+        `--env-file=${envFile}.${bunEnv}.local`,
+        `--env-file=${envFile}.${bunEnv}`,
+        `--env-file=${envFile}.local`,
+        `--env-file=${envFile}`,
+      ];
+    };
+
+    if (watch) {
+      runArgs.push('--watch', '--no-clear-screen');
+    }
+
+    for (const { name, prefix, files } of apps) {
+      this.runnerService.addProcess({
+        name,
+        prefix,
+        args: [
+          ...bunArgs,
+          ...envFiles(join(rootPath, files.env)),
+          ...runArgs,
+          join(rootPath, files.entry),
+        ],
+        envs,
+      });
+    }
+
+    return this.runnerService.startProcesses(labelStyle);
   }
 
   build(): CommandBuilt {
@@ -69,7 +118,7 @@ export class StartCommand implements Command<StartOptions> {
             alias: ['l'],
             describe: 'Process label style',
             type: 'string',
-            default: 'full',
+            default: 'name',
             choices: ['name', 'pid', 'full'],
           }),
     };

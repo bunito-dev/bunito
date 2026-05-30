@@ -31,10 +31,8 @@ export class BuildCommand implements Command<BuildOptions> {
 
     const { path: projectPath } = this.projectService.state;
 
-    for (const app of apps) {
-      const logger = this.logger.track().usePrefix(app.prefix);
-
-      logger.info('Building App...');
+    for (const { prefix, files } of apps) {
+      const logger = this.logger.track().usePrefix(prefix);
 
       const {
         success,
@@ -46,17 +44,17 @@ export class BuildCommand implements Command<BuildOptions> {
         features: ['RUNTIME_ONLY'],
         packages: 'bundle',
         sourcemap: disabled.has('sourcemap') ? 'none' : 'inline',
-        entrypoints: [join(projectPath, app.entryFile)],
+        entrypoints: [join(projectPath, files.entry)],
         tsconfig: join(projectPath, 'tsconfig.json'),
       });
 
       if (success && output) {
         const content = await output.text();
 
-        const file = this.ioService.getFile(projectPath, app.outFile);
+        const file = this.ioService.getFile(projectPath, files.out);
         await file.write(content);
 
-        logger.info([app.outFile]);
+        logger.ok('App built:', [files.out]);
       }
     }
   }

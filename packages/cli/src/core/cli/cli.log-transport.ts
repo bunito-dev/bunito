@@ -8,32 +8,42 @@ import { PREFIX_COLOR } from './constants';
 
 @LogTransport()
 export class CLILogTransport implements LogTransport {
-  private static readonly prefixColors = new Map<string, InspectColor>();
+  private readonly prefixColors = new Map<string, InspectColor>();
 
   readonly NAME = 'cli';
 
   write(options: LogRecord): void {
     const { level, message, data, error } = options;
 
-    switch (level.kind) {
-      case 'OK':
-        return;
-
-      default:
-    }
-
     let { prefix = '' } = options;
 
     let lines: string[] = [];
 
-    if (prefix) {
-      const { prefixColors } = CLILogTransport;
+    let icon = '';
+    let messageColor: InspectColor | undefined;
 
-      let prefixColor = prefixColors.get(prefix);
+    switch (level.kind) {
+      case 'OK':
+        icon = styleText('greenBright', '✓ ');
+        break;
+
+      case 'WARN':
+      case 'ERROR':
+      case 'FATAL':
+        icon = styleText('redBright', '⦸ ');
+        messageColor = 'red';
+        break;
+
+      default:
+    }
+
+    if (prefix) {
+      let prefixColor = this.prefixColors.get(prefix);
 
       if (!prefixColor) {
-        prefixColor = PREFIX_COLOR[prefixColors.size % PREFIX_COLOR.length] ?? 'gray';
-        CLILogTransport.prefixColors.set(prefix, prefixColor);
+        prefixColor =
+          PREFIX_COLOR[this.prefixColors.size % PREFIX_COLOR.length] ?? 'gray';
+        this.prefixColors.set(prefix, prefixColor);
       }
 
       prefix = styleText(prefixColor, prefix);
@@ -41,22 +51,23 @@ export class CLILogTransport implements LogTransport {
 
     let instructions: string[] | undefined;
 
-    if (error) {
+    if (error && !CLIException.isInstance(error)) {
+      lines.push(
+        ...Bun.inspect(error, {
+          colors: true,
+        })
+          .trim()
+          .split('\n')
+          .map((line) => `${icon}${line}`),
+      );
+    } else {
       if (CLIException.isInstance(error)) {
-        lines.push(styleText('red', error.message));
         ({ instructions } = error);
-      } else {
-        lines.push(
-          ...Bun.inspect(error, {
-            colors: true,
-          })
-            .trim()
-            .split('\n')
-            .map((line) => `${styleText('redBright', '•')} ${line}`),
-        );
       }
-    } else if (message) {
-      lines.push(message);
+
+      if (message) {
+        lines.push(`${icon}${messageColor ? styleText(messageColor, message) : message}`);
+      }
     }
 
     if (data && Array.isArray(data[0])) {
@@ -72,7 +83,9 @@ export class CLILogTransport implements LogTransport {
 
     if (instructions) {
       lines.push(
-        ...instructions.map((instruction) => styleText(['white', 'italic'], instruction)),
+        ...instructions.map(
+          (instruction) => `↪ ${styleText(['white', 'italic'], instruction)}`,
+        ),
       );
     }
 

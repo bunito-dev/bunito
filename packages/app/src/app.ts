@@ -1,12 +1,51 @@
 import { EventEmitter } from 'node:events';
 import { InternalException } from '@bunito/common';
-import type { Container, ResolveToken, Token } from '@bunito/container';
-import type { Logger } from '@bunito/logger';
+import { ConfigModule } from '@bunito/config';
+import type { ModuleLike, ResolveToken, Token } from '@bunito/container';
+import { Container } from '@bunito/container';
+import { Logger, LoggerModule } from '@bunito/logger';
 import { OnAppShutdown, OnAppStart } from './decorators';
-import type { AppAction, AppEvents } from './types';
+import type { AppAction, AppEvents, AppOptions } from './types';
 
 export class App extends EventEmitter<AppEvents> implements EventEmitter<AppEvents> {
+  protected static readonly defaultOptions: AppOptions = {
+    silent: false,
+  };
+
+  protected static readonly defaultModules: ModuleLike[] = [ConfigModule, LoggerModule];
+
+  static async create(rootModule: ModuleLike, options: AppOptions = {}): Promise<App> {
+    const container = new Container({
+      // biome-ignore lint/complexity/noThisInStatic: Need to use `this`
+      imports: [rootModule, ...this.defaultModules],
+    });
+
+    const logger = await container.resolveProvider(Logger, {
+      context: App,
+    });
+
+    return new App(
+      {
+        // biome-ignore lint/complexity/noThisInStatic: Need to use `this`
+        ...this.defaultOptions,
+        ...options,
+      },
+      container,
+      logger,
+    );
+  }
+
+  static async start(rootModule: ModuleLike, options?: AppOptions): Promise<App> {
+    // biome-ignore lint/complexity/noThisInStatic: Need to use `this`
+    const app = await this.create(rootModule, options);
+
+    await app.start();
+
+    return app;
+  }
+
   constructor(
+    protected readonly options: AppOptions,
     protected readonly container: Container,
     readonly logger: Logger | undefined,
   ) {
@@ -36,7 +75,7 @@ export class App extends EventEmitter<AppEvents> implements EventEmitter<AppEven
   }
 
   protected async triggerAction(action: AppAction): Promise<void> {
-    const trace = this.logger?.track();
+    const logger = this.logger?.track();
 
     try {
       switch (action) {
@@ -55,21 +94,27 @@ export class App extends EventEmitter<AppEvents> implements EventEmitter<AppEven
       switch (action) {
         case 'start':
           this.emit('ready');
-          trace?.ok('Ready');
+
+          if (!this.options.silent) {
+            logger?.ok('Ready');
+          }
           break;
 
         case 'shutdown':
           this.emit('shutdown');
-          trace?.ok('Shutdown');
+
+          if (!this.options.silent) {
+            logger?.ok('Shutdown');
+          }
           break;
       }
     } catch (err) {
-      if (!trace) {
+      if (!logger) {
         this.emit('error', err);
         return;
       }
 
-      trace.fatal('Unhandled error', err);
+      logger.fatal('Unhandled error', err);
     }
 
     this[action] = async () => {

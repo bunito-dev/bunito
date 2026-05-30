@@ -1,17 +1,18 @@
 import process from 'node:process';
 import { OnAppStart } from '@bunito/app';
-import { optional, Provider } from '@bunito/container';
+import { isNumber } from '@bunito/common';
+import { Provider } from '@bunito/container';
 import { Logger } from '@bunito/logger';
 import yargs from 'yargs';
 import { IOService } from '../core';
 import { Command } from './command';
 
 @Provider({
-  injects: [optional(Logger), IOService, Command],
+  injects: [Logger, IOService, Command],
 })
 export class CommandService {
   constructor(
-    private readonly logger: Logger | null,
+    private readonly logger: Logger,
     private readonly ioService: IOService,
     private readonly commands: Command[],
   ) {
@@ -37,7 +38,11 @@ export class CommandService {
       args = args.command({
         ...command.build(),
         handler: async (argv) => {
-          await command.run(argv);
+          const code = await command.run(argv);
+
+          if (isNumber(code) && code > 0) {
+            process.exit(code);
+          }
         },
       });
     }
@@ -53,14 +58,14 @@ export class CommandService {
       })
       .fail((msg, err, yargs) => {
         if (Error.isError(err)) {
-          this.logger?.error(err);
+          this.logger.error(err);
         } else if (msg) {
-          this.logger?.error(msg);
+          this.logger.error(msg);
         } else {
-          this.logger?.error('An unexpected CLI error occurred.');
+          this.logger.error('An unexpected CLI error occurred.');
         }
 
-        this.logger?.info(' ');
+        this.logger.info(' ');
 
         yargs.showHelp('log');
         process.exit(2);

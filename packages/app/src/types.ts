@@ -1,6 +1,3 @@
-import type { ModuleLike } from '@bunito/container';
-import type { App } from './app';
-
 export type AppAction = 'start' | 'shutdown';
 
 export type AppEvents = {
@@ -10,7 +7,6 @@ export type AppEvents = {
   error: [err: unknown];
 };
 
-export type AppFactory = (
-  rootModule: ModuleLike,
-  ...defaultModules: ModuleLike[]
-) => Promise<App>;
+export type AppOptions = {
+  silent?: boolean;
+};

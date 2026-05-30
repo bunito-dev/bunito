@@ -1,17 +1,22 @@
 #!/usr/bin/env bun
 
-import { startApp } from '@bunito/app';
+import { App } from '@bunito/app';
 import { overwriteConfigEnvs } from '@bunito/config';
 import { CommandModule } from './commands';
 import { CLILogTransport } from './core';
 
-await startApp({
-  imports: [CommandModule],
-  providers: [
-    CLILogTransport,
-    overwriteConfigEnvs({
-      LOG_LEVEL: 'verbose',
-      LOG_TRANSPORT: 'cli',
-    }),
-  ],
-});
+await App.start(
+  {
+    imports: [CommandModule],
+    providers: [
+      CLILogTransport,
+      overwriteConfigEnvs({
+        LOG_LEVEL: 'verbose',
+        LOG_TRANSPORT: 'cli',
+      }),
+    ],
+  },
+  {
+    silent: true,
+  },
+);

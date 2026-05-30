@@ -45,12 +45,14 @@ export function AppTemplate(options: { name: string; root: boolean }): TemplateV
     '.env': {
       view: 'app/.env',
     },
-    'README.md': {
-      view: 'app/README.md',
-      params: {
-        name,
-        root,
-      },
-    },
+    'README.md': root
+      ? null
+      : {
+          view: 'app/README.md',
+          params: {
+            name,
+            root,
+          },
+        },
   };
 }

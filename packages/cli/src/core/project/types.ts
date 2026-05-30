@@ -14,8 +14,9 @@ export type AppOptions = {
 
 export type AppState = AppOptions & {
   prefix: string;
-  entryFile: string;
-  envsFile: string;
-  outFile: string;
-  outPath: string;
+  files: {
+    env: string;
+    entry: string;
+    out: string;
+  };
 };

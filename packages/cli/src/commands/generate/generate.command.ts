@@ -1,4 +1,5 @@
 import { Logger } from '@bunito/logger';
+import { toPascalCase } from '../../common';
 import { CLIException, IOService, ProjectService } from '../../core';
 import { AppTemplate, LibTemplate } from '../../templates';
 import { Command } from '../command';
@@ -39,7 +40,7 @@ export class GenerateCommand implements Command<GenerateOptions> {
           })('apps', name);
         }
 
-        this.logger.info(`${name ? name : 'Root'} app generated:`, files);
+        this.logger.ok(`${name ? toPascalCase(name) : 'Root'} app generated:`, files);
 
         break;
 
@@ -61,10 +62,12 @@ export class GenerateCommand implements Command<GenerateOptions> {
           name,
         );
 
-        this.logger.info(`${name} lib generated:`, files);
+        this.logger.ok(`${toPascalCase(name)} lib generated:`, files);
 
         break;
     }
+
+    await this.projectService.synchronize();
   }
 
   build(): CommandBuilt {

@@ -1,19 +1,22 @@
 import { Module } from '@bunito/container';
-import { IOModule, ProjectModule } from '../core';
-import { BuildCommand } from './build';
+import { IOModule } from '../core';
+import { BuildModule } from './build';
 import { CommandService } from './command.service';
-import { GenerateCommand } from './generate';
-import { InitCommand } from './init';
-import { StartCommand } from './start';
+import { GenerateModule } from './generate';
+import { InitModule } from './init';
+import { StartModule } from './start';
+import { SyncModule } from './sync';
 
 @Module({
-  imports: [IOModule, ProjectModule],
-  providers: [CommandService],
-  extensions: [
-    InitCommand, //
-    StartCommand,
-    BuildCommand,
-    GenerateCommand,
+  imports: [
+    IOModule,
+    // commands:
+    InitModule,
+    StartModule,
+    BuildModule,
+    GenerateModule,
+    SyncModule,
   ],
+  providers: [CommandService],
 })
 export class CommandModule {}

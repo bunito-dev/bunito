@@ -5,4 +5,4 @@ export type TemplateFactory = Fn<TemplateViews>;
 export type TemplateViews = RawObject<{
   view: string;
   params?: RawObject;
-}>;
+} | null>;

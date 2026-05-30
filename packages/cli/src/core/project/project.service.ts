@@ -1,4 +1,5 @@
 import { basename, join, sep } from 'node:path';
+import { isObject, type RawObject } from '@bunito/common';
 import { OnInit, Provider } from '@bunito/container';
 import { Eta } from 'eta';
 import { isKebabCase, ROOT_PATH } from '../../common';
@@ -121,6 +122,52 @@ export class ProjectService {
     this.state.root = true;
   }
 
+  async synchronize(): Promise<void> {
+    const { path, root, apps, libs } = this.state;
+
+    const tsConfigFile = this.ioService.getFile(path, 'tsconfig.json');
+
+    const tsConfig = await tsConfigFile.tryJSON<{
+      compilerOptions?: {
+        paths?: Record<string, string[]>;
+      };
+    }>();
+
+    if (!tsConfig) {
+      throw new CLIException('Could not read tsconfig.json');
+    }
+
+    if (!isObject(tsConfig)) {
+      throw new CLIException('tsconfig.json is not an object');
+    }
+
+    let paths: Record<string, string[]> | undefined;
+
+    if (root) {
+      paths ??= {};
+      paths['@app'] = ['./src/index.ts'];
+    }
+
+    if (apps) {
+      paths ??= {};
+      for (const app of apps) {
+        paths[`@apps/${app}`] = [`./apps/${app}/src/index.ts`];
+      }
+    }
+
+    if (libs) {
+      paths ??= {};
+      for (const lib of libs) {
+        paths[`@libs/${lib}`] = [`./libs/${lib}/src/index.ts`];
+      }
+    }
+
+    tsConfig.compilerOptions ??= {};
+    tsConfig.compilerOptions.paths = paths;
+
+    await tsConfigFile.write(JSON.stringify(tsConfig, null, 2));
+  }
+
   addApp(name?: string): void {
     if (!name) {
       if (this.state.root) {
@@ -233,15 +280,15 @@ export class ProjectService {
     const { root, name } = options;
 
     const appPath = root ? '' : join('apps', name);
-    const outPath = join('out', root ? '' : name);
 
     return {
       prefix: '',
       ...options,
-      entryFile: join(appPath, 'src', 'main.ts'),
-      envsFile: join(appPath, '.env'),
-      outPath,
-      outFile: join(outPath, 'main.js'),
+      files: {
+        entry: join(appPath, 'src', 'main.ts'),
+        env: join(appPath, '.env'),
+        out: join('out', root ? '' : name, 'main.js'),
+      },
     };
   }
 
@@ -257,7 +304,13 @@ export class ProjectService {
       const basePath = join(...paths);
       const rootPath = join(projectPath, basePath);
 
-      for (const [filePath, { view, params = {} }] of Object.entries(template(...args))) {
+      for (const [filePath, viewOptions] of Object.entries(template(...args))) {
+        if (!viewOptions) {
+          continue;
+        }
+
+        const { view, params = {} } = viewOptions;
+
         const content = await this.templateEngine.renderAsync(`${view}.eta`, params);
         const file = this.ioService.getFile(rootPath, filePath);
 

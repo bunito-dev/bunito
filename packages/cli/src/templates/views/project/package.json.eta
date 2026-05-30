@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "cli": "bunito",
+    "sync": "bunito sync",
     "start": "bunito start",
     "build": "bunito build",
     "test": "bun test",

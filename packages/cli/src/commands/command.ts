@@ -4,7 +4,7 @@ import { createExtensionDecorator } from '@bunito/container';
 import type { CommandBuilt } from './types';
 
 export interface Command<TOptions extends RawObject = RawObject> {
-  run: (options: TOptions) => Promise<void>;
+  run: (options: TOptions) => Promise<unknown>;
   build: () => CommandBuilt;
 }
 

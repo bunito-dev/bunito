@@ -1,1 +1,1 @@
-export * from './generate.command';
+export * from './generate.module';

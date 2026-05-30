@@ -5,11 +5,17 @@
       "@app": [
         "./src/index.ts"
       ],
-      "@apps/*": [
-        "./apps/*/src/index.ts"
+      "@apps/foo": [
+        "./apps/foo/src/index.ts"
       ],
-      "@libs/*": [
-        "./libs/*/src/index.ts"
+      "@apps/bar": [
+        "./apps/bar/src/index.ts"
+      ],
+      "@libs/example": [
+        "./libs/example/src/index.ts"
+      ],
+      "@libs/client": [
+        "./libs/client/src/index.ts"
       ]
     }
   }

@@ -1,16 +1,12 @@
-import process from 'node:process';
 import { styleText } from 'node:util';
 import { Provider } from '@bunito/container';
 import { Logger } from '@bunito/logger';
-import type {
-  ProcessOptions,
-  ProcessRunning,
-  ProcessWriter,
-  StartProcessOptions,
-} from './types';
+import { DEFAULT_PROCESS_ENVS } from './constants';
+import type { ProcessLabelStyle, ProcessOptions, ProcessRunning } from './types';
 
 @Provider({
   injects: [Logger, null, null],
+  scope: 'transient',
 })
 export class RunnerService {
   private readonly processes: ProcessRunning[] = [];
@@ -18,31 +14,21 @@ export class RunnerService {
   constructor(
     private readonly logger: Logger,
     private readonly textDecoder = new TextDecoder(),
-    private readonly defaultEnvs: Record<string, string | undefined> = Object.fromEntries(
-      Object.entries(process.env).filter(([key]) => {
-        switch (key) {
-          case 'PATH':
-          case 'USER':
-          case 'TZ':
-          case 'LANG':
-          case 'PWD':
-            return true;
-
-          default:
-            return key.startsWith('npm_') || key.startsWith('BUN_');
-        }
-      }),
-    ),
+    private readonly defaultEnvs: Record<
+      string,
+      string | undefined
+    > = DEFAULT_PROCESS_ENVS,
   ) {
     //
   }
 
   addProcess(options: ProcessOptions): void {
-    const { name, args, envs = {} } = options;
+    const { name, prefix, args, envs = {} } = options;
 
     this.processes.push({
       name,
-      logger: this.logger.clone(),
+      prefix,
+      logger: this.logger?.clone(),
       proc: Bun.spawn(args, {
         stdout: 'pipe',
         stderr: 'pipe',
@@ -55,60 +41,41 @@ export class RunnerService {
     });
   }
 
-  async startProcesses(options: StartProcessOptions): Promise<number> {
+  async startProcesses(labelStyle: ProcessLabelStyle): Promise<number> {
     if (!this.processes.length) {
       return 0;
     }
 
     const finished: Promise<number>[] = [];
 
-    const usePrefix = this.processes.length > 1;
-
-    let prefixWidth = 0;
-
-    if (usePrefix) {
-      for (const { name } of this.processes) {
-        prefixWidth = Math.max(prefixWidth, name.length);
-      }
-    }
-
-    for (const { name, logger, proc } of this.processes) {
-      if (usePrefix) {
+    for (const { prefix, logger, proc } of this.processes) {
+      if (prefix) {
         const pid = proc.pid;
 
         let label: string;
 
         const pidLabel = `[${pid}]`;
-        const nameLabel = name.padEnd(prefixWidth, '_');
 
-        switch (options.label) {
+        switch (labelStyle) {
           case 'pid':
             label = pidLabel;
             break;
 
           case 'name':
-            label = nameLabel;
+            label = prefix;
             break;
 
           default:
-            label = `${pidLabel} ${nameLabel}`;
+            label = `${pidLabel} ${prefix}`;
         }
 
         logger.usePrefix(label);
       }
 
-      const writeOut: ProcessWriter = (buffer: string): void => {
-        logger.verbose(buffer);
-      };
-
-      const writeErr: ProcessWriter = (buffer: string): void => {
-        logger.verbose(buffer);
-      };
-
       finished.push(
         Promise.all([
-          this.pipeWriter(proc.stdout.getReader(), writeOut),
-          this.pipeWriter(proc.stderr.getReader(), writeErr),
+          this.pipeWriter(proc.stdout.getReader(), (buffer) => logger.info(buffer)),
+          this.pipeWriter(proc.stderr.getReader(), (buffer) => logger.info(buffer)),
           proc.exited,
         ]).then((codes) => {
           const code = Math.max(...codes);
@@ -117,11 +84,7 @@ export class RunnerService {
             `Process finished with exit code ${code}`,
           );
 
-          if (code) {
-            writeErr(message);
-          } else {
-            writeOut(message);
-          }
+          logger.info(message);
 
           return code;
         }),
@@ -133,7 +96,7 @@ export class RunnerService {
 
   private async pipeWriter(
     input: ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>,
-    write: ProcessWriter,
+    write: (buffer: string) => void,
   ): Promise<number> {
     let buffer = '';
 

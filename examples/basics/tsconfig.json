@@ -4,12 +4,6 @@
     "paths": {
       "@app": [
         "./src/index.ts"
-      ],
-      "@apps/*": [
-        "./apps/*/src/index.ts"
-      ],
-      "@libs/*": [
-        "./libs/*/src/index.ts"
       ]
     }
   }
