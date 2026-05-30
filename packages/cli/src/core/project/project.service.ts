@@ -1,5 +1,5 @@
 import { basename, join, sep } from 'node:path';
-import { isObject, type RawObject } from '@bunito/common';
+import { isObject } from '@bunito/common';
 import { OnInit, Provider } from '@bunito/container';
 import { Eta } from 'eta';
 import { isKebabCase, ROOT_PATH } from '../../common';
