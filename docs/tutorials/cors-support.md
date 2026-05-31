@@ -6,20 +6,18 @@ modules, and how `OnRequest` can handle a route for every HTTP method.
 
 ## App Module
 
-The app imports `HTTPModule`, applies JSON serialization to all app routes, and sets
-a top-level CORS policy:
+The app imports a shared HTTP example module, the `foo` feature module, and sets a
+top-level CORS policy:
 
 ```ts
-import { LoggerModule, Module } from '@bunito/bunito';
-import { HTTPModule, JSONSerializer, UseCORS, UseMiddleware } from '@bunito/http';
-import { AppController } from './app-controller';
+import { Module } from '@bunito/bunito';
+import { UseCORS } from '@bunito/http';
+import { ExampleModule } from '@libs/example';
 import { FooModule } from './foo';
 
 @Module({
-  imports: [LoggerModule, HTTPModule, FooModule],
-  controllers: [AppController],
+  imports: [ExampleModule.forRoot('cors-support'), FooModule],
 })
-@UseMiddleware(JSONSerializer)
 @UseCORS({
   origin: '*',
   credentials: true,
@@ -32,26 +30,7 @@ options unless they override them.
 
 For browser clients, use an explicit `origin` when `credentials` is enabled.
 
-## Root Controller
-
-The root controller uses the normal `@Controller()` and route decorators:
-
-```ts
-import { Controller } from '@bunito/bunito';
-import { Get } from '@bunito/http';
-
-@Controller()
-class AppController {
-  @Get()
-  index(): Response {
-    return Response.json({
-      example: 'cors-support',
-    });
-  }
-}
-```
-
-Requests to `/` receive the app-level CORS headers.
+The shared example module supplies the common HTTP/logger setup and root response.
 
 ## Feature Module
 
@@ -61,7 +40,7 @@ configuration:
 ```ts
 import { Module, UsePrefix } from '@bunito/bunito';
 import { UseCORS } from '@bunito/http';
-import { FooController } from './foo-controller';
+import { FooController } from './foo.controller';
 
 @Module({
   controllers: [FooController],

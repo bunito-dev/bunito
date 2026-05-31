@@ -26,10 +26,10 @@ Run those commands from `examples/microservices`.
 
 ## What To Read 🔎
 
-- `apps/foo/src/foo-controller.ts`: HTTP route that sends a broker request to
+- `apps/foo/src/foo.controller.ts`: HTTP route that sends a broker request to
   `bar.process`.
-- `apps/bar/src/bar-controller.ts`: mirror route that sends a request to
+- `apps/bar/src/bar.controller.ts`: mirror route that sends a request to
   `foo.process`.
-- `apps/foo/src/foo-module.ts` and `apps/bar/src/bar-module.ts`: broker, logger,
-  and HTTP module setup.
-- `src/app-module.ts`: composed app importing both modules.
+- `apps/foo/src/foo.module.ts` and `apps/bar/src/bar.module.ts`: app module setup.
+- `libs/client/src/client.service.ts`: shared broker request client.
+- `src/main.ts`: composed app importing both modules.

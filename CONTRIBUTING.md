@@ -81,6 +81,8 @@ bun test packages/bun/src
   advanced extension code that genuinely needs internal building blocks.
 - Keep examples current with the actual API and runtime behavior.
 - Do not introduce new runtime dependencies unless the tradeoff is clear.
+- Name implementation files with role postfixes, for example `.module.ts`,
+  `.service.ts`, `.controller.ts`, `.config.ts`, and `.exception.ts`.
 
 ## Code Style ✨
 
@@ -94,6 +96,8 @@ bun test packages/bun/src
 - Avoid unnecessary `await` expressions.
 - In tests, use `await` only for actual promises, async matchers, or APIs that are
   intentionally async.
+- Prefer explicit awaited values and `try`/`catch` for expected rejections over
+  `await expect(...).resolves` or `await expect(...).rejects`.
 
 For imports:
 
@@ -170,7 +174,8 @@ useful draft content or remove it from the navigation.
 - `@bunito/broker`: check handler metadata, adapter selection, local transport,
   request/reply behavior, and NATS payload mapping.
 - `@bunito/cli`: validate at least one `examples` start command when CLI project
-  discovery or command behavior changes.
+  discovery or command behavior changes. CLI command tests should mock filesystem,
+  build, and process-runner boundaries rather than spawning real apps.
 
 ## Pull Request Checklist 🚀
 

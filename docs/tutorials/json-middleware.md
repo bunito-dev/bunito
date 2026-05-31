@@ -119,6 +119,7 @@ cd examples/http
 bun run start json-middleware
 ```
 
-Request examples are available in `examples/http/apps/json-middleware.http`.
+Request examples are available in
+`examples/http/apps/json-middleware/requests.http`.
 
 Continue with [Multiple APIs](./multiple-apis.md).

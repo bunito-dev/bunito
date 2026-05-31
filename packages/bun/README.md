@@ -17,15 +17,18 @@ bun add @bunito/bun
 ## Usage ✨
 
 ```ts
-import { SecretsModule, ServerModule } from '@bunito/bun';
+import { BunSecretsModule, BunServerModule } from '@bunito/bun';
 import { ConfigModule } from '@bunito/config';
 import { Module } from '@bunito/container';
 
 @Module({
-  imports: [ConfigModule, SecretsModule, ServerModule],
+  imports: [ConfigModule, BunSecretsModule, BunServerModule],
 })
 class AppModule {}
 ```
+
+The public names carry the `Bun` prefix so they stay distinct from framework-level
+server or secret abstractions.
 
 ## License
 

@@ -31,6 +31,11 @@ workspace:
 The repository uses Bun workspaces, Bun's built-in test runner, strict TypeScript,
 modern decorators, VitePress for documentation, and Biome for linting and formatting.
 
+Implementation files use role postfixes instead of hyphenated role names. Prefer
+names such as `main.module.ts`, `foo.service.ts`, `foo.controller.ts`,
+`logger.module.ts`, `logger.service.ts`, `broker.config.ts`, and
+`bad-request.exception.ts`.
+
 ## Workspace Layout
 
 - Root config:
@@ -85,7 +90,9 @@ Current examples and run commands are listed in `examples/README.md`.
 - `@bunito/bun`
   - Depends on `@bunito/app`, `@bunito/common`, `@bunito/config`,
     `@bunito/container`, and `@bunito/logger`
-  - Owns Bun-specific server and secrets integrations
+  - Owns Bun-specific server and secrets integrations exposed as
+    `BunServerModule`, `BunServerService`, `BunSecretsModule`, and
+    `BunSecretsService`
 - `@bunito/common`
   - Has no workspace dependencies
   - Owns base exception classes, type helpers, predicates, and utility functions
@@ -97,6 +104,8 @@ Current examples and run commands are listed in `examples/README.md`.
 - `@bunito/cli`
   - Depends on `@bunito/common`, `@inquirer/prompts`, `yargs`, and `zod`
   - Exposes the `bunito` binary used by the example workspace package scripts
+  - Is organized into command modules under `src/commands/*`, reusable runtime
+    services under `src/core/*`, and Eta-backed templates under `src/templates/*`
 - `examples`
   - Private workspaces used for runnable examples
   - Depends on `@bunito/bunito`, `@bunito/http`, `@bunito/cli`, and `zod`
@@ -225,8 +234,8 @@ Notes:
 
 Important areas:
 
-- `packages/config/src/config-module.ts`
-- `packages/config/src/config-service.ts`
+- `packages/config/src/config.module.ts`
+- `packages/config/src/config.service.ts`
 - `packages/config/src/config-reader.ts`
 - `packages/config/src/utils/*`
 - `packages/config/src/types.ts`
@@ -243,12 +252,12 @@ Notes:
 Important areas:
 
 - `packages/logger/src/logger.ts`
-- `packages/logger/src/logger-service.ts`
-- `packages/logger/src/logger-module.ts`
-- `packages/logger/src/logger-config.ts`
-- `packages/logger/src/extensions/*`
-- `packages/logger/src/bundled/json-transport/*`
-- `packages/logger/src/bundled/pretty-transform/*`
+- `packages/logger/src/logger.service.ts`
+- `packages/logger/src/logger.module.ts`
+- `packages/logger/src/logger.config.ts`
+- `packages/logger/src/log-transport.ts`
+- `packages/logger/src/bundled/json-logger/*`
+- `packages/logger/src/bundled/pretty-logger/*`
 
 Notes:
 
@@ -271,6 +280,8 @@ Notes:
 - use `@bunito/testing` helpers in package tests where they keep assertions smaller
 - keep testing helpers out of runtime examples and application-facing docs unless a
   page explicitly documents testing
+- do not create tests for package-local `src/testing/**` helpers; these paths are
+  intentionally ignored by coverage in `bunfig.toml`
 - shared factories should stay deterministic because they are reused across package
   suites
 
@@ -291,7 +302,7 @@ Notes:
 
 Important areas:
 
-- `packages/http/src/http-module.ts`
+- `packages/http/src/http.module.ts`
 - `packages/http/src/decorators/*`
 - `packages/http/src/injections/*`
 - `packages/http/src/middleware/*`
@@ -311,7 +322,7 @@ Notes:
 
 Important areas:
 
-- `packages/broker/src/broker-service.ts`
+- `packages/broker/src/broker.service.ts`
 - `packages/broker/src/decorators/*`
 - `packages/broker/src/injections/*`
 - `packages/broker/src/bundled/local-broker/*`
@@ -322,8 +333,7 @@ Notes:
 - broker handlers are discovered from controller metadata
 - request/reply behavior depends on adapter payload shape and context forwarding
 - adapters exchange encoded `Uint8Array` payloads; public `BrokerService` methods
-  encode/decode values and handlers can inject both decoded `Data()` and raw
-  `Payload()`
+  encode/decode values and handlers normally inject decoded `Data()`
 - local broker supports in-memory and filesystem modes; keep both covered
 - validate broker-facing changes against `examples/microservices/README.md`
 
@@ -360,15 +370,20 @@ Important areas:
 
 - `packages/cli/src/main.ts`
 - `packages/cli/src/commands/*`
-- `packages/cli/src/context/*`
-- `packages/cli/src/services/*`
+- `packages/cli/src/core/cli/*`
+- `packages/cli/src/core/io/*`
+- `packages/cli/src/core/project/*`
+- `packages/cli/src/core/runner/*`
 - `packages/cli/src/templates/*`
 
 Notes:
 
 - the `bunito` binary is used by the `examples` workspace scripts
 - the CLI discovers the root app from `src/main.ts`, workspace apps from
-  `apps/*/src/main.ts`, and libraries from `libs/*/index.ts`
+  `apps/*/src/main.ts`, and libraries from `libs/*/src/index.ts`
+- `init`, `generate`, `start`, `build`, and `sync` are command extensions gathered
+  by `CommandModule`; command tests should mock `ProjectService`, `IOService`,
+  `RunnerService`, `Bun.build`, and `Bun.spawn` instead of starting real apps
 - `start` and `build` target every discovered app by default
 - named apps narrow the target list to workspace apps; `--root` includes the root
   app with a selected set
@@ -400,8 +415,8 @@ Current baseline:
 Keep tests aligned with the source tree at the file level:
 
 - every exported implementation file should have its own sibling test file
-- example: `packages/container/src/id.ts` should be covered by
-  `packages/container/src/id.test.ts`
+- example: `packages/container/src/utils/id.ts` should be covered by
+  `packages/container/src/utils/id.test.ts`
 - do not group several implementation files into one broad test file just because
   they belong to one folder; for example, decorators such as
   `controller.ts`, `get.ts`, and `use-prefix.ts`
@@ -410,6 +425,8 @@ Keep tests aligned with the source tree at the file level:
 - type-only and interface-only files do not need dedicated test files
 - files that only re-export other modules or only declare types/global interfaces do
   not need dedicated test files
+- package-local `src/testing/**` helper files do not need dedicated test files
+  because they are intentionally ignored by coverage
 - prefer putting assertions for a file's behavior into that file's dedicated test
   instead of grouping many source files into one broad test file
 

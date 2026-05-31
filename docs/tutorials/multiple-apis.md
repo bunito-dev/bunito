@@ -115,7 +115,7 @@ cd examples/http
 bun run start multiple-apis
 ```
 
-Request examples are available in `examples/http/apps/multiple-apis.http`.
+Request examples are available in `examples/http/apps/multiple-apis/requests.http`.
 
 You now have two route groups:
 

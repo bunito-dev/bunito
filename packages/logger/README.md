@@ -27,7 +27,7 @@ class Worker {
   constructor(private readonly logger: Logger) {}
 
   run(): void {
-    this.logger.track('Worker').info('Worker started');
+    this.logger.track().info('Worker started');
   }
 }
 
@@ -37,6 +37,9 @@ class Worker {
 })
 class AppModule {}
 ```
+
+Use `Logger.track()` when a log should include a fresh timestamp and duration
+context while preserving the logger's existing context and prefix.
 
 ## License
 

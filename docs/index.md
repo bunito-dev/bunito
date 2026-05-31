@@ -60,7 +60,7 @@ Configure TypeScript by extending the bunito config:
 }
 ```
 
-Create `src/app-module.ts`:
+Create `src/app.module.ts`:
 
 ```ts
 import { Logger, LoggerModule, Module, Provider } from '@bunito/bunito';
@@ -89,7 +89,7 @@ Create `src/main.ts`:
 
 ```ts
 import { App } from '@bunito/bunito';
-import { AppModule } from './app-module';
+import { AppModule } from './app.module';
 
 await App.start(AppModule);
 ```
@@ -105,7 +105,9 @@ Add scripts to `package.json`:
 }
 ```
 
-The CLI discovers the root app from `src/main.ts` automatically.
+The CLI discovers the root app from `src/main.ts` automatically. Generated source
+files use role postfixes such as `.module.ts`, `.service.ts`, and
+`.controller.ts`.
 If you add a `.env` file next to `package.json`, the CLI loads it before starting
 the app.
 

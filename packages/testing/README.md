@@ -3,11 +3,10 @@
 [![NPM Version][npm-img]][npm-url]
 [![License MIT][license-img]][license-url]
 
-Testing helpers, mock utilities, and shared test context factories for bunito
-packages.
+Testing helpers, mock utilities, and a shared test context for bunito packages.
 
-It provides the global `Test` context, `defineTestFactory()`, and small mock/spy
-helpers used by package tests.
+It provides the global `Test` context, `defineTestFactory()`, `mockClass()`, and
+`spyOnObject()` helpers used by package tests.
 
 ## Installation 📦
 

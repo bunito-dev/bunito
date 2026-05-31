@@ -7,8 +7,8 @@ Command-line tools for initializing, generating, running, and building bunito
 projects.
 
 It provides the `bunito` binary. The CLI discovers the root app from `src/main.ts`,
-workspace apps from `apps/*/src/main.ts`, and libraries from `libs/*/index.ts`; no
-project config file is required.
+workspace apps from `apps/*/src/main.ts`, and libraries from
+`libs/*/src/index.ts`; no project config file is required.
 
 ## Installation 📦
 
@@ -38,12 +38,18 @@ bunito build api worker
 bunito build api --root
 bunito generate app worker
 bunito generate lib shared
+bunito sync
 ```
 
 `start` and `build` target every discovered app by default. Pass app names to
 target selected workspace apps, and add `--root` when the root app should be
-included with that selection. The CLI loads `.env` for the root app and
-`apps/<name>/.env` for workspace apps.
+included with that selection. The CLI loads root and app-local `.env` files,
+including environment-specific variants such as `.env.production` and
+`.env.local`, before starting each app.
+
+Generated apps and libraries use role-postfixed file names such as
+`app.module.ts`, `worker.module.ts`, `shared.module.ts`, and
+`shared.service.ts`.
 
 ## License
 

@@ -39,3 +39,6 @@ bun run start foo bar --root
 Multi-app examples read app-local `.env` files such as
 `examples/http/apps/simple-controller/.env` and
 `examples/microservices/apps/foo/.env`.
+
+Example source files use role postfixes such as `.module.ts`, `.service.ts`, and
+`.controller.ts`, matching the current CLI templates.

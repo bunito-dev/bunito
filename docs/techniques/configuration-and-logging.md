@@ -17,7 +17,7 @@ class UsersService {
   private readonly logger: Logger;
 
   constructor(logger: Logger) {
-    this.logger = logger.track('UsersService');
+    this.logger = logger;
   }
 
   findAll(): string[] {
@@ -83,11 +83,11 @@ Secret lookup goes through config extensions. The Bun integration package provid
 Bun secrets support:
 
 ```ts
-import { SecretsModule } from '@bunito/bun';
+import { BunSecretsModule } from '@bunito/bun';
 import { ConfigModule, Module } from '@bunito/bunito';
 
 @Module({
-  imports: [ConfigModule, SecretsModule],
+  imports: [ConfigModule, BunSecretsModule],
 })
 class AppModule {}
 ```

@@ -35,36 +35,34 @@ Configure TypeScript:
 ## Create A Provider
 
 ```ts
-import { Logger, OnAppShutdown, OnAppStart, OnDestroy, OnInit, Provider } from '@bunito/bunito';
+import { Logger, OnAppShutdown, OnAppStart, OnDestroy, OnInit, optional, Provider } from '@bunito/bunito';
 
 @Provider({
-  injects: [Logger],
+  injects: [optional(Logger)],
 })
 class BarService {
-  private readonly logger: Logger;
-
-  constructor(logger: Logger) {
-    this.logger = logger.track('BarService');
+  constructor(private readonly logger: Logger | null) {
+    this.logger?.debug('created');
   }
 
   @OnInit()
   onInit(): void {
-    this.logger.debug('onInit() called');
+    this.logger?.debug('onInit() called');
   }
 
   @OnAppStart()
   onAppStart(): void {
-    this.logger.debug('onAppStart() called');
+    this.logger?.debug('onAppStart() called');
   }
 
   @OnAppShutdown()
   onAppShutdown(): void {
-    this.logger.debug('onAppShutdown() called');
+    this.logger?.debug('onAppShutdown() called');
   }
 
   @OnDestroy()
   onDestroy(): void {
-    this.logger.debug('onDestroy() called');
+    this.logger?.debug('onDestroy() called');
   }
 
   bar(): string {
@@ -73,26 +71,26 @@ class BarService {
 }
 ```
 
-`BarService` is a provider. The container creates it and injects `Logger` into the
-constructor.
+`BarService` is a provider. The container creates it and injects `Logger` when a
+logger is available.
 
 ## Inject One Provider Into Another
 
 ```ts
 @Provider({
   injects: {
-    logger: Logger,
+    logger: optional(Logger),
     barService: BarService,
   },
 })
 class FooService {
-  private readonly logger: Logger;
+  private readonly logger: Logger | null;
   private readonly barService: BarService;
 
-  constructor(options: { logger: Logger; barService: BarService }) {
-    const { logger, barService } = options;
+  constructor(options: { logger?: Logger | null; barService: BarService }) {
+    const { logger = null, barService } = options;
 
-    this.logger = logger.track('FooService');
+    this.logger = logger;
     this.barService = barService;
   }
 
@@ -108,23 +106,19 @@ available when constructor argument order is enough.
 ## Create And Start The App
 
 ```ts
-import { App, Logger, LoggerModule, Module, OnAppStart } from '@bunito/bunito';
+import { App, Logger, Module, OnAppStart, optional } from '@bunito/bunito';
 
 @Module({
-  imports: [LoggerModule],
   providers: [FooService, BarService],
-  injects: [Logger],
+  exports: [FooService, BarService],
+  injects: [optional(Logger)],
 })
 class AppModule {
-  private readonly logger: Logger;
-
-  constructor(logger: Logger) {
-    this.logger = logger.track('AppModule');
-  }
+  constructor(private readonly logger: Logger | null) {}
 
   @OnAppStart()
   onStart(): void {
-    this.logger.debug('onStart() called');
+    this.logger?.debug('onStart() called');
   }
 }
 

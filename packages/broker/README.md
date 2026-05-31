@@ -44,8 +44,7 @@ export class OrdersController {
 
 Use `BrokerService.sendRequest()` when a reply is expected and
 `BrokerService.sendEvent()` for fire-and-forget messages. Public payloads are
-encoded before they reach adapters; handlers can inject decoded `Data()` or raw
-`Payload()`.
+encoded before they reach adapters; handlers usually inject decoded `Data()`.
 
 ## Adapters 🔌
 

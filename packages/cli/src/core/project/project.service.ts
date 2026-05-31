@@ -137,7 +137,7 @@ export class ProjectService {
       throw new CLIException('Could not read tsconfig.json');
     }
 
-    if (!isObject(tsConfig)) {
+    if (!isObject(tsConfig) || Array.isArray(tsConfig)) {
       throw new CLIException('tsconfig.json is not an object');
     }
 

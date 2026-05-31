@@ -78,17 +78,18 @@ reach an adapter and deserializes replies by default. Pass `false` as the third
 argument to `sendRequest()` when adapter-level code needs the raw `Uint8Array`
 reply.
 
-Handlers can inject both decoded data and the raw payload:
+Handlers usually inject decoded data. Adapter-facing code can still work with the
+encoded `Uint8Array` payload at the adapter boundary:
 
 ```ts
-import { Data, OnMessage, Payload } from '@bunito/broker';
+import { Data, OnMessage } from '@bunito/broker';
 
 class OrdersController {
   @OnMessage('created', {
-    injects: [Data, Payload],
+    injects: [Data],
   })
-  handle(data: Data<{ id: string }>, payload: Payload): string {
-    return `${data.id}:${payload.byteLength}`;
+  handle(data: Data<{ id: string }>): string {
+    return data.id;
   }
 }
 ```

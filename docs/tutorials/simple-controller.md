@@ -25,7 +25,7 @@ import { Logger, Provider } from '@bunito/bunito';
 @Provider({
   injects: [Logger],
 })
-class FooProvider {
+class FooService {
   constructor(private readonly logger: Logger) {}
 
   foo(): string {
@@ -34,7 +34,7 @@ class FooProvider {
 }
 ```
 
-Controllers can inject providers the same way providers inject each other.
+Controllers can inject services the same way providers inject each other.
 
 ## Define Schemas
 
@@ -62,18 +62,18 @@ import { Controller, Logger } from '@bunito/bunito';
 import { Get, Params, Post, Query } from '@bunito/http';
 
 @Controller('/foo', {
-  injects: [Logger, FooProvider],
+  injects: [Logger, FooService],
 })
 class FooController {
   constructor(
     private readonly logger: Logger,
-    private readonly fooProvider: FooProvider,
+    private readonly fooService: FooService,
   ) {}
 
   @Get()
   getFoo(): Response {
     return Response.json({
-      foo: this.fooProvider.foo(),
+      foo: this.fooService.foo(),
     });
   }
 
@@ -82,7 +82,7 @@ class FooController {
   })
   getBarWithParams(params: Params<{ a: string; b: string }>, query: Query): Response {
     return Response.json({
-      foo: this.fooProvider.foo(),
+      foo: this.fooService.foo(),
       query,
       params,
     });
@@ -96,7 +96,7 @@ class FooController {
     params: Params<typeof BarParams>,
   ): Response {
     return Response.json({
-      foo: this.fooProvider.foo(),
+      foo: this.fooService.foo(),
       query,
       params,
     });
@@ -105,7 +105,7 @@ class FooController {
   @Post('/bar')
   postBar(): Response {
     return Response.json({
-      foo: this.fooProvider.foo(),
+      foo: this.fooService.foo(),
     });
   }
 }
@@ -121,7 +121,7 @@ import { HTTPModule } from '@bunito/http';
 
 @Module({
   imports: [LoggerModule, HTTPModule],
-  providers: [FooProvider],
+  providers: [FooService],
   controllers: [FooController],
 })
 class AppModule {}
@@ -141,6 +141,6 @@ bun run start simple-controller
 ```
 
 Request examples are available in
-`examples/http/apps/simple-controller.http`.
+`examples/http/apps/simple-controller/requests.http`.
 
 Continue with [JSON Middleware](./json-middleware.md).

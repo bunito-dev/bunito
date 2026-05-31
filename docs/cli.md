@@ -24,7 +24,7 @@ The CLI supports one root app and optional workspace apps:
 
 - root app: `src/main.ts`
 - workspace apps: `apps/<name>/src/main.ts`
-- shared libraries: `libs/<name>/index.ts`
+- shared libraries: `libs/<name>/src/index.ts`
 
 Optional environment files are discovered automatically:
 
@@ -154,7 +154,7 @@ examples/
         src/main.ts
     libs/
       example/
-        index.ts
+        src/index.ts
 ```
 
 `.env` files are app-local. For example, `examples/http/apps/json-middleware/.env`

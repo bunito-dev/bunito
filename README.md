@@ -12,6 +12,10 @@ The project is intentionally split into focused packages. You can start with
 `@bunito/bunito` for the core application APIs, then add feature packages such as
 `@bunito/http` or `@bunito/broker` when you need them.
 
+Source files use role postfixes such as `.module.ts`, `.service.ts`,
+`.controller.ts`, `.config.ts`, and `.exception.ts`. The CLI-generated project
+shape follows the same convention.
+
 ## Examples 🚀
 
 The best way to understand the current API is to read and run the examples.
@@ -39,6 +43,10 @@ bun run lint
 bun run test
 bun run coverage
 ```
+
+Tests live next to the implementation files they cover. CLI behavior is covered
+through mocked filesystem, build, and process-runner tests so command behavior can
+be validated without spawning real apps.
 
 For contribution notes, see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 

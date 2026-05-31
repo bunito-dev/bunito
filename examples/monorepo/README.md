@@ -31,6 +31,6 @@ bun run start --root
 ## What To Read 🔎
 
 - `libs/example`: shared module and provider exported for apps.
-- `apps/first/src/first-module.ts`: imports the shared library.
-- `apps/second/src/second-module.ts`: imports the shared library independently.
-- `src/app-module.ts`: imports app modules from `first` and `second`.
+- `apps/first/src/first.module.ts`: imports the shared library.
+- `apps/second/src/second.module.ts`: imports the shared library independently.
+- `src/composed.module.ts`: imports app modules from `first` and `second`.
