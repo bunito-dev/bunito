@@ -1,0 +1,17 @@
+### Shared root JSON response
+GET http://0.0.0.0:4004
+
+### Foo CORS preflight
+OPTIONS http://0.0.0.0:4004/foo
+
+### Foo JSON response
+GET http://0.0.0.0:4004/foo
+
+### Bar CORS preflight
+OPTIONS http://0.0.0.0:4004/foo/bar
+
+### Bar any-method response
+GET http://0.0.0.0:4004/foo/bar
+
+### Bar POST response
+POST http://0.0.0.0:4004/foo/bar

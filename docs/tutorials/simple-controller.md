@@ -20,15 +20,17 @@ bun add zod
 ## Create A Provider
 
 ```ts
-import { Logger, Provider } from '@bunito/bunito';
+import { Logger, optional, Provider } from '@bunito/bunito';
 
 @Provider({
-  injects: [Logger],
+  injects: [optional(Logger)],
 })
 class FooService {
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: Logger | null) {}
 
   foo(): string {
+    this.logger?.debug('foo() called');
+
     return 'bar';
   }
 }
@@ -58,15 +60,15 @@ These schemas will be attached to route injections.
 ## Create A Controller
 
 ```ts
-import { Controller, Logger } from '@bunito/bunito';
+import { Controller, Logger, optional } from '@bunito/bunito';
 import { Get, Params, Post, Query } from '@bunito/http';
 
 @Controller('/foo', {
-  injects: [Logger, FooService],
+  injects: [optional(Logger), FooService],
 })
 class FooController {
   constructor(
-    private readonly logger: Logger,
+    private readonly logger: Logger | null,
     private readonly fooService: FooService,
   ) {}
 
@@ -116,17 +118,26 @@ The controller prefix is `/foo`. The route path is appended to it.
 ## Register The App Module
 
 ```ts
-import { App, LoggerModule, Module } from '@bunito/bunito';
-import { HTTPModule } from '@bunito/http';
+import { Module } from '@bunito/bunito';
 
 @Module({
-  imports: [LoggerModule, HTTPModule],
-  providers: [FooService],
-  controllers: [FooController],
+  imports: [FooModule],
 })
 class AppModule {}
+```
 
-await App.start(AppModule);
+The repository example keeps shared HTTP, logger, and config setup in
+`examples/http/libs/example`. The app entrypoint imports that shared module and
+the local app module:
+
+```ts
+import { App } from '@bunito/bunito';
+import { ExampleModule } from '@libs/example';
+import { AppModule } from './app.module';
+
+await App.start({
+  imports: [ExampleModule.forRoot('simple-controller'), AppModule],
+});
 ```
 
 In the repository examples, this app lives at

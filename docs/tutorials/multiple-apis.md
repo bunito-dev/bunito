@@ -1,12 +1,13 @@
 # Multiple APIs
 
 This tutorial mirrors the `examples/http` `multiple-apis` app. It shows how to
-split an app into feature modules with their own prefixes and middleware.
+split an app into feature modules with their own prefixes, validation, and
+feature-local not-found handling.
 
 ## Create A Feature Module
 
 ```ts
-import { Controller, Logger, Module, UsePrefix } from '@bunito/bunito';
+import { Controller, Logger, Module, optional, UsePrefix } from '@bunito/bunito';
 import { Get, Params } from '@bunito/http';
 import { z } from 'zod';
 
@@ -15,11 +16,11 @@ const FooParams = z.object({
 });
 
 @Controller('/', {
-  injects: [Logger],
+  injects: [optional(Logger)],
   scope: 'singleton',
 })
 class FooController {
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: Logger | null) {}
 
   @Get('/:foo', {
     injects: [Params(FooParams)],
@@ -38,18 +39,11 @@ class FooModule {}
 
 Every route in `FooModule` is mounted under `/foo`.
 
-## Add A JSON Module
+## Add Another API Module
 
 ```ts
-import type { RawObject } from '@bunito/bunito';
-import { Controller, Logger, Module, UsePrefix } from '@bunito/bunito';
-import {
-  Get,
-  JSONSerializer,
-  NotFoundException,
-  Params,
-  UseMiddleware,
-} from '@bunito/http';
+import { Controller, Logger, Module, optional, UsePrefix } from '@bunito/bunito';
+import { Get, NotFoundException, Params } from '@bunito/http';
 import { z } from 'zod';
 
 const BarParams = z.object({
@@ -57,20 +51,20 @@ const BarParams = z.object({
 });
 
 @Controller('/', {
-  injects: [Logger],
+  injects: [optional(Logger)],
   scope: 'singleton',
 })
 class BarController {
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: Logger | null) {}
 
   @Get('/:bar', {
     injects: [Params(BarParams)],
   })
-  getBar(params: Params<typeof BarParams>): RawObject {
-    return {
+  getBar(params: Params<typeof BarParams>): Response {
+    return Response.json({
       action: 'getBar',
       params,
-    };
+    });
   }
 
   @Get()
@@ -84,24 +78,34 @@ class BarController {
   controllers: [BarController],
 })
 @UsePrefix('/bar')
-@UseMiddleware(JSONSerializer)
 class BarModule {}
 ```
 
-`BarModule` applies both a prefix and JSON middleware to its controllers.
+`BarModule` owns its `/bar` route group and declares a catch-all not-found handler
+for paths under that prefix.
 
 ## Compose The App
 
 ```ts
-import { App, LoggerModule, Module } from '@bunito/bunito';
-import { HTTPModule } from '@bunito/http';
+import { Module } from '@bunito/bunito';
 
 @Module({
-  imports: [LoggerModule, HTTPModule, FooModule, BarModule],
+  imports: [FooModule, BarModule],
 })
 class AppModule {}
+```
 
-await App.start(AppModule);
+The repository example gets shared HTTP, logger, config, and root response setup
+from `ExampleModule`:
+
+```ts
+import { App } from '@bunito/bunito';
+import { ExampleModule } from '@libs/example';
+import { AppModule } from './app.module';
+
+await App.start({
+  imports: [ExampleModule.forRoot('multiple-apis'), AppModule],
+});
 ```
 
 In the repository examples, this app lives at
@@ -120,7 +124,7 @@ Request examples are available in `examples/http/apps/multiple-apis/requests.htt
 You now have two route groups:
 
 - `/foo/*`: simple text responses
-- `/bar/*`: JSON responses with module-level middleware
+- `/bar/*`: JSON responses and a local not-found fallback
 
 Continue with [CORS Support](./cors-support.md) to add route headers and
 CORS policy to HTTP modules.

@@ -45,7 +45,7 @@ Params and body validation are independent.
 
 ```ts
 import type { RawObject } from '@bunito/bunito';
-import { Controller, Logger } from '@bunito/bunito';
+import { Controller, Logger, optional } from '@bunito/bunito';
 import {
   Body,
   BodyParser,
@@ -57,12 +57,12 @@ import {
 } from '@bunito/http';
 
 @Controller('/foo', {
-  injects: [Logger],
+  injects: [optional(Logger)],
 })
 @UseMiddleware(JSONSerializer)
 @UseMiddleware(BodyParser, { parser: 'json' })
 class FooController {
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: Logger | null) {}
 
   @Get('/:bar', {
     injects: [Params(FooParams)],
@@ -93,19 +93,28 @@ class FooController {
 `Body()` injects the parsed body. `Body(FooBody)` injects the parsed and validated
 body.
 
-## Register HTTPModule
+## Register The App
 
 ```ts
-import { App, LoggerModule, Module } from '@bunito/bunito';
-import { HTTPModule } from '@bunito/http';
+import { Module } from '@bunito/bunito';
 
 @Module({
-  imports: [LoggerModule, HTTPModule],
-  controllers: [FooController],
+  imports: [FooModule],
 })
 class AppModule {}
+```
 
-await App.start(AppModule);
+The repository example gets `HTTPModule`, `LoggerModule`, and `ConfigModule` from
+the shared `ExampleModule` in `examples/http/libs/example`:
+
+```ts
+import { App } from '@bunito/bunito';
+import { ExampleModule } from '@libs/example';
+import { AppModule } from './app.module';
+
+await App.start({
+  imports: [ExampleModule.forRoot('json-middleware'), AppModule],
+});
 ```
 
 In the repository examples, this app lives at

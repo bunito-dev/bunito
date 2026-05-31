@@ -1,3 +1,6 @@
+### Shared root JSON response
+GET http://0.0.0.0:4002
+
 ### Foo text response
 GET http://0.0.0.0:4002/foo/a
 
@@ -12,4 +15,3 @@ GET http://0.0.0.0:4002/bar/bbbb
 
 ### Bar not found handler
 GET http://0.0.0.0:4002/bar/missing/path
-

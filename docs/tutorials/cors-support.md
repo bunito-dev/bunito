@@ -6,17 +6,15 @@ modules, and how `OnRequest` can handle a route for every HTTP method.
 
 ## App Module
 
-The app imports a shared HTTP example module, the `foo` feature module, and sets a
-top-level CORS policy:
+The app imports the `foo` feature module and sets a top-level CORS policy:
 
 ```ts
 import { Module } from '@bunito/bunito';
 import { UseCORS } from '@bunito/http';
-import { ExampleModule } from '@libs/example';
 import { FooModule } from './foo';
 
 @Module({
-  imports: [ExampleModule.forRoot('cors-support'), FooModule],
+  imports: [FooModule],
 })
 @UseCORS({
   origin: '*',
@@ -30,7 +28,18 @@ options unless they override them.
 
 For browser clients, use an explicit `origin` when `credentials` is enabled.
 
-The shared example module supplies the common HTTP/logger setup and root response.
+The app entrypoint imports this module together with the shared `ExampleModule`,
+which supplies the common HTTP/logger/config setup and root response:
+
+```ts
+import { App } from '@bunito/bunito';
+import { ExampleModule } from '@libs/example';
+import { AppModule } from './app.module';
+
+await App.start({
+  imports: [ExampleModule.forRoot('cors-support'), AppModule],
+});
+```
 
 ## Feature Module
 
@@ -40,9 +49,11 @@ configuration:
 ```ts
 import { Module, UsePrefix } from '@bunito/bunito';
 import { UseCORS } from '@bunito/http';
+import { BarModule } from './bar';
 import { FooController } from './foo.controller';
 
 @Module({
+  imports: [BarModule],
   controllers: [FooController],
 })
 @UsePrefix('foo')
@@ -59,35 +70,55 @@ under `/foo`.
 ## Controller-Level CORS
 
 Controllers can refine the policy further. This controller limits CORS methods to
-`GET` and exposes one normal route plus one catch-all-method route:
+`GET` and exposes one normal route:
 
 ```ts
-import { Controller, Logger } from '@bunito/bunito';
-import { Get, Method, OnRequest, UseCORS } from '@bunito/http';
+import { Controller, Logger, optional } from '@bunito/bunito';
+import { Get, UseCORS } from '@bunito/http';
 
 @Controller({
-  injects: [Logger],
+  injects: [optional(Logger)],
 })
 @UseCORS({
   methods: ['GET'],
 })
 class FooController {
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: Logger | null) {}
 
   @Get()
   getFoo(): Response {
-    this.logger.debug('getFoo() called');
+    this.logger?.debug('getFoo() called');
 
     return Response.json({
       foo: 'Hello foo!',
     });
   }
+}
+```
 
-  @OnRequest('/bar', {
+## Nested Any-Method Route
+
+The `bar` feature is nested under `foo` and uses `OnRequest` to handle every
+non-`OPTIONS` method on `/foo/bar`:
+
+```ts
+import { Controller, Logger, Module, optional, UsePrefix } from '@bunito/bunito';
+import { Method, OnRequest, UseCORS } from '@bunito/http';
+
+@Controller({
+  injects: [optional(Logger)],
+})
+@UseCORS({
+  methods: ['GET', 'POST'],
+})
+class BarController {
+  constructor(private readonly logger: Logger | null) {}
+
+  @OnRequest('/', {
     injects: [Method],
   })
   getBar(method: Method): Response {
-    this.logger.debug('getBar() called');
+    this.logger?.debug('getBar() called');
 
     return Response.json({
       bar: 'Hello bar!',
@@ -95,6 +126,15 @@ class FooController {
     });
   }
 }
+
+@Module({
+  controllers: [BarController],
+})
+@UsePrefix('bar')
+@UseCORS({
+  credentials: true,
+})
+class BarModule {}
 ```
 
 `OnRequest` registers a handler for any non-`OPTIONS` method. The router still
@@ -124,6 +164,9 @@ Then try a regular request:
 ```bash
 curl -i http://localhost:4004/foo
 ```
+
+Request examples are available in
+`examples/http/apps/cors-support/requests.http`.
 
 Continue with [Microservices](./microservices.md) when you want to combine HTTP
 routes with broker messaging.

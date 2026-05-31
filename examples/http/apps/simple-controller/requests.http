@@ -1,3 +1,6 @@
+### Shared root JSON response
+GET http://0.0.0.0:4003
+
 ### Basic JSON response
 GET http://0.0.0.0:4003/foo
 
@@ -12,4 +15,3 @@ GET http://0.0.0.0:4003/foo/bar/aaaa/b/c
 
 ### POST route
 POST http://0.0.0.0:4003/foo/bar
-
