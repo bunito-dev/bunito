@@ -1,6 +1,6 @@
 {
   "name": "@bunito/http",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "HTTP module with controllers, routing, middleware, CORS, validation, and exceptions.",
   "keywords": [
     "bunito",
@@ -37,11 +37,11 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/bun": "workspace:0.0.15",
-    "@bunito/common": "workspace:0.0.15",
-    "@bunito/config": "workspace:0.0.15",
-    "@bunito/container": "workspace:0.0.15",
-    "@bunito/logger": "workspace:0.0.15"
+    "@bunito/bun": "workspace:0.0.16",
+    "@bunito/common": "workspace:0.0.16",
+    "@bunito/config": "workspace:0.0.16",
+    "@bunito/container": "workspace:0.0.16",
+    "@bunito/logger": "workspace:0.0.16"
   },
   "devDependencies": {
     "zod": "catalog:"
