@@ -1,43 +1,33 @@
 import { EventEmitter } from 'node:events';
-import { InternalException } from '@bunito/common';
-import { ConfigModule } from '@bunito/config';
+import { InternalException, warn } from '@bunito/common';
 import type { ModuleLike, ResolveToken, Token } from '@bunito/container';
 import { Container } from '@bunito/container';
-import { Logger, LoggerModule } from '@bunito/logger';
+import { Logger } from '@bunito/logger';
 import { OnAppShutdown, OnAppStart } from './decorators';
 import type { AppAction, AppEvents, AppOptions } from './types';
 
 export class App extends EventEmitter<AppEvents> implements EventEmitter<AppEvents> {
-  protected static readonly defaultOptions: AppOptions = {
-    silent: false,
-  };
-
-  protected static readonly defaultModules: ModuleLike[] = [ConfigModule, LoggerModule];
-
   static async create(rootModule: ModuleLike, options: AppOptions = {}): Promise<App> {
-    const container = new Container({
-      // biome-ignore lint/complexity/noThisInStatic: Need to use `this`
-      imports: [rootModule, ...this.defaultModules],
-    });
+    const container = new Container(rootModule);
 
-    const logger = await container.resolveProvider(Logger, {
-      context: App,
-    });
+    let logger: Logger | undefined;
 
-    return new App(
-      {
-        // biome-ignore lint/complexity/noThisInStatic: Need to use `this`
-        ...this.defaultOptions,
-        ...options,
-      },
-      container,
-      logger,
-    );
+    try {
+      logger = await container.resolveProvider(Logger, {
+        context: App,
+      });
+    } catch {
+      warn(
+        'Logger is not available in the App context',
+        'import LoggerModule from @bunito/bunito for automatic logging',
+      );
+    }
+
+    return new App(options, container, logger);
   }
 
   static async start(rootModule: ModuleLike, options?: AppOptions): Promise<App> {
-    // biome-ignore lint/complexity/noThisInStatic: Need to use `this`
-    const app = await this.create(rootModule, options);
+    const app = await App.create(rootModule, options);
 
     await app.start();
 

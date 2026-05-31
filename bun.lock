@@ -29,6 +29,7 @@
       },
       "devDependencies": {
         "@bunito/cli": "workspace:*",
+        "@bunito/testing": "workspace:*",
       },
     },
     "examples/microservices": {
@@ -101,6 +102,7 @@
         "@bunito/config": "workspace:0.0.15",
         "@bunito/container": "workspace:0.0.15",
         "@bunito/logger": "workspace:0.0.15",
+        "@bunito/testing": "workspace:0.0.15",
       },
     },
     "packages/cli": {

@@ -1,16 +1,17 @@
 import type { MaybePromise } from '@bunito/common';
 import type { ExtensionDecorator, ProviderDecoratorOptions } from '@bunito/container';
 import { createExtensionDecorator } from '@bunito/container';
-import type { BunWebSocket, RequestContext, WebSocketEvent } from './types';
+import type { BunWebSocket } from './bun-websocket';
+import type { BunRequestContext, BunWebSocketEvent } from './types';
 
 export interface BunServerRouter {
   getRoutePaths?: () => MaybePromise<string[]>;
   processRequest: (
     request: Request,
-    context: RequestContext,
+    context: BunRequestContext,
   ) => MaybePromise<Response | undefined>;
   processWebSocketEvent?: (
-    event: WebSocketEvent,
+    event: BunWebSocketEvent,
     socket: BunWebSocket,
   ) => MaybePromise<false | undefined>;
 }

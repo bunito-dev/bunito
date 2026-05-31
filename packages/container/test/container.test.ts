@@ -35,11 +35,11 @@ describe('Container (integration)', () => {
     class RootModule {}
 
     const container = new Container(RootModule);
-    const exportedFromRoot = await container.resolveProvider(ExportedService);
-    const exportedAgain = await container.resolveProvider(ExportedService);
+    const exportedFromRoot = await container.resolveProvider(ExportedService, {});
+    const exportedAgain = await container.resolveProvider(ExportedService, {});
     let privateFromRootError: unknown;
     try {
-      await container.resolveProvider(PrivateService);
+      await container.resolveProvider(PrivateService, {});
     } catch (error) {
       privateFromRootError = error;
     }
@@ -78,7 +78,7 @@ describe('Container (integration)', () => {
     class RootModule {}
 
     const container = new Container(RootModule);
-    const leaf = await container.resolveProvider(LeafService);
+    const leaf = await container.resolveProvider(LeafService, {});
 
     expect(leaf.value).toBe('leaf');
   });
@@ -110,8 +110,8 @@ describe('Container (integration)', () => {
     class RootModule {}
 
     const container = new Container(RootModule);
-    const plainFactory = await container.resolveProvider(plainFactoryProvider);
-    const tokenLikeFactory = await container.resolveProvider<string>(factoryToken);
+    const plainFactory = await container.resolveProvider(plainFactoryProvider, {});
+    const tokenLikeFactory = await container.resolveProvider<string>(factoryToken, {});
 
     expect(plainFactory).toBe('plain-factory');
     expect(tokenLikeFactory).toBe('token-like-factory');
@@ -137,7 +137,10 @@ describe('Container (integration)', () => {
     class RootModule {}
 
     const container = new Container(RootModule);
-    const value = await container.resolveProvider<{ value: string }>('exported-value');
+    const value = await container.resolveProvider<{ value: string }>(
+      'exported-value',
+      {},
+    );
 
     expect(value).toEqual({
       value: 'from-feature',
@@ -264,14 +267,14 @@ describe('Container (integration)', () => {
 
     const container = new Container(RootModule);
 
-    const singleton = await container.resolveProvider(SingletonService);
-    const singletonAgain = await container.resolveProvider(SingletonService);
+    const singleton = await container.resolveProvider(SingletonService, {});
+    const singletonAgain = await container.resolveProvider(SingletonService, {});
     const [requestA, requestB] = await container.runInRequestContext(async () => [
-      await container.resolveProvider(RequestService),
-      await container.resolveProvider(RequestService),
+      await container.resolveProvider(RequestService, {}),
+      await container.resolveProvider(RequestService, {}),
     ]);
     const requestC = await container.runInRequestContext(() =>
-      container.resolveProvider(RequestService),
+      container.resolveProvider(RequestService, {}),
     );
 
     expect(singleton).toBe(singletonAgain);
@@ -283,7 +286,7 @@ describe('Container (integration)', () => {
     expect(requestA?.requestId).not.toBe(requestC.requestId);
 
     const requestD = await container.runInRequestContext(() =>
-      container.resolveProvider(RequestService),
+      container.resolveProvider(RequestService, {}),
     );
     expect(requestD).not.toBe(requestA);
 

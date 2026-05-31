@@ -1,4 +1,7 @@
 import { App } from '@bunito/bunito';
-import { MainModule } from './main.module';
+import { ExampleModule } from '@libs/example';
+import { AppModule } from './app.module';
 
-await App.start(MainModule);
+await App.start({
+  imports: [ExampleModule.forRoot('multiple-apis'), AppModule],
+});

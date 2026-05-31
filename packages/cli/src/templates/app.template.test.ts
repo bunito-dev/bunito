@@ -30,14 +30,6 @@ describe('AppTemplate', () => {
           moduleClass: 'AppModule',
         },
       },
-      'test/app.module.spec.ts': {
-        view: 'app/module.spec.ts',
-        params: {
-          moduleClass: 'AppModule',
-          root: true,
-          name: 'demo',
-        },
-      },
       '.env': {
         view: 'app/.env',
       },

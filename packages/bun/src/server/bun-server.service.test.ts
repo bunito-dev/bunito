@@ -4,13 +4,14 @@ import { InternalException } from '@bunito/common';
 import type { Container } from '@bunito/container';
 import { Logger } from '@bunito/logger';
 import { mockClass } from '@bunito/testing';
+import type { BunServer } from './bun-server';
 import { BunServerService } from './bun-server.service';
 import type { BunServerRouter } from './bun-server-router';
 import type {
-  BunServer,
+  BunRequestContext,
+  BunServerFactory,
   BunServerOptions,
-  RequestContext,
-  WebSocketEvent,
+  BunWebSocketEvent,
 } from './types';
 
 type CapturedServe = {
@@ -18,17 +19,13 @@ type CapturedServe = {
   server: BunServer;
   stopped: boolean;
   stopImmediately?: boolean;
-  factory: typeof Bun.serve;
+  factory: BunServerFactory;
 };
 
 type PrivateServerService = {
-  processRequest: (
-    request: Request,
-    server: BunServer,
-    routePath?: string,
-  ) => Promise<Response | undefined>;
+  processRequest: (request: Request, routePath?: string) => Promise<Response | undefined>;
   processWebSocketEvent: (
-    event: WebSocketEvent,
+    event: BunWebSocketEvent,
     socket: Bun.ServerWebSocket<unknown>,
   ) => Promise<void>;
 };
@@ -44,11 +41,12 @@ function createServeCapture(): CapturedServe {
       capture.stopped = true;
       capture.stopImmediately = immediately;
     }),
+    upgrade: mock(() => false),
   } as unknown as BunServer;
   capture.factory = ((options: BunServerOptions) => {
     capture.options = options;
     return capture.server;
-  }) as typeof Bun.serve;
+  }) as BunServerFactory;
 
   return capture;
 }
@@ -161,7 +159,6 @@ describe('ServerService', () => {
       new Request('http://localhost/missing', {
         method: 'POST',
       }),
-      capture.server,
     )) as Response | undefined;
 
     expect(capture.options?.port).toBe(3000);
@@ -236,7 +233,6 @@ describe('ServerService', () => {
       await invalidCapture.options?.fetch?.call(
         invalidCapture.server,
         new Request('http://localhost'),
-        invalidCapture.server,
       );
     } catch (error) {
       invalidResponseError = error;
@@ -246,7 +242,7 @@ describe('ServerService', () => {
     const upgradeService = createService(
       [
         {
-          processRequest: (_request: Request, context: RequestContext) => {
+          processRequest: (_request: Request, context: BunRequestContext) => {
             context.upgrade();
           },
         },
@@ -264,7 +260,6 @@ describe('ServerService', () => {
       await upgradeCapture.options?.fetch?.call(
         upgradeCapture.server,
         new Request('http://localhost'),
-        upgradeCapture.server,
       );
     } catch (error) {
       upgradeError = error;
@@ -280,6 +275,7 @@ describe('ServerService', () => {
 
   it('rejects duplicate websocket upgrades', async () => {
     const capture = createServeCapture();
+    capture.server.upgrade = mock(() => true) as BunServer['upgrade'];
     const service = createService(
       [
         {
@@ -309,9 +305,7 @@ describe('ServerService', () => {
           request: Request,
           server: BunServer,
         ) => Response | undefined | Promise<Response | undefined>
-      )(new Request('http://localhost/ws'), {
-        upgrade: () => true,
-      } as unknown as BunServer);
+      )(new Request('http://localhost/ws'), capture.server);
     } catch (cause) {
       error = cause;
     }
@@ -323,7 +317,7 @@ describe('ServerService', () => {
   it('upgrades websocket requests and dispatches websocket events', async () => {
     const capture = createServeCapture();
     const logger = createLogger() as unknown as Logger;
-    const events: WebSocketEvent[] = [];
+    const events: BunWebSocketEvent[] = [];
     const socket = {} as Bun.ServerWebSocket<unknown>;
     let upgraded:
       | {
@@ -334,8 +328,8 @@ describe('ServerService', () => {
           };
         }
       | undefined;
-    const server = {
-      upgrade: (
+    capture.server.upgrade = mock(
+      (
         request: Request,
         options?: {
           data?: unknown;
@@ -349,7 +343,7 @@ describe('ServerService', () => {
 
         return true;
       },
-    } as BunServer;
+    ) as BunServer['upgrade'];
     const routeRouter: BunServerRouter = {
       getRoutePaths: () => ['/ws'],
       processRequest: (_request, context) => {
@@ -391,7 +385,7 @@ describe('ServerService', () => {
         request: Request,
         server: BunServer,
       ) => Response | undefined | Promise<Response | undefined>
-    )(request, server);
+    )(request, capture.server);
     await capture.options?.websocket?.open?.(socket);
     await capture.options?.websocket?.close?.(socket, 1000, 'done');
     await capture.options?.websocket?.ping?.(socket, Buffer.from('ping'));
@@ -456,7 +450,6 @@ describe('ServerService', () => {
       new Request('http://localhost/private', {
         method: 'PATCH',
       }),
-      createServeCapture().server,
       '/unknown',
     );
 

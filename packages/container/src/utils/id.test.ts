@@ -18,13 +18,14 @@ describe('Id', () => {
     expect(Id.for(localSymbol)).toBe(Id.for(localSymbol));
     expect(Id.for(objectToken)).toBe(Id.for(objectToken));
     expect(Id.for(NamedClass)).toBe(Id.for(NamedClass));
-    expect(`${Id.unique('Example')}`).toStartWith('Example#');
+    expect(`${Id.unique('ExampleUniqueForTest')}`).toBe('ExampleUniqueForTest');
+    expect(`${Id.unique('ExampleUniqueForTest')}`).toBe('ExampleUniqueForTest#2');
     expect(new Id('Manual').toString()).toBe('Manual');
     expect(Bun.inspect(new Id('Manual'))).toBe('Manual');
   });
 
   it('rejects empty string tokens and names anonymous symbols', () => {
     expect(() => Id.for('')).toThrow('Token must be a non-empty string');
-    expect(`${Id.for(Symbol())}`).toStartWith('[symbol]#');
+    expect(`${Id.for(Symbol())}`).toBe('[symbol]');
   });
 });

@@ -40,13 +40,6 @@ export function LibTemplate(options: { name: string }): TemplateViews {
         serviceName,
       },
     },
-    [`test/${moduleName}.spec.ts`]: {
-      view: 'lib/module.spec.ts',
-      params: {
-        name,
-        moduleClass,
-      },
-    },
     'src/index.ts': {
       view: 'lib/index.ts',
       params: {

@@ -1,4 +1,4 @@
-import type { HTTPMethod, RequestContext } from '@bunito/bun/internals';
+import type { BunRequestContext, HTTPMethod } from '@bunito/bun/internals';
 import { BunServerRouter } from '@bunito/bun/internals';
 import type { CallableInstance, Class, MaybePromise, RawObject } from '@bunito/common';
 import { InternalException, isFn, isNumber, isObject } from '@bunito/common';
@@ -113,7 +113,7 @@ export class HTTPBunServerRouter implements BunServerRouter {
 
   async processRequest(
     request: Request,
-    requestContext: RequestContext,
+    requestContext: BunRequestContext,
   ): Promise<Response | undefined> {
     const { defaultResponseContentType } = this.config;
     const { route: requestRoute } = requestContext;
@@ -143,6 +143,7 @@ export class HTTPBunServerRouter implements BunServerRouter {
 
     const logger = await this.container.resolveProvider(Logger, {
       context: HTTPBunServerRouter,
+      orThrow: false,
     });
 
     const {

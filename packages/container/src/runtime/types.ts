@@ -22,6 +22,10 @@ export type ResolveProviderOptions = {
   context?: TokenLike;
 };
 
+export type ResolveProviderOptionsOrUndefined = ResolveProviderOptions & {
+  orThrow: false;
+};
+
 export type ResolveInjectionsOptions = ResolveProviderOptions & {
   injectionResolver?: InjectionResolver;
 };

@@ -45,7 +45,7 @@ export class LoggerService {
       let message: string | undefined;
 
       for (const arg of args) {
-        if (isObject(arg) && 'context' in arg && Object.keys(arg).length === 1) {
+        if (isObject(arg) && Object.keys(arg).length === 1 && 'context' in arg) {
           context = resolveContext([context, arg.context]);
           continue;
         }
@@ -106,7 +106,7 @@ export class LoggerService {
     }
 
     if (kind === 'FATAL' && this.config.exitOnFatal) {
-      process.exit(1);
+      process.exit(2);
     }
   }
 }

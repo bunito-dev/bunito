@@ -90,6 +90,6 @@ export class Id {
   }
 
   toString(): string {
-    return this.index ? `${this.name}#${this.index}` : this.name;
+    return this.index > 1 ? `${this.name}#${this.index}` : this.name;
   }
 }

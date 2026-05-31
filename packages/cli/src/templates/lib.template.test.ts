@@ -32,13 +32,6 @@ describe('LibTemplate', () => {
           serviceName: 'shared-auth.service',
         },
       },
-      'test/shared-auth.module.spec.ts': {
-        view: 'lib/module.spec.ts',
-        params: {
-          name: 'shared-auth',
-          moduleClass: 'SharedAuthModule',
-        },
-      },
       'src/index.ts': {
         view: 'lib/index.ts',
         params: {

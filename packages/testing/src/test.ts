@@ -17,10 +17,10 @@ export const Test = new Proxy({} as TestContext, {
         throw new TestException(`Test context key "${key}" is not defined`);
       }
 
-      value = factory.apply(context as TestContext);
+      value = factory.apply(Test);
       context[key] = value;
     }
 
     return value;
   },
-});
+}) as TestContext;

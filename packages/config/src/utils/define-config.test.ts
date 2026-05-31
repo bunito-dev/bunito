@@ -64,6 +64,23 @@ describe('defineConfig', () => {
     });
   });
 
+  it('uses an empty context when ConfigService is not available', async () => {
+    const config = expectFactoryProvider(
+      defineConfig(function Feature(context) {
+        return {
+          available: Boolean(context.getFlag),
+        };
+      }),
+    );
+
+    const useFactory = config.useFactory as () => Promise<{ available: boolean }>;
+    const result = await useFactory();
+
+    expect(result).toEqual({
+      available: false,
+    });
+  });
+
   it('creates a value config provider when an explicit value is provided', () => {
     expect(
       defineConfig('Feature', {

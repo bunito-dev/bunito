@@ -1,4 +1,4 @@
-import { isFn, isNullish, isNumber, isObject, isString } from '@bunito/common';
+import { isFn, isNullish, isObject, isString, parseBoolean } from '@bunito/common';
 import type { ConfigFormat, ConfigParser } from '../types';
 
 export function processConfigValue(
@@ -13,41 +13,9 @@ export function processConfigValue(
   let result: unknown;
 
   switch (format) {
+    case 'bool':
     case 'boolean':
-      switch (typeof value) {
-        case 'boolean':
-          result = value;
-          break;
-
-        case 'string':
-          switch (value.trim().toLowerCase()) {
-            case 'true':
-            case 't':
-            case 'yes':
-            case 'y':
-            case 'on':
-              result = true;
-              break;
-
-            case 'false':
-            case 'f':
-            case 'no':
-            case 'n':
-            case 'off':
-              result = false;
-              break;
-
-            default:
-          }
-          break;
-
-        case 'number':
-          result = value !== 0 && isNumber(value);
-          break;
-
-        default:
-          result = null;
-      }
+      result = parseBoolean(value);
       break;
 
     case 'string':

@@ -34,14 +34,6 @@ export function AppTemplate(options: { name: string; root: boolean }): TemplateV
         moduleClass,
       },
     },
-    [`test/${moduleName}.spec.ts`]: {
-      view: 'app/module.spec.ts',
-      params: {
-        moduleClass,
-        root,
-        name,
-      },
-    },
     '.env': {
       view: 'app/.env',
     },

@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 
 import { App } from '@bunito/app';
-import { overwriteConfigEnvs } from '@bunito/config';
+import { ConfigModule, overwriteConfigEnvs } from '@bunito/config';
+import { LoggerModule } from '@bunito/logger';
 import { CommandModule } from './commands';
 import { CLILogTransport } from './core';
 
 await App.start(
   {
-    imports: [CommandModule],
+    imports: [ConfigModule, LoggerModule, CommandModule],
     providers: [
       CLILogTransport,
       overwriteConfigEnvs({

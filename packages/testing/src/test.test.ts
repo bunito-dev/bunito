@@ -18,13 +18,11 @@ describe('Test', () => {
 
       return {
         calls,
-        previous: this.cached,
       };
     });
 
     expect(context.cached).toEqual({
       calls: 1,
-      previous: undefined,
     });
     expect(context.cached).toBe(context.cached);
     expect(calls).toBe(1);

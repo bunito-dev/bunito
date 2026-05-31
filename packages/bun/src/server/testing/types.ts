@@ -1,4 +1,11 @@
-import type { BunServerOptions } from '../types';
-import type { TestBunServer } from './test-bun-server';
+import type { Mock } from 'bun:test';
+import type { BunRouteHandler, BunServerFactory } from '../types';
 
-export type TestBunServerFactory = (options: BunServerOptions) => TestBunServer;
+export type TestBunServerFactory = Mock<BunServerFactory>;
+
+export type TestBunRouteMatch = {
+  path: string;
+  params: Record<string, string>;
+  score: number;
+  handler: BunRouteHandler;
+};

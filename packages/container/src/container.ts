@@ -1,7 +1,11 @@
 import type { Fn } from '@bunito/common';
 import type { Injections, MatchedControllers, ModuleId, ModuleLike } from './compiler';
 import { ContainerCompiler } from './compiler';
-import type { ResolveInjectionsOptions, ResolveProviderOptions } from './runtime';
+import type {
+  ResolveInjectionsOptions,
+  ResolveProviderOptions,
+  ResolveProviderOptionsOrUndefined,
+} from './runtime';
 import { ContainerRuntime } from './runtime';
 import type { ResolveToken, Token } from './utils';
 import { Id } from './utils';
@@ -35,19 +39,36 @@ export class Container {
 
   resolveProvider<TInstance>(
     token: Token<TInstance>,
+    options: ResolveProviderOptionsOrUndefined,
+  ): Promise<TInstance | undefined>;
+  resolveProvider<TToken extends Token>(
+    token: TToken,
+    options: ResolveProviderOptionsOrUndefined,
+  ): Promise<ResolveToken<TToken> | undefined>;
+  resolveProvider<TInstance>(
+    token: Token<TInstance>,
     options?: ResolveProviderOptions,
   ): Promise<TInstance>;
   resolveProvider<TToken extends Token>(
     token: TToken,
     options?: ResolveProviderOptions,
   ): Promise<ResolveToken<TToken>>;
-  resolveProvider(token: Token, options: ResolveProviderOptions = {}): Promise<unknown> {
-    const { context, moduleId } = options;
+  async resolveProvider(
+    token: Token,
+    options: Partial<ResolveProviderOptionsOrUndefined>,
+  ): Promise<unknown> {
+    const { context, moduleId, orThrow } = options;
 
-    return this.runtime.resolveProvider(Id.for(token), {
-      moduleId,
-      contextId: context ? Id.for(context) : undefined,
-    });
+    try {
+      return await this.runtime.resolveProvider(Id.for(token), {
+        moduleId,
+        contextId: context ? Id.for(context) : undefined,
+      });
+    } catch (err) {
+      if (orThrow !== false) {
+        throw err;
+      }
+    }
   }
 
   resolveInjections(

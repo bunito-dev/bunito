@@ -1,21 +1,38 @@
 import type { Buffer } from 'node:buffer';
 import type { RawObject } from '@bunito/common';
+import type { BunServer } from './bun-server';
 
-export type BunServer = Bun.Server<unknown>;
+export type HTTPMethod = Bun.Serve.HTTPMethod;
 
-export type BunServerOptions = Bun.Serve.Options<unknown>;
+export type BunServerOptions = Pick<Bun.Serve.Options<unknown>, 'port' | 'hostname'> & {
+  error: (error: unknown) => Response;
+  fetch: BunRouteHandler;
+  routes?: Record<string, BunRouteHandler>;
+  websocket?: Bun.Serve.Options<unknown>['websocket'];
+};
 
 export type BunServerFactory = (options: BunServerOptions) => BunServer;
+
+export type BunRouteHandler = (request: BunRequest) => Promise<Response | undefined>;
 
 export type BunRequest = Request & {
   params?: RawObject<string>;
 };
 
-export type BunWebSocket = Bun.ServerWebSocket<unknown>;
+export type BunRequestRoute = {
+  path: string;
+  method: HTTPMethod;
+  params: RawObject<string>;
+};
 
-export type HTTPMethod = Bun.Serve.HTTPMethod;
+export type BunRequestContext = {
+  route?: BunRequestRoute;
+  upgrade: <TOptions extends RawObject>(
+    options?: TOptions & { headers?: HeadersInit },
+  ) => boolean;
+};
 
-export type WebSocketEvent =
+export type BunWebSocketEvent =
   | {
       name: 'text';
       data: string;
@@ -36,16 +53,3 @@ export type WebSocketEvent =
       name: 'ping' | 'pong';
       data: Buffer<ArrayBufferLike>;
     };
-
-export type RequestRoute = {
-  path: string;
-  method: HTTPMethod;
-  params: RawObject<string>;
-};
-
-export type RequestContext = {
-  route?: RequestRoute;
-  upgrade: <TOptions extends RawObject>(
-    options?: TOptions & { headers?: HeadersInit },
-  ) => boolean;
-};

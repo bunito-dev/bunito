@@ -7,7 +7,7 @@ export const LoggerConfig = defineConfig<{
   level: LogLevelKind;
   transport: string;
   exitOnFatal: boolean;
-}>(function Logger({ whenProd, getEnv }) {
+}>(function Logger({ whenProd, getEnv, whenTest }) {
   return {
     level:
       getEnv?.('LOG_LEVEL', 'uppercase', (value: string): LogLevelKind => {
@@ -22,6 +22,6 @@ export const LoggerConfig = defineConfig<{
       this.whenProd?.('INFO') ??
       'DEBUG',
     transport: getEnv?.('LOG_TRANSPORT', 'lowercase') ?? whenProd?.('json') ?? 'pretty',
-    exitOnFatal: getEnv?.('EXIT_ON_FATAL', 'boolean') ?? true,
+    exitOnFatal: getEnv?.('EXIT_ON_FATAL', 'boolean') ?? whenTest?.(false) ?? true,
   };
 });

@@ -1,5 +1,5 @@
 import { Controller, Logger, optional } from '@bunito/bunito';
-import { Get, Method, OnRequest, UseCORS } from '@bunito/http';
+import { Get, UseCORS } from '@bunito/http';
 
 @Controller({
   injects: [optional(Logger)],
@@ -9,7 +9,7 @@ import { Get, Method, OnRequest, UseCORS } from '@bunito/http';
 })
 export class FooController {
   constructor(private readonly logger: Logger | null) {
-    logger?.debug('created');
+    this.logger?.debug('created');
   }
 
   @Get()
@@ -18,18 +18,6 @@ export class FooController {
 
     return Response.json({
       foo: 'Hello foo!',
-    });
-  }
-
-  @OnRequest('/bar', {
-    injects: [Method],
-  })
-  getBar(method: Method): Response {
-    this.logger?.debug('getBar() called');
-
-    return Response.json({
-      bar: 'Hello bar!',
-      method,
     });
   }
 }

@@ -13,7 +13,7 @@ export type LogLevel = {
   value: number;
 };
 
-export type LogArg = { context: unknown } | unknown;
+export type LogArg = { context: string | string[] } | { exitCode: number } | unknown;
 export type LogArgs<TArg0 = LogArg> = [TArg0, ...LogArg[]];
 
 export type LogOptions = LoggerState & {

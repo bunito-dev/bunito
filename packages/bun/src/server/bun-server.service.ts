@@ -4,30 +4,32 @@ import { InternalException, isFn } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import { Container, optional, Provider } from '@bunito/container';
 import { Logger } from '@bunito/logger';
+import type { BunServer } from './bun-server';
 import { BunServerConfig } from './bun-server.config';
 import { BunServerRouter } from './bun-server-router';
+import type { BunWebSocket } from './bun-websocket';
 import { BUN_SERVER_FACTORY_ID } from './constants';
 import type {
   BunRequest,
-  BunServer,
+  BunRequestContext,
   BunServerFactory,
   BunServerOptions,
+  BunWebSocketEvent,
   HTTPMethod,
-  RequestContext,
-  WebSocketEvent,
 } from './types';
+import { ErrorResponse } from './utils';
 
 @Provider({
   injects: [
     BunServerConfig,
     optional(Logger),
     Container,
-    optional(BUN_SERVER_FACTORY_ID, Bun.serve),
+    BUN_SERVER_FACTORY_ID,
     optional(BunServerRouter),
   ],
 })
 export class BunServerService {
-  private server: Bun.Server<unknown> | undefined;
+  private server: BunServer | undefined;
 
   private readonly routerRoles: {
     route?: Map<string, BunServerRouter[]>;
@@ -56,19 +58,23 @@ export class BunServerService {
     const { port, hostname } = this.config;
     const routers = this.routers;
 
-    const options = {
+    const options: BunServerOptions = {
       port,
       hostname,
-    } as Bun.Serve.Options<unknown>;
+      fetch: (request) => this.processRequest(request),
+      error: (error) => {
+        this.logger?.fatal('Unhandled error', error);
 
-    options.fetch = (request, server) => this.processRequest(request, server);
+        return new ErrorResponse(500);
+      },
+    };
 
     for (const router of routers) {
       if (isFn(router.getRoutePaths)) {
         for (const routePath of await router.getRoutePaths()) {
           options.routes ??= {};
-          options.routes[routePath] ??= (request, server) =>
-            this.processRequest(request, server, routePath);
+          options.routes[routePath] ??= (request) =>
+            this.processRequest(request, routePath);
 
           this.routerRoles.route ??= new Map();
           this.routerRoles.route?.getOrInsertComputed(routePath, () => []).push(router);
@@ -85,20 +91,9 @@ export class BunServerService {
       options.websocket = this.createWebSocketOption();
     }
 
-    this.server = this.serverFactory({
-      ...options,
-      error: (error) => {
-        this.logger?.fatal('Unhandled error', error);
+    this.server = this.serverFactory(options);
 
-        return new Response('Internal Server Error', {
-          status: 500,
-        });
-      },
-    });
-
-    const url = this.server?.url?.toString() ?? 'unknown';
-
-    this.logger?.info(`Server started: ${url}`);
+    this.logger?.info(`Server started: ${this.server.url}`);
   }
 
   @OnAppShutdown()
@@ -116,9 +111,8 @@ export class BunServerService {
     this.routerRoles.websocket = undefined;
   }
 
-  private async processRequest(
+  protected async processRequest(
     request: BunRequest,
-    server: BunServer,
     routePath?: string,
   ): Promise<Response | undefined> {
     const routers = routePath ? this.routerRoles.route?.get(routePath) : this.routers;
@@ -126,14 +120,12 @@ export class BunServerService {
     if (!routers?.length) {
       this.logger?.warn(`No matching router found for ${request.method} ${request.url}`);
 
-      return new Response('Not Found', {
-        status: 404,
-      });
+      return new ErrorResponse(404);
     }
 
     let upgraded = false;
 
-    const context: RequestContext = {
+    const context: BunRequestContext = {
       route: routePath
         ? {
             path: routePath,
@@ -152,10 +144,11 @@ export class BunServerService {
           return InternalException.throw`WebSocket upgrade is not supported`;
         }
 
-        upgraded = server.upgrade(request, {
-          data,
-          headers,
-        });
+        upgraded =
+          this.server?.upgrade(request, {
+            data,
+            headers,
+          }) ?? false;
 
         return upgraded;
       },
@@ -166,6 +159,7 @@ export class BunServerService {
 
       const logger = await this.container.resolveProvider(Logger, {
         context: BunServerService,
+        orThrow: false,
       });
 
       const logPrefix = `${request.method} ${request.url}`;
@@ -193,9 +187,7 @@ export class BunServerService {
       }
 
       if (!response) {
-        response = new Response('Not Found', {
-          status: 404,
-        });
+        response = new ErrorResponse(404);
       }
 
       logger?.debug(`${logPrefix} ${response.status}`);
@@ -204,9 +196,9 @@ export class BunServerService {
     });
   }
 
-  private async processWebSocketEvent(
-    event: WebSocketEvent,
-    socket: Bun.ServerWebSocket<unknown>,
+  protected async processWebSocketEvent(
+    event: BunWebSocketEvent,
+    socket: BunWebSocket,
   ): Promise<void> {
     if (!this.routerRoles.websocket) {
       return;
@@ -215,7 +207,10 @@ export class BunServerService {
     const routers = this.routerRoles.websocket;
 
     await this.container.runInRequestContext(async () => {
-      const logger = await this.container.resolveProvider(Logger);
+      const logger = await this.container.resolveProvider(Logger, {
+        context: BunServerService,
+        orThrow: false,
+      });
 
       for (const router of routers) {
         if (!isFn(router.processWebSocketEvent)) {

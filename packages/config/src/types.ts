@@ -30,6 +30,7 @@ export type ConfigFormat =
   | 'integer'
   | 'decimal'
   | 'port'
+  | 'bool'
   | 'boolean';
 
 export type ConfigParser<TOutput = unknown, TInput = unknown> =
