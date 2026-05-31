@@ -7,7 +7,7 @@ import {
   optional,
   Provider,
 } from '@bunito/bunito';
-import { BarService } from './bar.service';
+import { BarService } from '../bar';
 
 @Provider({
   injects: {

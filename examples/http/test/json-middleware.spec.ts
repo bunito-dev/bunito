@@ -4,7 +4,7 @@ import { App } from '@bunito/bunito';
 import { HTTPModule } from '@bunito/http';
 import { Test } from '@bunito/testing';
 
-describe.only('json-middleware', () => {
+describe('json-middleware', () => {
   let app: App | undefined;
 
   beforeAll(async () => {
@@ -31,7 +31,7 @@ describe.only('json-middleware', () => {
     expect(headers?.get('Accept')).toBe('GET, POST');
   });
 
-  test.only('GET /foo/:bar', async () => {
+  test('GET /foo/:bar', async () => {
     const bar = 'p1';
     const res = await Test.bunServer.buildRequest(`/foo/${bar}`).withMethod('GET').send();
 
@@ -41,5 +41,53 @@ describe.only('json-middleware', () => {
         bar,
       },
     });
+  });
+
+  test('GET /foo/:bar validation failure', async () => {
+    const { status } = await Test.bunServer
+      .buildRequest('/foo/long')
+      .withMethod('GET')
+      .send();
+
+    expect(status).toBe(400);
+  });
+
+  test('POST /foo/:bar', async () => {
+    const body = {
+      foo: 'custom foo',
+    };
+    const res = await Test.bunServer
+      .buildRequest('/foo/p1')
+      .withMethod('POST')
+      .withHeaders({
+        'Content-Type': 'application/json',
+      })
+      .withBody(JSON.stringify(body))
+      .send();
+
+    expect(res.status).toBe(200);
+    expect(await res?.json?.()).toEqual({
+      params: {
+        bar: 'p1',
+      },
+      rawBody: body,
+      body: {
+        foo: 'custom foo',
+        bar: "I'm a bar",
+      },
+    });
+  });
+
+  test('POST /foo/:bar validation failure', async () => {
+    const { status } = await Test.bunServer
+      .buildRequest('/foo/long')
+      .withMethod('POST')
+      .withHeaders({
+        'Content-Type': 'application/json',
+      })
+      .withBody(JSON.stringify({ foo: 'custom foo' }))
+      .send();
+
+    expect(status).toBe(400);
   });
 });
