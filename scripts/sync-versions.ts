@@ -6,6 +6,7 @@ export type PackageInfo = {
   name: string;
   version: string;
   dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
   engines?: {
     bun?: string;
   };
@@ -95,6 +96,17 @@ for (const pkgDirName of pkgDirNames) {
     for (const [name, version] of dependencies) {
       if (name.startsWith(PKG_NAME_PREFIX) && version !== pkgDepVersion) {
         pkgInfo.dependencies[name] = pkgDepVersion;
+        pkgSummary.addChange(`${name} version`, pkgDepVersion);
+      }
+    }
+  }
+
+  if (pkgInfo.devDependencies) {
+    const dependencies = Object.entries(pkgInfo.devDependencies);
+
+    for (const [name, version] of dependencies) {
+      if (name.startsWith(PKG_NAME_PREFIX) && version !== pkgDepVersion) {
+        pkgInfo.devDependencies[name] = pkgDepVersion;
         pkgSummary.addChange(`${name} version`, pkgDepVersion);
       }
     }
