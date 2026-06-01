@@ -18,9 +18,7 @@ export class RunnerService {
       string,
       string | undefined
     > = DEFAULT_PROCESS_ENVS,
-  ) {
-    //
-  }
+  ) {}
 
   addProcess(options: ProcessOptions): void {
     const { name, prefix, args, envs = {} } = options;
@@ -91,7 +89,18 @@ export class RunnerService {
       );
     }
 
-    return Promise.all(finished).then((codes) => Math.max(...codes));
+    const terminate = async (signal: 'SIGTERM' | 'SIGINT') => {
+      for (const { proc } of this.processes) {
+        proc.kill(signal);
+      }
+    };
+
+    process.on('SIGTERM', terminate).on('SIGINT', terminate);
+
+    const code = await Promise.all(finished).then((codes) => Math.max(...codes));
+
+    process.off('SIGTERM', terminate).off('SIGINT', terminate);
+    return code;
   }
 
   private async pipeWriter(

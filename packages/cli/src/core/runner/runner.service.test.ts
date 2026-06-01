@@ -142,4 +142,40 @@ describe('RunnerService', () => {
       spawn.mockRestore();
     }
   });
+
+  it('terminates running processes when the parent receives a signal', async () => {
+    let resolveExit: (code: number) => void = () => {};
+    const kills: unknown[] = [];
+    const spawn = spyOn(Bun, 'spawn').mockImplementation((() => ({
+      pid: 101,
+      stdout: streamFrom(''),
+      stderr: streamFrom(''),
+      exited: new Promise<number>((resolve) => {
+        resolveExit = resolve;
+      }),
+      kill: (signal?: unknown) => {
+        kills.push(signal);
+      },
+    })) as unknown as typeof Bun.spawn);
+
+    try {
+      const service = new RunnerService(createLogger().logger);
+
+      service.addProcess({
+        name: 'api',
+        prefix: 'api',
+        args: ['bun', 'api'],
+      });
+
+      const finished = service.startProcesses('name');
+
+      process.emit('SIGTERM', 'SIGTERM');
+      resolveExit(0);
+
+      expect(await finished).toBe(0);
+      expect(kills).toEqual(['SIGTERM']);
+    } finally {
+      spawn.mockRestore();
+    }
+  });
 });
