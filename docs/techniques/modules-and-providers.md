@@ -85,6 +85,29 @@ await app.shutdown();
 
 This pattern is useful for workers, scripts, and tests.
 
+## Testing Modules
+
+Tests can compose modules the same way application code does. Use `App.start()` or
+`App.create()` with inline module options, then resolve the provider under test:
+
+```ts
+import { App } from '@bunito/bunito';
+
+const app = await App.start({
+  providers: [UsersService],
+});
+
+const users = await app.resolve(UsersService);
+
+expect(users.findAll()).toEqual([]);
+
+await app.shutdown();
+```
+
+Feature packages also provide test modules on the shared `Test` context. See
+[Testing](./testing.md) for `Test.ConfigModule`, `Test.LoggerModule`,
+`Test.BunServerModule`, and `Test.BrokerModule`.
+
 ## Lifecycle Hooks
 
 Providers can define lifecycle hooks:
@@ -111,6 +134,7 @@ diagnose.
 
 ## Where To Go Next
 
+- Replace runtime integrations in [Testing](../techniques/testing.md).
 - Use config and logging in [Configuration and Logging](../techniques/configuration-and-logging.md).
 - Build controllers in [HTTP](../techniques/http.md).
 - Add message handlers in [Broker](../techniques/broker.md).

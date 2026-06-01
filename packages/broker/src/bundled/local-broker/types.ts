@@ -1,4 +1,5 @@
 import type { BrokerMessageHandler } from '../../types';
+import type { Payload } from '../../utils';
 
 export type LocalBrokerContext = {
   id: string;
@@ -10,4 +11,4 @@ export type LocalBrokerTopicHandler = {
   matched: BrokerMessageHandler<LocalBrokerContext>[];
 };
 
-export type LocalBrokerRequestCallback = (err: unknown, payload?: Uint8Array) => void;
+export type LocalBrokerRequestCallback = (err: unknown, payload?: Payload) => void;

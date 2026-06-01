@@ -118,5 +118,6 @@ bun run start
 - Read the project model in [Overview](./overview.md).
 - Learn how the CLI discovers projects in [CLI](./cli.md).
 - Build the first example in [Basics](./tutorials/basics.md).
+- Replace runtime integrations in [Testing](./techniques/testing.md).
 - Add HTTP controllers in [HTTP](./techniques/http.md).
 - Explore composed apps in [Monorepo](./tutorials/monorepo.md).

@@ -95,6 +95,61 @@ class AppModule {}
 Use secrets for values that should not be stored directly in environment variables
 or source files.
 
+## Testing
+
+Importing `@bunito/config` and `@bunito/logger` registers their test factories on
+the shared `Test` context from `@bunito/testing`.
+
+For configuration-heavy code, use `Test.ConfigModule` to replace real environment
+and secret readers with a mocked `ConfigService`. Use `Test.defineConfig()` when a
+module expects a typed config provider:
+
+```ts
+import { ConfigService, defineConfig } from '@bunito/config';
+import { App } from '@bunito/bunito';
+import { Test } from '@bunito/testing';
+
+const ServerConfig = defineConfig(function ServerConfig() {
+  return {
+    port: 3000,
+  };
+});
+
+const app = await App.start({
+  imports: [Test.ConfigModule],
+  configs: [
+    Test.defineConfig(ServerConfig, {
+      port: 53100,
+    }),
+  ],
+});
+
+expect(await app.resolve(ConfigService)).toBe(Test.configService);
+
+await app.shutdown();
+```
+
+For logger assertions, import `Test.LoggerModule` and read the contextual
+`TestLogger` with `Test.getLogger()`:
+
+```ts
+const app = await App.start({
+  imports: [Test.LoggerModule],
+  providers: [UsersService],
+});
+
+const users = await app.resolve(UsersService);
+
+users.findAll();
+
+expect(Test.getLogger(UsersService).debug).toBeCalledWith('findAll() called');
+
+await app.shutdown();
+```
+
+`TestLogger` methods are Bun mocks, so normal `bun:test` mock assertions work for
+`debug`, `info`, `warn`, `error`, `track`, and the other logger methods.
+
 ## Good Defaults
 
 For most apps:

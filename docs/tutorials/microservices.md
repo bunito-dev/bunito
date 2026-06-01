@@ -52,8 +52,14 @@ class FooController {
   @Get('/', {
     injects: [Query],
   })
-  sendMessage(query: Query<{ message?: string }>): Promise<string> {
-    return this.broker.sendRequest('bar.process', query.message ?? 'Hello');
+  async sendMessage(query: Query<{ message?: string }>): Promise<Response> {
+    const message = query.message ?? 'Hello';
+    const payload = await this.broker.sendRequest('bar.process', message);
+
+    return Response.json({
+      message,
+      reply: payload?.decode(),
+    });
   }
 
   @OnMessage('process', {
@@ -85,3 +91,38 @@ class FooModule {}
 ```
 
 `NatsBrokerModule` can be added when the same handlers should run through NATS.
+
+## Test The Composition
+
+The composed root app can be tested without starting real servers or broker
+transports. The example test imports `Test.BunServerModule`,
+`Test.ConfigModule`, `Test.LoggerModule`, and `Test.BrokerModule`, then resolves
+`BrokerService` against the composed module:
+
+```ts
+import { BrokerService, Payload } from '@bunito/broker';
+import { App } from '@bunito/bunito';
+import { HTTPModule } from '@bunito/http';
+import { Test } from '@bunito/testing';
+
+const app = await App.start({
+  imports: [
+    Test.BunServerModule,
+    Test.ConfigModule,
+    Test.LoggerModule,
+    HTTPModule,
+    Test.BrokerModule,
+    ComposedModule,
+  ],
+});
+
+const broker = await app.resolve(BrokerService);
+const payload = await broker.sendRequest('foo.process', 'Hello!');
+
+expect(payload?.decode()).toBe("Hello! ... I'm foo!");
+expect(Test.broker.sendRequest).toBeCalledWith('foo.process', expect.any(Payload));
+
+await app.shutdown();
+```
+
+This mirrors `examples/microservices/test/composed.spec.ts`.

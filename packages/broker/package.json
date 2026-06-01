@@ -1,14 +1,15 @@
 {
   "name": "@bunito/broker",
-  "version": "0.0.16",
-  "description": "Broker module, message decorators, request/reply APIs, and local or NATS adapters for bunito.",
+  "version": "0.0.17",
+  "description": "Broker module, message decorators, request/reply APIs, adapters, and test broker utilities for bunito.",
   "keywords": [
     "bunito",
     "broker",
     "messaging",
     "microservices",
     "request-reply",
-    "nats"
+    "nats",
+    "testing"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",
@@ -37,11 +38,12 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/app": "workspace:0.0.16",
-    "@bunito/common": "workspace:0.0.16",
-    "@bunito/config": "workspace:0.0.16",
-    "@bunito/container": "workspace:0.0.16",
-    "@bunito/logger": "workspace:0.0.16",
+    "@bunito/app": "workspace:0.0.17",
+    "@bunito/common": "workspace:0.0.17",
+    "@bunito/config": "workspace:0.0.17",
+    "@bunito/container": "workspace:0.0.17",
+    "@bunito/logger": "workspace:0.0.17",
+    "@bunito/testing": "workspace:0.0.17",
     "@msgpack/msgpack": "3.1.3"
   },
   "devDependencies": {

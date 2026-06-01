@@ -377,6 +377,10 @@ export class ContainerCompiler {
         token = providerOptions.token ?? providerOptions.useFactory;
       } else if ('useValue' in providerOptions) {
         token = providerOptions.token;
+
+        if (isClass(token)) {
+          providerMetadata = getClassMetadata(token, 'provider');
+        }
       }
     }
 

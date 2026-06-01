@@ -3,6 +3,7 @@ import type { ResolveConfig } from '@bunito/config';
 import type { NatsConnection } from '@nats-io/transport-node';
 import { BrokerAdapter } from '../../broker-adapter';
 import type { BrokerMessageHandler } from '../../types';
+import { Payload } from '../../utils';
 import { NatsBrokerConfig } from './nats-broker.config';
 import type { NatsBrokerContext } from './types';
 
@@ -41,20 +42,20 @@ export class NatsBroker implements BrokerAdapter<NatsBrokerContext> {
     await this.connection.close();
   }
 
-  async sendRequest(topic: string, payload: Uint8Array): Promise<Uint8Array> {
-    const { data } = await this.getConnection().request(topic, payload);
+  async sendRequest(topic: string, payload: Payload): Promise<Payload> {
+    const { data } = await this.getConnection().request(topic, payload.data);
 
-    return data;
+    return Payload.create(data);
   }
 
-  async sendEvent(topic: string, payload: Uint8Array): Promise<boolean> {
-    this.getConnection().publish(topic, payload);
+  async sendEvent(topic: string, payload: Payload): Promise<boolean> {
+    this.getConnection().publish(topic, payload.data);
 
     return true;
   }
 
-  async sendResponse(msg: NatsBrokerContext, payload: Uint8Array): Promise<boolean> {
-    return msg.respond(payload);
+  async sendResponse(msg: NatsBrokerContext, payload: Payload): Promise<boolean> {
+    return msg.respond(payload.data);
   }
 
   subscribe(pattern: string, handler: BrokerMessageHandler<NatsBrokerContext>): void {
@@ -72,7 +73,7 @@ export class NatsBroker implements BrokerAdapter<NatsBrokerContext> {
           context: msg,
           kind: msg.reply ? 'request' : 'event',
           topic: msg.subject,
-          payload: msg.data,
+          payload: Payload.create(msg.data),
         });
       },
     });

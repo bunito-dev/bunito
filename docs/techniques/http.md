@@ -35,7 +35,9 @@ class AppModule {}
 ```
 
 The HTTP package uses Bun server integration from `@bunito/bun` and registers
-routes from controller metadata.
+routes from controller metadata. `HTTPModule` imports the Bun server module
+automatically. If the module graph already contains a Bun server module, that
+existing module is used instead.
 
 ## Controllers
 
@@ -287,6 +289,39 @@ throw new NotFoundException();
 ```
 
 Use them when a handler needs to stop normal response flow with an HTTP error.
+
+## Testing
+
+HTTP tests usually replace the real Bun server with `Test.BunServerModule` from
+`@bunito/bun`. Because `HTTPModule` respects an already registered server module,
+put `Test.BunServerModule` before `HTTPModule` in the test app imports:
+
+```ts
+import '@bunito/bun';
+
+import { App } from '@bunito/bunito';
+import { HTTPModule } from '@bunito/http';
+import { Test } from '@bunito/testing';
+
+const app = await App.start({
+  imports: [Test.BunServerModule, Test.LoggerModule, HTTPModule, AppModule],
+});
+
+const response = await Test.bunServer
+  .buildRequest('/users/ada')
+  .withMethod('GET')
+  .send();
+
+expect(response.status).toBe(200);
+
+await app.shutdown();
+```
+
+`Test.bunServer.buildRequest()` returns a small request builder with
+`withMethod()`, `withHeaders()`, `withBody()`, `build()`, and `send()`. The test
+server simulates Bun route tables, including `:param` segments and trailing `*`
+wildcards, so route params are available to the HTTP router just like they are at
+runtime.
 
 ## Tutorials
 

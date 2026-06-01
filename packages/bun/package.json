@@ -1,13 +1,14 @@
 {
   "name": "@bunito/bun",
-  "version": "0.0.16",
-  "description": "Bun server and secrets integrations for bunito applications.",
+  "version": "0.0.17",
+  "description": "Bun server, secrets integrations, and test doubles for bunito applications.",
   "keywords": [
     "bunito",
     "bun",
     "server",
     "secrets",
-    "http"
+    "http",
+    "testing"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",
@@ -36,12 +37,12 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/app": "workspace:0.0.16",
-    "@bunito/common": "workspace:0.0.16",
-    "@bunito/config": "workspace:0.0.16",
-    "@bunito/container": "workspace:0.0.16",
-    "@bunito/logger": "workspace:0.0.16",
-    "@bunito/testing": "workspace:0.0.16"
+    "@bunito/app": "workspace:0.0.17",
+    "@bunito/common": "workspace:0.0.17",
+    "@bunito/config": "workspace:0.0.17",
+    "@bunito/container": "workspace:0.0.17",
+    "@bunito/logger": "workspace:0.0.17",
+    "@bunito/testing": "workspace:0.0.17"
   },
   "devDependencies": {},
   "engines": {

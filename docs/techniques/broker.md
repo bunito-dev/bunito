@@ -62,8 +62,10 @@ import { Provider } from '@bunito/bunito';
 class OrdersClient {
   constructor(private readonly broker: BrokerService) {}
 
-  send(id: string): Promise<string> {
-    return this.broker.sendRequest<string>('orders.created', { id });
+  async send(id: string): Promise<string | undefined> {
+    const payload = await this.broker.sendRequest('orders.created', { id });
+
+    return payload?.decode();
   }
 
   emit(id: string): Promise<boolean> {
@@ -73,13 +75,12 @@ class OrdersClient {
 ```
 
 Use `sendRequest()` when a response is expected and `sendEvent()` for
-fire-and-forget messages. `BrokerService` serializes public payloads before they
-reach an adapter and deserializes replies by default. Pass `false` as the third
-argument to `sendRequest()` when adapter-level code needs the raw `Uint8Array`
-reply.
+fire-and-forget messages. `BrokerService` wraps public data in a `Payload` before
+it reaches an adapter. Request replies are returned as `Payload | undefined`, and
+application code can call `payload.decode<T>()` to read the decoded value.
 
 Handlers usually inject decoded data. Adapter-facing code can still work with the
-encoded `Uint8Array` payload at the adapter boundary:
+`Payload` object at the adapter boundary:
 
 ```ts
 import { Data, OnMessage } from '@bunito/broker';
@@ -93,6 +94,9 @@ class OrdersController {
   }
 }
 ```
+
+Import `Payload` from `@bunito/broker` when a handler or adapter needs access to
+the encoded bytes through `payload.data`.
 
 ## Configuration
 
@@ -108,6 +112,41 @@ NATS_BROKER_QUEUE=default
 ```
 
 App-local `.env` files are loaded by the CLI for workspace apps.
+
+## Testing
+
+Importing `@bunito/broker` registers broker test factories on the shared
+`@bunito/testing` `Test` context:
+
+- `Test.BrokerModule`: a `BrokerModule` replacement configured with the
+  in-memory `TestBroker` adapter.
+- `Test.broker`: the `TestBroker` adapter instance. Its adapter methods are Bun
+  mocks.
+
+```ts
+import { BrokerService, Payload } from '@bunito/broker';
+import { App } from '@bunito/bunito';
+import { Test } from '@bunito/testing';
+
+const app = await App.start({
+  imports: [Test.ConfigModule, Test.LoggerModule, Test.BrokerModule, AppModule],
+});
+
+const broker = await app.resolve(BrokerService);
+const payload = await broker.sendRequest('orders.created', { id: 'ord_1' });
+
+expect(payload?.decode()).toEqual({ ok: true });
+expect(Test.broker.sendRequest).toBeCalledWith(
+  'orders.created',
+  expect.any(Payload),
+);
+
+await app.shutdown();
+```
+
+`TestBroker` uses the same topic matching style as the local broker, including
+single-token wildcards and trailing multi-token wildcards. Use
+`Test.broker.setTimeout()` when a request/reply test should fail faster.
 
 ## Example
 

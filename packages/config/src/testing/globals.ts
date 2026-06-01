@@ -3,6 +3,7 @@ declare global {
     interface Test {
       ConfigModule: import('@bunito/container').ModuleOptions;
       configService: import('./types').TestConfigService;
+      defineConfig: typeof import('./define-test-config').defineTestConfig;
     }
   }
 }

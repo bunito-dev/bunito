@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test';
 import { Id } from '@bunito/container';
-import { decode, encode } from '@msgpack/msgpack';
 import { BrokerService } from './broker.service';
 import type { BrokerAdapter } from './broker-adapter';
-import { Context, Data, Payload, Subject, Topic } from './injections';
+import { Context, Data, Subject, Topic } from './injections';
 import type { BrokerMessage, BrokerMessageHandler } from './types';
+import { Payload } from './utils';
 
 class TestController {
   calls: unknown[][] = [];
@@ -38,20 +38,20 @@ class TestAdapter implements BrokerAdapter {
     this.disconnected = true;
   }
 
-  sendRequest(_topic: string, payload: Uint8Array): Uint8Array {
-    this.requests.push(decode(payload));
+  sendRequest(_topic: string, payload: Payload): Payload {
+    this.requests.push(payload.decode());
 
-    return encode('response');
+    return Payload.create('response');
   }
 
-  sendEvent(_topic: string, payload: Uint8Array): boolean {
-    this.events.push(decode(payload));
+  sendEvent(_topic: string, payload: Payload): boolean {
+    this.events.push(payload.decode());
 
     return true;
   }
 
-  sendResponse(_context: unknown, payload: Uint8Array): boolean {
-    this.responses.push(decode(payload));
+  sendResponse(_context: unknown, payload: Payload): boolean {
+    this.responses.push(payload.decode());
 
     return true;
   }
@@ -106,7 +106,7 @@ describe('BrokerService', () => {
                   kind: 'handler',
                   options: {
                     pattern: 'created',
-                    injects: [Data(), Payload(), Topic(), Subject(), Context()],
+                    injects: [Data(), Payload, Topic(), Subject(), Context()],
                   },
                 },
               },
@@ -151,7 +151,7 @@ describe('BrokerService', () => {
     const payload: BrokerMessage = {
       kind: 'request',
       topic: 'root.orders.created',
-      payload: encode({
+      payload: Payload.create({
         id: 1,
       }),
       context: {
@@ -168,9 +168,7 @@ describe('BrokerService', () => {
         {
           id: 1,
         },
-        encode({
-          id: 1,
-        }),
+        payload.payload,
         'root.orders.created',
         'root.orders.created',
         {
@@ -193,12 +191,11 @@ describe('BrokerService', () => {
 
     const request = await service.sendRequest('orders.created', {});
     const event = await service.sendEvent('orders.created', {});
-    const rawRequest = await service.sendRequest('orders.created', {}, false);
 
-    expect(request).toBe('response');
-    expect(rawRequest).toEqual(encode('response'));
+    expect(request).toBeDefined();
+    expect(request?.decode<string>()).toBe('response');
     expect(event).toBeTrue();
-    expect(adapter.requests).toEqual([{}, {}]);
+    expect(adapter.requests).toEqual([{}]);
     expect(adapter.events).toEqual([{}]);
   });
 
@@ -323,13 +320,13 @@ describe('BrokerService', () => {
     adapter.subscriptions.get('orders.missing')?.(null, {
       kind: 'request',
       topic: 'orders.missing',
-      payload: encode({}),
+      payload: Payload.create({}),
       context: {},
     });
     adapter.subscriptions.get('orders.event')?.(null, {
       kind: 'event',
       topic: 'orders.event',
-      payload: encode({
+      payload: Payload.create({
         id: 1,
       }),
       context: {},
@@ -339,13 +336,13 @@ describe('BrokerService', () => {
     adapter.subscriptions.get('orders.failed')?.(null, {
       kind: 'request',
       topic: 'orders.failed',
-      payload: encode({}),
+      payload: Payload.create({}),
       context: {},
     });
     adapter.subscriptions.get('child.audit.logged')?.(null, {
       kind: 'event',
       topic: 'child.audit.logged',
-      payload: encode({
+      payload: Payload.create({
         id: 2,
       }),
       context: {},

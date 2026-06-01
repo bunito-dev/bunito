@@ -33,6 +33,45 @@ const AppConfig = defineConfig(function AppConfig({ getEnv }) {
 class AppModule {}
 ```
 
+## Testing 🧪
+
+Importing `@bunito/config` registers config test factories on the shared
+`@bunito/testing` `Test` context:
+
+- `Test.ConfigModule`: a `ConfigModule` replacement exporting a mocked
+  `ConfigService`.
+- `Test.configService`: a mocked `ConfigService` created with `mockClass()`.
+- `Test.defineConfig`: a helper for replacing config providers with fixed test
+  values.
+
+```ts
+import { ConfigService, defineConfig } from '@bunito/config';
+import { App } from '@bunito/bunito';
+import { Test } from '@bunito/testing';
+
+const AppConfig = defineConfig(function AppConfig() {
+  return {
+    port: 3000,
+  };
+});
+
+const app = await App.start({
+  imports: [Test.ConfigModule],
+  configs: [
+    Test.defineConfig(AppConfig, {
+      port: 53100,
+    }),
+  ],
+});
+
+const config = await app.resolve(ConfigService);
+
+expect(config).toBe(Test.configService);
+```
+
+Use `Test.defineConfig()` when a module expects a typed config provider but the
+test should avoid real environment or secret reads.
+
 ## License
 
 MIT

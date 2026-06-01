@@ -1,13 +1,14 @@
 {
   "name": "@bunito/config",
-  "version": "0.0.16",
-  "description": "Configuration module with environment parsing, typed config factories, and secret lookup.",
+  "version": "0.0.17",
+  "description": "Configuration module with environment parsing, typed config factories, secret lookup, and test helpers.",
   "keywords": [
     "bunito",
     "config",
     "environment",
     "configuration",
     "secrets",
+    "testing",
     "typescript"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
@@ -36,9 +37,9 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.16",
-    "@bunito/container": "workspace:0.0.16",
-    "@bunito/testing": "workspace:0.0.16"
+    "@bunito/common": "workspace:0.0.17",
+    "@bunito/container": "workspace:0.0.17",
+    "@bunito/testing": "workspace:0.0.17"
   },
   "devDependencies": {
     "zod": "catalog:"

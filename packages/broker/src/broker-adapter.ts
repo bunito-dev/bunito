@@ -2,6 +2,7 @@ import type { MaybePromise } from '@bunito/common';
 import type { ExtensionDecorator, ProviderDecoratorOptions } from '@bunito/container';
 import { createExtensionDecorator } from '@bunito/container';
 import type { BrokerMessageHandler } from './types';
+import type { Payload } from './utils';
 
 export interface BrokerAdapter<TContext = unknown> {
   readonly NAME: string;
@@ -10,11 +11,11 @@ export interface BrokerAdapter<TContext = unknown> {
 
   disconnect?: () => MaybePromise<void>;
 
-  sendRequest(topic: string, payload: Uint8Array): MaybePromise<Uint8Array | undefined>;
+  sendRequest(topic: string, payload: Payload): MaybePromise<Payload | undefined>;
 
-  sendEvent(topic: string, payload: Uint8Array): MaybePromise<boolean>;
+  sendEvent(topic: string, payload: Payload): MaybePromise<boolean>;
 
-  sendResponse(context: TContext, payload: Uint8Array): MaybePromise<boolean>;
+  sendResponse(context: TContext, payload: Payload): MaybePromise<boolean>;
 
   subscribe(pattern: string, handler: BrokerMessageHandler<TContext>): MaybePromise<void>;
 }

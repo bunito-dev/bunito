@@ -11,7 +11,7 @@ export type ModuleOptions = {
   token?: Token;
   providers?: ProviderLike[];
   controllers?: Class[];
-  extensions?: Class[];
+  extensions?: ProviderLike[];
   imports?: ModuleLike[];
   exports?: TokenLike[];
 } & {

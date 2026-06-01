@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import { InternalException } from '@bunito/common';
 import { decode, encode } from '@msgpack/msgpack';
+import type { BrokerMessage } from '../../types';
+import { Payload } from '../../utils';
 import { NatsBroker } from './nats-broker';
 import type { NatsBrokerContext } from './types';
 
@@ -78,14 +80,14 @@ describe('NatsBroker', () => {
 
     let requestError: unknown;
     try {
-      await broker.sendRequest('orders.created', encode({}));
+      await broker.sendRequest('orders.created', Payload.create({}));
     } catch (err) {
       requestError = err;
     }
 
     let eventError: unknown;
     try {
-      await broker.sendEvent('orders.created', encode({}));
+      await broker.sendEvent('orders.created', Payload.create({}));
     } catch (err) {
       eventError = err;
     }
@@ -103,20 +105,20 @@ describe('NatsBroker', () => {
       queue: 'orders',
     });
     const connection = new TestConnection();
-    const received: unknown[] = [];
+    const received: BrokerMessage<NatsBrokerContext>[] = [];
     const errors: unknown[] = [];
 
     setConnection(broker, connection);
 
     const request = await broker.sendRequest(
       'orders.created',
-      encode({
+      Payload.create({
         id: 1,
       }),
     );
     const event = await broker.sendEvent(
       'orders.created',
-      encode({
+      Payload.create({
         id: 2,
       }),
     );
@@ -125,7 +127,7 @@ describe('NatsBroker', () => {
         respond: (payload: Uint8Array) =>
           JSON.stringify(decode(payload)) === JSON.stringify({ ok: true }),
       } as unknown as NatsBrokerContext,
-      encode({
+      Payload.create({
         ok: true,
       }),
     );
@@ -136,7 +138,9 @@ describe('NatsBroker', () => {
         return;
       }
 
-      received.push(payload);
+      if (payload) {
+        received.push(payload);
+      }
     });
 
     connection.subscriptions.get('orders.*')?.(null, {
@@ -162,7 +166,7 @@ describe('NatsBroker', () => {
     await broker.connect();
     await broker.disconnect();
 
-    expect(decode(request)).toEqual({
+    expect(request.decode<{ ok: boolean }>()).toEqual({
       ok: true,
     });
     expect(event).toBeTrue();
@@ -188,17 +192,25 @@ describe('NatsBroker', () => {
         context: expect.any(Object),
         kind: 'request',
         topic: 'orders.created',
-        payload: encode({
-          id: 3,
+        payload: expect.objectContaining({
+          data: expect.any(Uint8Array),
         }),
       },
       {
         context: expect.any(Object),
         kind: 'event',
         topic: 'orders.updated',
-        payload: encode({
-          id: 4,
+        payload: expect.objectContaining({
+          data: expect.any(Uint8Array),
         }),
+      },
+    ]);
+    expect(received.map((message) => message.payload.decode())).toEqual([
+      {
+        id: 3,
+      },
+      {
+        id: 4,
       },
     ]);
     expect(errors).toHaveLength(1);

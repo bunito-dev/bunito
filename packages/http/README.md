@@ -45,6 +45,36 @@ class HelloController {
 class AppModule {}
 ```
 
+## Testing 🧪
+
+`HTTPModule` imports the Bun server integration automatically. If the application
+module graph already provides a server module, that existing module is used
+instead. In tests, import `Test.BunServerModule` before `HTTPModule` to run HTTP
+controllers against the in-memory `TestBunServer` from `@bunito/bun`.
+
+```ts
+import { App } from '@bunito/bunito';
+import { HTTPModule } from '@bunito/http';
+import { Test } from '@bunito/testing';
+
+const app = await App.start({
+  imports: [Test.BunServerModule, Test.LoggerModule, HTTPModule, AppModule],
+});
+
+const response = await Test.bunServer
+  .buildRequest('/hello')
+  .withMethod('GET')
+  .send();
+
+expect(response.status).toBe(200);
+
+await app.shutdown();
+```
+
+`Test.bunServer.buildRequest()` supports route params such as `:id` and trailing
+`*` wildcard routes, so HTTP tests can exercise the same route table that Bun
+would receive at runtime.
+
 ## License
 
 MIT

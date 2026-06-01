@@ -1,14 +1,15 @@
 {
   "name": "@bunito/logger",
-  "version": "0.0.16",
-  "description": "Logger module with injectable loggers, trace helpers, and JSON or pretty transports.",
+  "version": "0.0.17",
+  "description": "Logger module with injectable loggers, trace helpers, transports, and test logger utilities.",
   "keywords": [
     "bunito",
     "logger",
     "logging",
     "transport",
     "json",
-    "pretty"
+    "pretty",
+    "testing"
   ],
   "author": "Stanisław Głogowski <hello@bunito.dev>",
   "license": "MIT",
@@ -36,10 +37,10 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.16",
-    "@bunito/config": "workspace:0.0.16",
-    "@bunito/container": "workspace:0.0.16",
-    "@bunito/testing": "workspace:0.0.16"
+    "@bunito/common": "workspace:0.0.17",
+    "@bunito/config": "workspace:0.0.17",
+    "@bunito/container": "workspace:0.0.17",
+    "@bunito/testing": "workspace:0.0.17"
   },
   "devDependencies": {},
   "engines": {

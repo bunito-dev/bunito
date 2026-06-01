@@ -1,4 +1,5 @@
 import './globals';
+import './testing';
 
 export { BrokerModule } from './broker.module';
 export { BrokerService } from './broker.service';
@@ -9,3 +10,4 @@ export {
 } from './bundled';
 export { OnMessage } from './decorators';
 export { Context, Data, Subject, Topic } from './injections';
+export { Payload } from './utils';

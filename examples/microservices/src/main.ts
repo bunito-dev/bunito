@@ -1,8 +1,7 @@
-import { BarModule } from '@apps/bar';
-import { FooModule } from '@apps/foo';
 import { App } from '@bunito/bunito';
 import { ExampleModule } from '@libs/example';
+import { ComposedModule } from './composed.module';
 
 await App.start({
-  imports: [ExampleModule.forRoot('composed'), FooModule, BarModule],
+  imports: [ExampleModule.forRoot('composed'), ComposedModule],
 });

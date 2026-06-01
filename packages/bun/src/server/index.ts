@@ -1,5 +1,5 @@
-import { feature } from 'bun:bundle';
 import './globals';
+import './testing';
 
 export * from './bun-server';
 export * from './bun-server.module';
@@ -8,7 +8,3 @@ export * from './bun-server-router';
 export * from './bun-websocket';
 export * from './constants';
 export * from './types';
-
-if (!feature('RUNTIME_ONLY')) {
-  await import('./testing');
-}

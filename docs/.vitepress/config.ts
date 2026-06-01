@@ -42,6 +42,7 @@ export default defineConfig({
         text: 'Techniques',
         items: [
           { text: 'Modules and Providers', link: '/techniques/modules-and-providers' },
+          { text: 'Testing', link: '/techniques/testing' },
           {
             text: 'Configuration and Logging',
             link: '/techniques/configuration-and-logging',

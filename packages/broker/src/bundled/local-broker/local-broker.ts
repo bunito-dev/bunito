@@ -7,13 +7,13 @@ import { InternalException } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import { BrokerAdapter } from '../../broker-adapter';
 import type { BrokerMessage, BrokerMessageHandler } from '../../types';
+import { compilePattern, Payload } from '../../utils';
 import { LocalBrokerConfig } from './local-broker.config';
 import type {
   LocalBrokerContext,
   LocalBrokerRequestCallback,
   LocalBrokerTopicHandler,
 } from './types';
-import { compilePattern } from './utils';
 
 @BrokerAdapter<LocalBrokerContext>({
   injects: [LocalBrokerConfig],
@@ -63,7 +63,7 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
     await this.removeData();
   }
 
-  async sendRequest(topic: string, payload: Uint8Array): Promise<Uint8Array | undefined> {
+  async sendRequest(topic: string, payload: Payload): Promise<Payload | undefined> {
     const id = Bun.randomUUIDv7();
 
     return new Promise((resolve, reject) => {
@@ -103,7 +103,7 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
     });
   }
 
-  async sendEvent(topic: string, payload: Uint8Array): Promise<boolean> {
+  async sendEvent(topic: string, payload: Payload): Promise<boolean> {
     await this.publishMessage({
       kind: 'event',
       payload,
@@ -116,7 +116,7 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
     return true;
   }
 
-  async sendResponse(context: LocalBrokerContext, payload: Uint8Array): Promise<boolean> {
+  async sendResponse(context: LocalBrokerContext, payload: Payload): Promise<boolean> {
     const { id: requestId } = context;
 
     await this.publishMessage({
@@ -225,11 +225,13 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
 
     const content = await file.json();
 
-    const { payload, ...common } = content as BrokerMessage<LocalBrokerContext, string>;
+    const { payload, ...common } = content as BrokerMessage<LocalBrokerContext> & {
+      payload: string;
+    };
 
     return {
       ...common,
-      payload: Uint8Array.fromHex(payload),
+      payload: Payload.create(Uint8Array.fromHex(payload)),
     };
   }
 
@@ -253,7 +255,7 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
       JSON.stringify(
         {
           ...common,
-          payload: payload.toHex(),
+          payload: payload.data.toHex(),
         },
         null,
         2,
