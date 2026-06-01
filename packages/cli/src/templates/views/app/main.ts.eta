@@ -1,4 +1,4 @@
-import { startApp } from '@bunito/bunito';
+import { App } from '@bunito/bunito';
 import { <%= it.moduleClass %> } from './<%= it.moduleName %>';
 
-await startApp(<%= it.moduleClass %>);
+await App.start(<%= it.moduleClass %>);

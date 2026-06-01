@@ -17,7 +17,6 @@ export abstract class AbstractException extends Error {
   ): never {
     const message = String.raw(strings, ...args.map(inspectName));
 
-    // biome-ignore lint/complexity/noThisInStatic: Need to use `this`
     throw new this(message);
   }
 
@@ -28,7 +27,6 @@ export abstract class AbstractException extends Error {
   ): Promise<never> {
     const message = String.raw(strings, ...args.map(inspectName));
 
-    // biome-ignore lint/complexity/noThisInStatic: Need to use `this`
     return Promise.reject(new this(message));
   }
 
