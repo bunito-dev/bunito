@@ -1,6 +1,6 @@
 {
   "name": "@bunito/bunito",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "Convenience entrypoint for bunito application, container, config, and logger APIs.",
   "keywords": [
     "bunito",
@@ -40,12 +40,12 @@
     "tsconfig.base.json"
   ],
   "dependencies": {
-    "@bunito/app": "workspace:0.0.18",
-    "@bunito/common": "workspace:0.0.18",
-    "@bunito/config": "workspace:0.0.18",
-    "@bunito/container": "workspace:0.0.18",
-    "@bunito/logger": "workspace:0.0.18",
-    "@bunito/testing": "workspace:0.0.18"
+    "@bunito/app": "workspace:0.0.19",
+    "@bunito/common": "workspace:0.0.19",
+    "@bunito/config": "workspace:0.0.19",
+    "@bunito/container": "workspace:0.0.19",
+    "@bunito/logger": "workspace:0.0.19",
+    "@bunito/testing": "workspace:0.0.19"
   },
   "engines": {
     "bun": ">=1.3.10"

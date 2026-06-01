@@ -1,6 +1,6 @@
 {
   "name": "@bunito/testing",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "Testing helpers, mock utilities, and shared test context factories for bunito packages.",
   "keywords": [
     "bunito",
@@ -35,7 +35,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.18"
+    "@bunito/common": "workspace:0.0.19"
   },
   "devDependencies": {},
   "engines": {

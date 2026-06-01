@@ -18,6 +18,6 @@
     "@bunito/testing": "<%= it.pkgVersion %>"
   },
   "engines": {
-    "bun": "<%= it.bunVersion %>"
+    "bun": "<%~ it.bunVersion %>"
   }
 }
