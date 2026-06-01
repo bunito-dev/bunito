@@ -1,7 +1,3 @@
----
-title: Documentation
----
-
 # Getting Started
 
 `bunito` is a small Bun-first TypeScript framework for applications built from
