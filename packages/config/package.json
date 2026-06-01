@@ -1,6 +1,6 @@
 {
   "name": "@bunito/config",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "Configuration module with environment parsing, typed config factories, secret lookup, and test helpers.",
   "keywords": [
     "bunito",
@@ -37,9 +37,9 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.17",
-    "@bunito/container": "workspace:0.0.17",
-    "@bunito/testing": "workspace:0.0.17"
+    "@bunito/common": "workspace:0.0.18",
+    "@bunito/container": "workspace:0.0.18",
+    "@bunito/testing": "workspace:0.0.18"
   },
   "devDependencies": {
     "zod": "catalog:"
