@@ -12,4 +12,7 @@ concurrency:
 
 jobs:
   verify:
+    permissions:
+      contents: read
+      checks: write
     uses: ./.github/workflows/checks.yml
