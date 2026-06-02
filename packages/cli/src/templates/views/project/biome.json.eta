@@ -2,11 +2,6 @@
   "extends": ["@bunito/bunito/biome.json"],
   "files": {
     "ignoreUnknown": true,
-    "includes": [
-      "apps/**/*.ts",
-      "libs/**/*.ts",
-      "scripts/**/*.ts",
-      "src/**/*.ts"
-    ]
+    "includes": ["apps/**/*.ts", "libs/**/*.ts", "scripts/**/*.ts", "src/**/*.ts"]
   }
 }

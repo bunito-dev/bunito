@@ -11,7 +11,7 @@
     "coverage": "bun test --coverage",
     "lint": "biome check",
     "format": "biome format",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@bunito/bunito": "<%~ it.bunitoVersion %>"
