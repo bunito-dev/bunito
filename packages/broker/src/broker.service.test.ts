@@ -29,6 +29,7 @@ class TestAdapter implements BrokerAdapter {
   requests: unknown[] = [];
   events: unknown[] = [];
   responses: unknown[] = [];
+  unsubscribed: string[] = [];
 
   async connect(): Promise<void> {
     this.connected = true;
@@ -56,8 +57,13 @@ class TestAdapter implements BrokerAdapter {
     return true;
   }
 
-  subscribe(pattern: string, handler: BrokerMessageHandler): void {
+  subscribe(pattern: string, handler: BrokerMessageHandler): () => void {
     this.subscriptions.set(pattern, handler);
+
+    return () => {
+      this.unsubscribed.push(pattern);
+      this.subscriptions.delete(pattern);
+    };
   }
 }
 
@@ -181,6 +187,7 @@ describe('BrokerService', () => {
     await service.disconnectAdapter();
 
     expect(adapter.disconnected).toBeTrue();
+    expect(adapter.unsubscribed).toEqual(['root.orders.created']);
   });
 
   it('forwards request and event publishing to the selected adapter', async () => {
@@ -197,6 +204,46 @@ describe('BrokerService', () => {
     expect(event).toBeTrue();
     expect(adapter.requests).toEqual([{}]);
     expect(adapter.events).toEqual([{}]);
+  });
+
+  it('subscribes direct handlers, logs subscription errors, and unsubscribes', () => {
+    const adapter = new TestAdapter();
+    const errors: unknown[] = [];
+    const received: unknown[] = [];
+    const logger = {
+      error: (err: unknown) => errors.push(err),
+    };
+    const service = new BrokerService({ adapter: 'test' }, logger as never, {} as never, [
+      adapter,
+    ]);
+    const unsubscribe = service.subscribe('orders.created', (payload) => {
+      received.push(payload.decode());
+    });
+    const subscription = adapter.subscriptions.get('orders.created');
+    const error = new Error('Subscription failed');
+
+    subscription?.(error);
+    subscription?.(null);
+    subscription?.(null, {
+      kind: 'event',
+      topic: 'orders.created',
+      payload: Payload.create({
+        id: 1,
+      }),
+      context: {},
+    });
+
+    expect(errors).toEqual([error]);
+    expect(received).toEqual([
+      {
+        id: 1,
+      },
+    ]);
+
+    unsubscribe();
+
+    expect(adapter.unsubscribed).toEqual(['orders.created']);
+    expect(adapter.subscriptions.has('orders.created')).toBeFalse();
   });
 
   it('handles empty component matches and subscription edge cases', async () => {

@@ -26,6 +26,8 @@ export class BrokerService {
 
   private readonly handlers = new Map<string, HandlerDefinition[]>();
 
+  private readonly subscriptions = new Set<() => void>();
+
   constructor(
     config: ResolveConfig<typeof BrokerConfig>,
     private readonly logger: Logger | null,
@@ -56,6 +58,12 @@ export class BrokerService {
 
   @OnAppShutdown()
   async disconnectAdapter(): Promise<void> {
+    for (const subscription of this.subscriptions) {
+      subscription();
+    }
+
+    this.subscriptions.clear();
+
     await this.adapter.disconnect?.();
   }
 
@@ -65,6 +73,27 @@ export class BrokerService {
 
   async sendRequest(topic: string, data: unknown): Promise<Payload | undefined> {
     return this.adapter.sendRequest(topic, Payload.create(data));
+  }
+
+  subscribe(topic: string, handler: (payload: Payload) => void): () => void {
+    const subscription = this.adapter.subscribe(topic, (err, message) => {
+      if (err) {
+        this.logger?.error(err);
+      }
+
+      if (!message) {
+        return;
+      }
+
+      handler(message.payload);
+    });
+
+    this.subscriptions.add(subscription);
+
+    return () => {
+      this.subscriptions.delete(subscription);
+      subscription();
+    };
   }
 
   private async processMessage(pattern: string, message: BrokerMessage): Promise<void> {
@@ -204,19 +233,21 @@ export class BrokerService {
                 controller,
               });
 
-            this.adapter.subscribe(prefixedPattern, (err, message) => {
-              if (err) {
-                this.logger?.error(err);
-              }
+            this.subscriptions.add(
+              this.adapter.subscribe(prefixedPattern, (err, message) => {
+                if (err) {
+                  this.logger?.error(err);
+                }
 
-              if (!message) {
-                return;
-              }
+                if (!message) {
+                  return;
+                }
 
-              this.processMessage(prefixedPattern, message).catch((err) => {
-                this.logger?.error(err);
-              });
-            });
+                this.processMessage(prefixedPattern, message).catch((err) => {
+                  this.logger?.error(err);
+                });
+              }),
+            );
           }
         }
       }

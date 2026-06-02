@@ -17,7 +17,7 @@ export interface BrokerAdapter<TContext = unknown> {
 
   sendResponse(context: TContext, payload: Payload): MaybePromise<boolean>;
 
-  subscribe(pattern: string, handler: BrokerMessageHandler<TContext>): MaybePromise<void>;
+  subscribe(pattern: string, handler: BrokerMessageHandler<TContext>): () => void;
 }
 
 export function BrokerAdapter<TContext = unknown>(

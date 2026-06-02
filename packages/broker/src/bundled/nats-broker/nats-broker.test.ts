@@ -22,6 +22,7 @@ class TestConnection {
     ok: true,
   });
   subscriptions = new Map<string, SubscriptionCallback>();
+  unsubscribed: string[] = [];
 
   close(): void {
     this.closed = true;
@@ -58,8 +59,15 @@ class TestConnection {
       queue: string;
       callback: SubscriptionCallback;
     },
-  ): void {
+  ): { unsubscribe: () => void } {
     this.subscriptions.set(pattern, options.callback);
+
+    return {
+      unsubscribe: () => {
+        this.unsubscribed.push(pattern);
+        this.subscriptions.delete(pattern);
+      },
+    };
   }
 }
 
@@ -132,7 +140,7 @@ describe('NatsBroker', () => {
       }),
     );
 
-    broker.subscribe('orders.*', (err, payload) => {
+    const unsubscribe = broker.subscribe('orders.*', (err, payload) => {
       if (err) {
         errors.push(err);
         return;
@@ -162,6 +170,8 @@ describe('NatsBroker', () => {
       }),
       subject: 'orders.failed',
     });
+
+    unsubscribe();
 
     await broker.connect();
     await broker.disconnect();
@@ -214,6 +224,8 @@ describe('NatsBroker', () => {
       },
     ]);
     expect(errors).toHaveLength(1);
+    expect(connection.unsubscribed).toEqual(['orders.*']);
+    expect(connection.subscriptions.has('orders.*')).toBeFalse();
     expect(connection.closed).toBeTrue();
   });
 });

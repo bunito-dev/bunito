@@ -114,9 +114,13 @@ export class TestBroker implements MockedObject<BrokerAdapter<TestBrokerContext>
       this.topicHandlers
         .getOrInsertComputed(pattern, () => ({
           pattern: compilePattern(pattern),
-          matched: [],
+          matched: new Set(),
         }))
-        .matched.push(handler);
+        .matched.add(handler);
+
+      return mock(() => {
+        this.topicHandlers.get(pattern)?.matched.delete(handler);
+      });
     },
   );
 

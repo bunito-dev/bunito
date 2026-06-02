@@ -60,14 +60,8 @@ export class InitCommand implements Command<InitOptions> {
       }
     }
 
-    const pkgInfo = await this.ioService.readPkgInfo();
-    const pkgVersion = pkgInfo?.version ?? '0.0.0';
-    const bunVersion = pkgInfo?.engines?.bun ?? '>=1.3.10';
-
     let files = await this.projectService.renderTemplate(ProjectTemplate, {
       name,
-      pkgVersion,
-      bunVersion,
     })();
 
     this.logger.ok('Project initialized:', files);

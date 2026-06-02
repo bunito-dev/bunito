@@ -93,7 +93,7 @@ export class CLILogTransport implements LogTransport {
       lines = lines.map((line) => `${prefix} ${line}`);
     }
 
-    const buffer = lines.join('\n').trim();
+    const buffer = lines.join('\n');
 
     if (buffer.endsWith('\n')) {
       console.write(buffer);

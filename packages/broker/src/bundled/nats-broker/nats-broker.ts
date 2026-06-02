@@ -58,10 +58,13 @@ export class NatsBroker implements BrokerAdapter<NatsBrokerContext> {
     return msg.respond(payload.data);
   }
 
-  subscribe(pattern: string, handler: BrokerMessageHandler<NatsBrokerContext>): void {
+  subscribe(
+    pattern: string,
+    handler: BrokerMessageHandler<NatsBrokerContext>,
+  ): () => void {
     const { queue } = this.config;
 
-    this.getConnection().subscribe(pattern, {
+    const subscription = this.getConnection().subscribe(pattern, {
       queue: `NatsBroker:${queue}`,
       callback: (err, msg) => {
         if (err) {
@@ -77,6 +80,8 @@ export class NatsBroker implements BrokerAdapter<NatsBrokerContext> {
         });
       },
     });
+
+    return () => subscription.unsubscribe();
   }
 
   private getConnection(): NatsConnection {

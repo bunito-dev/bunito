@@ -5,9 +5,8 @@ import { Provider } from '@bunito/container';
 import { input } from '@inquirer/prompts';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { ROOT_PATH, takeFirst } from '../../common';
-import { PKG_INFO_FILE, PKG_INFO_SCHEMA } from './constants';
-import type { File, PkgInfo } from './types';
+import { takeFirst } from '../../common';
+import type { File } from './types';
 
 @Provider({
   injects: [null, null, null],
@@ -86,31 +85,6 @@ export class IOService {
     }
 
     return files;
-  }
-
-  async readPkgInfo(path?: string, ...paths: string[]): Promise<PkgInfo | undefined> {
-    const file = this.getFile(path ?? ROOT_PATH, ...paths, PKG_INFO_FILE);
-    const fileStats = await file.tryStat();
-
-    if (!fileStats) {
-      return;
-    }
-
-    if (!fileStats.isFile()) {
-      return;
-    }
-
-    const fileContent = await file.tryJSON();
-
-    if (!fileContent) {
-      return;
-    }
-
-    try {
-      return PKG_INFO_SCHEMA.parse(fileContent);
-    } catch {
-      return;
-    }
   }
 
   async readInput(options: Parameters<typeof input>[0]): Promise<string> {

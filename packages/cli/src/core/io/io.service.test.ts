@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { IOService } from './io.service';
 
 describe('IOService', () => {
-  it('resolves cwd options and reads files, directories, and package metadata', async () => {
+  it('resolves cwd options and reads files, directories, and JSON files', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'bunito-io-'));
     const service = new IOService(['--cwd', 'workspace'], dir);
     const workspace = join(dir, 'workspace');
@@ -23,7 +23,6 @@ describe('IOService', () => {
 
     const file = service.getFile(workspace, 'package.json');
     const created = service.getFile(workspace, 'created.txt');
-    const pkg = await service.readPkgInfo(workspace);
 
     await created.write('created');
     const dirs = await service.readDir(workspace);
@@ -38,7 +37,7 @@ describe('IOService', () => {
       join(workspace, 'created.txt'),
       join(workspace, 'package.json'),
     ]);
-    expect(pkg).toMatchObject({
+    expect(await file.tryJSON()).toMatchObject({
       name: 'demo',
       dependencies: {
         '@bunito/bunito': 'workspace:*',
@@ -58,25 +57,23 @@ describe('IOService', () => {
     expect(await file.tryStat()).toBeUndefined();
   });
 
-  it('ignores missing, invalid, or directory package files', async () => {
+  it('returns undefined for missing, invalid, or directory JSON files', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'bunito-io-'));
     const service = new IOService([], dir);
+    const missing = service.getFile(dir, 'package.json');
 
-    expect(await service.readPkgInfo(dir)).toBeUndefined();
+    expect(await missing.tryJSON()).toBeUndefined();
 
     await mkdir(join(dir, 'package.json'));
 
-    expect(await service.readPkgInfo(dir)).toBeUndefined();
+    expect(await missing.tryJSON()).toBeUndefined();
 
     const invalidJSON = await mkdtemp(join(tmpdir(), 'bunito-io-'));
+    const invalidJSONFile = service.getFile(invalidJSON, 'package.json');
+
     await Bun.write(join(invalidJSON, 'package.json'), '{');
 
-    expect(await service.readPkgInfo(invalidJSON)).toBeUndefined();
-
-    const invalidSchema = await mkdtemp(join(tmpdir(), 'bunito-io-'));
-    await Bun.write(join(invalidSchema, 'package.json'), '{"name": 123}');
-
-    expect(await service.readPkgInfo(invalidSchema)).toBeUndefined();
+    expect(await invalidJSONFile.tryJSON()).toBeUndefined();
     expect(await service.readDir(dir, 'missing')).toBeUndefined();
   });
 

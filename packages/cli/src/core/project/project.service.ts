@@ -1,4 +1,5 @@
 import { basename, join, sep } from 'node:path';
+import type { RawObject } from '@bunito/common';
 import { isObject } from '@bunito/common';
 import { OnInit, Provider } from '@bunito/container';
 import { Eta } from 'eta';
@@ -6,7 +7,7 @@ import { isKebabCase, ROOT_PATH } from '../../common';
 import type { TemplateFactory } from '../../templates';
 import { CLIException } from '../cli';
 import { IOService } from '../io';
-import { PROJECT_PKG_DEPT, ROOT_APP_NAME } from './constants';
+import { BUNITO_PKG_NAME, ROOT_APP_NAME } from './constants';
 import type { AppOptions, AppState, ProjectState } from './types';
 
 @Provider({
@@ -43,9 +44,19 @@ export class ProjectService {
     while (paths.length > 1) {
       path = paths.join(sep);
 
-      const pkgInfo = await this.ioService.readPkgInfo(path);
+      const pkgFile = this.ioService.getFile(path, 'package.json');
+      const pkgFileStat = await pkgFile.tryStat();
 
-      if (pkgInfo?.dependencies[PROJECT_PKG_DEPT]) {
+      if (pkgFileStat) {
+        const pkgInfo = (await pkgFile.tryJSON()) as {
+          name: string;
+          dependencies: RawObject;
+        };
+
+        if (!pkgInfo?.dependencies[BUNITO_PKG_NAME]) {
+          throw new CLIException('Invalid project package.json file');
+        }
+
         name = pkgInfo.name;
         initialized = true;
         break;

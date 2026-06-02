@@ -1,6 +1,6 @@
 {
   "name": "@bunito/broker",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Broker module, message decorators, request/reply APIs, adapters, and test broker utilities for bunito.",
   "keywords": [
     "bunito",
@@ -38,12 +38,12 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/app": "workspace:0.0.20",
-    "@bunito/common": "workspace:0.0.20",
-    "@bunito/config": "workspace:0.0.20",
-    "@bunito/container": "workspace:0.0.20",
-    "@bunito/logger": "workspace:0.0.20",
-    "@bunito/testing": "workspace:0.0.20",
+    "@bunito/app": "workspace:0.0.21",
+    "@bunito/common": "workspace:0.0.21",
+    "@bunito/config": "workspace:0.0.21",
+    "@bunito/container": "workspace:0.0.21",
+    "@bunito/logger": "workspace:0.0.21",
+    "@bunito/testing": "workspace:0.0.21",
     "@msgpack/msgpack": "3.1.3"
   },
   "devDependencies": {

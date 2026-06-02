@@ -132,13 +132,20 @@ export class LocalBroker implements BrokerAdapter<LocalBrokerContext> {
     return true;
   }
 
-  subscribe(pattern: string, handler: BrokerMessageHandler<LocalBrokerContext>): void {
+  subscribe(
+    pattern: string,
+    handler: BrokerMessageHandler<LocalBrokerContext>,
+  ): () => void {
     this.topicHandlers
       .getOrInsertComputed(pattern, () => ({
         pattern: compilePattern(pattern),
-        matched: [],
+        matched: new Set(),
       }))
-      .matched.push(handler);
+      .matched.add(handler);
+
+    return () => {
+      this.topicHandlers.get(pattern)?.matched.delete(handler);
+    };
   }
 
   private readonly processFileEvent = async (

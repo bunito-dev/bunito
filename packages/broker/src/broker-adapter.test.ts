@@ -20,8 +20,8 @@ describe('BrokerAdapter', () => {
         return true;
       }
 
-      subscribe(): void {
-        //
+      subscribe(): () => void {
+        return () => null;
       }
     }
 

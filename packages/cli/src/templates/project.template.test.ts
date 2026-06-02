@@ -3,23 +3,31 @@ import { ProjectTemplate } from './project.template';
 
 describe('ProjectTemplate', () => {
   it('describes project-level files', () => {
-    expect(
-      ProjectTemplate({
-        name: 'demo',
-        pkgVersion: 'workspace:*',
-        bunVersion: '>=1.3.10',
-      }),
-    ).toEqual({
+    const views = ProjectTemplate({
+      name: 'demo',
+    });
+
+    expect(Object.keys(views).sort()).toEqual([
+      '.gitignore',
+      'README.md',
+      'biome.json',
+      'package.json',
+      'tsconfig.json',
+    ]);
+    expect(views).toEqual({
       '.gitignore': {
         view: 'project/.gitignore',
       },
       'package.json': {
         view: 'project/package.json',
-        params: {
+        params: expect.objectContaining({
           name: 'demo',
-          pkgVersion: 'workspace:*',
-          bunVersion: '>=1.3.10',
-        },
+          bunitoVersion: expect.any(String),
+          biomeVersion: expect.any(String),
+          bunTypesVersion: expect.any(String),
+          typescriptVersion: expect.any(String),
+          bunEngineVersion: expect.any(String),
+        }),
       },
       'tsconfig.json': {
         view: 'project/tsconfig.json',
@@ -29,6 +37,9 @@ describe('ProjectTemplate', () => {
         params: {
           name: 'demo',
         },
+      },
+      'biome.json': {
+        view: 'project/biome.json',
       },
     });
   });

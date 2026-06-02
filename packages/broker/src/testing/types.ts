@@ -8,7 +8,7 @@ export type TestBrokerContext = {
 
 export type TestBrokerTopicHandler = {
   pattern: RegExp;
-  matched: BrokerMessageHandler<TestBrokerContext>[];
+  matched: Set<BrokerMessageHandler<TestBrokerContext>>;
 };
 
 export type TestBrokerRequestCallback = (err: unknown, payload?: Payload) => void;

@@ -8,7 +8,7 @@ export type LocalBrokerContext = {
 
 export type LocalBrokerTopicHandler = {
   pattern: RegExp;
-  matched: BrokerMessageHandler<LocalBrokerContext>[];
+  matched: Set<BrokerMessageHandler<LocalBrokerContext>>;
 };
 
 export type LocalBrokerRequestCallback = (err: unknown, payload?: Payload) => void;

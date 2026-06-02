@@ -280,4 +280,39 @@ describe('LocalBroker', () => {
 
     expect(kind).toBe('event');
   });
+
+  it('removes in-memory subscriptions when unsubscribed', async () => {
+    const broker = new LocalBroker({
+      mode: 'in-memory',
+      uid: 'test',
+      timeout: 250,
+      dataDir: '/tmp/bunito-broker-test',
+    });
+    const received: unknown[] = [];
+    const unsubscribe = broker.subscribe('orders.*', (_err, payload) => {
+      received.push(payload?.payload.decode());
+    });
+
+    await broker.sendEvent(
+      'orders.created',
+      Payload.create({
+        id: 1,
+      }),
+    );
+
+    unsubscribe();
+
+    await broker.sendEvent(
+      'orders.updated',
+      Payload.create({
+        id: 2,
+      }),
+    );
+
+    expect(received).toEqual([
+      {
+        id: 1,
+      },
+    ]);
+  });
 });

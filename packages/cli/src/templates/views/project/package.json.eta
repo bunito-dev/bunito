@@ -8,16 +8,22 @@
     "start": "bunito start",
     "build": "bunito build",
     "test": "bun test",
-    "coverage": "bun test --coverage"
+    "coverage": "bun test --coverage",
+    "lint": "biome check",
+    "format": "biome format",
+    "typecheck": "tsc --noEmit",
   },
   "dependencies": {
-    "@bunito/bunito": "<%= it.pkgVersion %>"
+    "@bunito/bunito": "<%~ it.bunitoVersion %>"
   },
   "devDependencies": {
-    "@bunito/cli": "<%= it.pkgVersion %>",
-    "@bunito/testing": "<%= it.pkgVersion %>"
+    "@biomejs/biome": "<%~ it.biomeVersion %>",
+    "@bunito/cli": "<%~ it.bunitoVersion %>",
+    "@bunito/testing": "<%~ it.bunitoVersion %>",
+    "@types/bun": "<%~ it.bunTypesVersion %>",
+    "typescript": "<%~ it.typescriptVersion %>"
   },
   "engines": {
-    "bun": "<%~ it.bunVersion %>"
+    "bun": "<%~ it.bunEngineVersion %>"
   }
 }

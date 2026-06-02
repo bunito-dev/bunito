@@ -12,59 +12,38 @@ export type PackageInfo = {
   };
 };
 
-const ROOT_PATH = resolve(import.meta.dir, '..');
+export type BiomeConfig = {
+  $schema: string;
+};
 
-const PKG_NAME_PREFIX = '@bunito';
-const PKG_DEP_VERSION_PREFIX = 'workspace:';
+const ROOT_PATH = resolve(import.meta.dir, '..');
+const WORKSPACE_VERSION_PREFIX = 'workspace:';
+const BUNITO_ORG = '@bunito';
+const BIOME_CONFIG_FILE = 'biome.base.json';
+const VERSIONS_FILE = join('src', 'templates', 'versions.ts');
 const PKG_FILE = 'package.json';
 const PKG_PATH = join(ROOT_PATH, 'packages');
+const PKG_DEPS_KEYS = ['dependencies', 'devDependencies'] as const;
 
-class PkgSummary {
-  private readonly changes: string[] = [];
+const rootPkgInfo = (await Bun.file(join(ROOT_PATH, PKG_FILE)).json()) as PackageInfo;
 
-  constructor(private readonly name: string) {}
+const rootVersions = {
+  bunito: rootPkgInfo.version,
+  bunEngine: rootPkgInfo.engines?.bun ?? 'latest',
+  bunTypes: rootPkgInfo.devDependencies?.['@types/bun'] ?? 'latest',
+  biome: rootPkgInfo.devDependencies?.['@biomejs/biome'] ?? 'latest',
+  typescript: rootPkgInfo.devDependencies?.typescript ?? 'latest',
+};
 
-  addChange(title: string, version: string): void {
-    this.changes.push(
-      styleText(
-        'italic',
-        `  ${styleText('gray', title)} → ${styleText('green', version)}`,
-      ),
-    );
-  }
-
-  hasChanges(): boolean {
-    return !!this.changes.length;
-  }
-
-  print(): void {
-    const changed = !!this.changes.length;
-
-    const name = styleText(changed ? [] : ['white'], this.name);
-    const status = styleText(
-      changed ? 'greenBright' : 'gray',
-      changed ? 'UPDATED' : 'SKIPPED',
-    );
-
-    console.log(`${name} ${status}`);
-
-    for (const change of this.changes) {
-      console.log(change);
-    }
-  }
-}
-
-const {
-  version: rootPkgVersion,
-  engines: { bun: rootBunVersion = `>=${Bun.version}` } = {},
-} = (await Bun.file(join(ROOT_PATH, PKG_FILE)).json()) as PackageInfo;
-
-const pkgDepVersion = `${PKG_DEP_VERSION_PREFIX}${rootPkgVersion}`;
+const pkgDepVersion = `${WORKSPACE_VERSION_PREFIX}${rootVersions.bunito}`;
 
 const pkgDirNames = await readdir(PKG_PATH);
 
-for (const pkgDirName of pkgDirNames) {
-  const pkgFile = Bun.file(join(PKG_PATH, pkgDirName, PKG_FILE));
+for (const pkgName of pkgDirNames) {
+  let updated = false;
+
+  const pkgPath = join(PKG_PATH, pkgName);
+  const pkgFile = Bun.file(join(pkgPath, PKG_FILE));
 
   if (!(await pkgFile.exists())) {
     continue;
@@ -72,49 +51,80 @@ for (const pkgDirName of pkgDirNames) {
 
   const pkgInfo = (await pkgFile.json()) as PackageInfo;
 
-  if (!pkgInfo.name.startsWith(PKG_NAME_PREFIX)) {
+  if (!pkgInfo.name.startsWith(BUNITO_ORG)) {
     continue;
   }
 
-  const pkgSummary = new PkgSummary(pkgInfo.name);
-
-  if (pkgInfo.version !== rootPkgVersion) {
-    pkgInfo.version = rootPkgVersion;
-    pkgSummary.addChange('version', rootPkgVersion);
+  if (pkgInfo.version !== rootVersions.bunito) {
+    pkgInfo.version = rootVersions.bunito;
+    updated = true;
   }
 
-  if (pkgInfo?.engines?.bun !== rootBunVersion) {
+  if (pkgInfo?.engines?.bun !== rootVersions.bunEngine) {
     pkgInfo.engines = {
-      bun: rootBunVersion,
+      bun: rootVersions.bunEngine,
     };
-    pkgSummary.addChange('bun engine version', rootBunVersion);
+    updated = true;
   }
 
-  if (pkgInfo.dependencies) {
-    const dependencies = Object.entries(pkgInfo.dependencies);
+  for (const depsKey of PKG_DEPS_KEYS) {
+    const deps = pkgInfo[depsKey];
+    if (!deps) {
+      continue;
+    }
 
-    for (const [name, version] of dependencies) {
-      if (name.startsWith(PKG_NAME_PREFIX) && version !== pkgDepVersion) {
-        pkgInfo.dependencies[name] = pkgDepVersion;
-        pkgSummary.addChange(`${name} version`, pkgDepVersion);
+    for (const [name, version] of Object.entries(deps)) {
+      if (name.startsWith(BUNITO_ORG) && version !== pkgDepVersion) {
+        deps[name] = pkgDepVersion;
+        updated = true;
       }
     }
   }
 
-  if (pkgInfo.devDependencies) {
-    const dependencies = Object.entries(pkgInfo.devDependencies);
+  switch (pkgName) {
+    case 'bunito': {
+      const biomeConfigFile = Bun.file(join(pkgPath, BIOME_CONFIG_FILE));
+      const biomeConfigSchema: BiomeConfig['$schema'] = `https://biomejs.dev/schemas/${rootVersions.biome}/schema.json`;
+      const biomeConfig = (await biomeConfigFile.json()) as BiomeConfig;
 
-    for (const [name, version] of dependencies) {
-      if (name.startsWith(PKG_NAME_PREFIX) && version !== pkgDepVersion) {
-        pkgInfo.devDependencies[name] = pkgDepVersion;
-        pkgSummary.addChange(`${name} version`, pkgDepVersion);
+      if (biomeConfig.$schema !== biomeConfigSchema) {
+        biomeConfig.$schema = biomeConfigSchema;
+
+        await biomeConfigFile.write(JSON.stringify(biomeConfig, null, 2));
+
+        updated = true;
       }
+      break;
+    }
+
+    case 'cli': {
+      const versionsFile = Bun.file(join(pkgPath, VERSIONS_FILE));
+      const versionsContent = [
+        '// This file is generated by sync-versions script',
+        '',
+        `export const BUNITO_VERSION = '^${rootVersions.bunito}';`,
+        `export const BUN_ENGINE_VERSION = '${rootVersions.bunEngine}';`,
+        `export const BUN_TYPES_VERSION = '${rootVersions.bunTypes}';`,
+        `export const BIOME_VERSION = '^${rootVersions.biome}';`,
+        `export const TYPESCRIPT_VERSION = '${rootVersions.typescript}';`,
+        '',
+      ].join('\n');
+
+      if ((await versionsFile.text()) !== versionsContent) {
+        await versionsFile.write(versionsContent);
+        updated = true;
+      }
+      break;
     }
   }
 
-  if (pkgSummary.hasChanges()) {
+  console.write(`${pkgInfo.name} `);
+
+  if (updated) {
     await pkgFile.write(JSON.stringify(pkgInfo, null, 2));
-  }
 
-  pkgSummary.print();
+    console.log(styleText('greenBright', 'UPDATED'));
+  } else {
+    console.log(styleText('gray', 'SKIPPED'));
+  }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@bunito/logger",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Logger module with injectable loggers, trace helpers, transports, and test logger utilities.",
   "keywords": [
     "bunito",
@@ -37,10 +37,10 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/common": "workspace:0.0.20",
-    "@bunito/config": "workspace:0.0.20",
-    "@bunito/container": "workspace:0.0.20",
-    "@bunito/testing": "workspace:0.0.20"
+    "@bunito/common": "workspace:0.0.21",
+    "@bunito/config": "workspace:0.0.21",
+    "@bunito/container": "workspace:0.0.21",
+    "@bunito/testing": "workspace:0.0.21"
   },
   "devDependencies": {},
   "engines": {
