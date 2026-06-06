@@ -1,6 +1,6 @@
 {
   "name": "@bunito/bun",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "Bun server, secrets integrations, and test doubles for bunito applications.",
   "keywords": [
     "bunito",
@@ -37,12 +37,12 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@bunito/app": "workspace:0.0.25",
-    "@bunito/common": "workspace:0.0.25",
-    "@bunito/config": "workspace:0.0.25",
-    "@bunito/container": "workspace:0.0.25",
-    "@bunito/logger": "workspace:0.0.25",
-    "@bunito/testing": "workspace:0.0.25"
+    "@bunito/app": "workspace:0.0.26",
+    "@bunito/common": "workspace:0.0.26",
+    "@bunito/config": "workspace:0.0.26",
+    "@bunito/container": "workspace:0.0.26",
+    "@bunito/logger": "workspace:0.0.26",
+    "@bunito/testing": "workspace:0.0.26"
   },
   "devDependencies": {},
   "engines": {

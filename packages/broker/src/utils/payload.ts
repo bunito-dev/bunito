@@ -6,6 +6,10 @@ export class Payload {
   private static readonly decoder = new Decoder();
 
   static create(value: unknown): Payload {
+    if (value === undefined || value === null) {
+      return new Payload(new Uint8Array());
+    }
+
     if (value instanceof Uint8Array) {
       return new Payload(value);
     }

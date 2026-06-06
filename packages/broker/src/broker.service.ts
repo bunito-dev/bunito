@@ -67,13 +67,13 @@ export class BrokerService {
     await this.adapter.disconnect?.();
   }
 
-  async sendEvent(topic: string, data: unknown): Promise<boolean> {
+  async sendEvent(topic: string, data?: unknown): Promise<boolean> {
     return this.adapter.sendEvent(topic, Payload.create(data));
   }
 
   async sendRequest<TResponse = unknown>(
     topic: string,
-    data: unknown,
+    data?: unknown,
     decode?: true,
   ): Promise<TResponse>;
   async sendRequest(topic: string, data: unknown, decode: false): Promise<Payload>;
