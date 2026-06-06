@@ -1,6 +1,6 @@
 {
   "name": "@bunito/cli",
-  "version": "0.0.23",
+  "version": "0.0.25",
   "description": "Command-line tools for initializing, generating, running, and building bunito projects.",
   "keywords": [
     "bunito",
@@ -39,17 +39,17 @@
   ],
   "scripts": {},
   "dependencies": {
-    "@bunito/app": "workspace:0.0.23",
-    "@bunito/common": "workspace:0.0.23",
-    "@bunito/config": "workspace:0.0.23",
-    "@bunito/container": "workspace:0.0.23",
-    "@bunito/logger": "workspace:0.0.23",
+    "@bunito/app": "workspace:0.0.25",
+    "@bunito/common": "workspace:0.0.25",
+    "@bunito/config": "workspace:0.0.25",
+    "@bunito/container": "workspace:0.0.25",
+    "@bunito/logger": "workspace:0.0.25",
     "@inquirer/prompts": "8.5.2",
     "eta": "4.6.0",
     "yargs": "18.0.0"
   },
   "devDependencies": {
-    "@bunito/testing": "workspace:0.0.23",
+    "@bunito/testing": "workspace:0.0.25",
     "@types/yargs": "17.0.35"
   },
   "engines": {

@@ -1,6 +1,6 @@
 {
   "name": "@bunito/common",
-  "version": "0.0.23",
+  "version": "0.0.25",
   "description": "Shared exceptions, predicates, type helpers, and utilities for bunito packages.",
   "keywords": [
     "bunito",

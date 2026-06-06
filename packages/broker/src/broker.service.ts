@@ -1,6 +1,6 @@
 import { OnAppShutdown, OnAppStart } from '@bunito/app';
 import type { CallableInstance, MaybePromise } from '@bunito/common';
-import { InternalException } from '@bunito/common';
+import { InternalException, isFn } from '@bunito/common';
 import type { ResolveConfig } from '@bunito/config';
 import type { MatchedControllers } from '@bunito/container';
 import { Container, optional, Provider } from '@bunito/container';
@@ -8,7 +8,7 @@ import { Logger } from '@bunito/logger';
 import { BrokerConfig } from './broker.config';
 import { BrokerAdapter } from './broker-adapter';
 import { BROKER_CONTROLLER_KEY } from './constants';
-import { Context, Data, Subject, Topic } from './injections';
+import { Context, CustomInjection, Data, Subject, Topic } from './injections';
 import type {
   BrokerMessage,
   ControllerDefinition,
@@ -71,11 +71,30 @@ export class BrokerService {
     return this.adapter.sendEvent(topic, Payload.create(data));
   }
 
-  async sendRequest(topic: string, data: unknown): Promise<Payload | undefined> {
-    return this.adapter.sendRequest(topic, Payload.create(data));
+  async sendRequest<TResponse = unknown>(
+    topic: string,
+    data: unknown,
+    decode?: true,
+  ): Promise<TResponse>;
+  async sendRequest(topic: string, data: unknown, decode: false): Promise<Payload>;
+  async sendRequest(topic: string, data: unknown, decode = true): Promise<unknown> {
+    const payload = await this.adapter.sendRequest(topic, Payload.create(data));
+
+    if (!payload) {
+      throw new InternalException('No response received');
+    }
+
+    if (!decode) {
+      return payload;
+    }
+
+    return payload.decode();
   }
 
-  subscribe(topic: string, handler: (payload: Payload) => void): () => void {
+  subscribe<TContext = unknown>(
+    topic: string,
+    handler: (message: BrokerMessage<TContext>) => void,
+  ): () => void {
     const subscription = this.adapter.subscribe(topic, (err, message) => {
       if (err) {
         this.logger?.error(err);
@@ -85,7 +104,7 @@ export class BrokerService {
         return;
       }
 
-      handler(message.payload);
+      handler(message as BrokerMessage<TContext>);
     });
 
     this.subscriptions.add(subscription);
@@ -123,7 +142,7 @@ export class BrokerService {
 
         const args = await this.container.resolveInjections(injects, {
           moduleId,
-          injectionResolver: async (token) => {
+          injectionResolver: async (token, options) => {
             let arg: unknown;
 
             switch (token) {
@@ -142,6 +161,12 @@ export class BrokerService {
 
               case Data:
                 arg = message.payload.decode();
+                break;
+
+              case CustomInjection:
+                if (isFn(options)) {
+                  arg = options(context);
+                }
                 break;
             }
 

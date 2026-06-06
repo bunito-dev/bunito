@@ -31,17 +31,17 @@ describe('composed', async () => {
   });
 
   test('foo.process topic', async () => {
-    const payload = await brokerService?.sendRequest('foo.process', TEST_MESSAGE);
+    const res = await brokerService?.sendRequest<string>('foo.process', TEST_MESSAGE);
 
-    expect(payload?.decode<string>()).toBe(`${TEST_MESSAGE} ... I'm foo!`);
+    expect(res).toBe(`${TEST_MESSAGE} ... I'm foo!`);
 
     expect(Test.broker.sendRequest).toBeCalledWith('foo.process', expect.any(Payload));
   });
 
   test('bar.process topic', async () => {
-    const payload = await brokerService?.sendRequest('bar.process', TEST_MESSAGE);
+    const res = await brokerService?.sendRequest<string>('bar.process', TEST_MESSAGE);
 
-    expect(payload?.decode<string>()).toBe(`${TEST_MESSAGE} ... I'm bar!`);
+    expect(res).toBe(`${TEST_MESSAGE} ... I'm bar!`);
 
     expect(Test.broker.sendRequest).toBeCalledWith('bar.process', expect.any(Payload));
   });

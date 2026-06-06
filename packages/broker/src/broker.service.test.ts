@@ -196,7 +196,7 @@ describe('BrokerService', () => {
       adapter,
     ]);
 
-    const request = await service.sendRequest('orders.created', {});
+    const request = await service.sendRequest('orders.created', {}, false);
     const event = await service.sendEvent('orders.created', {});
 
     expect(request).toBeDefined();
@@ -216,8 +216,8 @@ describe('BrokerService', () => {
     const service = new BrokerService({ adapter: 'test' }, logger as never, {} as never, [
       adapter,
     ]);
-    const unsubscribe = service.subscribe('orders.created', (payload) => {
-      received.push(payload.decode());
+    const unsubscribe = service.subscribe('orders.created', (message) => {
+      received.push(message.payload.decode());
     });
     const subscription = adapter.subscriptions.get('orders.created');
     const error = new Error('Subscription failed');

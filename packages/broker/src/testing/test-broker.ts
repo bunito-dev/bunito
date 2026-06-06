@@ -36,47 +36,45 @@ export class TestBroker implements MockedObject<BrokerAdapter<TestBrokerContext>
 
   disconnect = mock();
 
-  sendRequest = mock(
-    async (topic: string, payload: Payload): Promise<Payload | undefined> => {
-      const id = this.getNextId();
+  sendRequest = mock(async (topic: string, payload: Payload): Promise<Payload> => {
+    const id = this.getNextId();
 
-      return new Promise((resolve, reject) => {
-        let timeout: NodeJS.Timeout;
+    return new Promise((resolve, reject) => {
+      let timeout: NodeJS.Timeout;
 
-        const callback: TestBrokerRequestCallback = (err, payload): void => {
-          if (!this.requestCallbacks.delete(id)) {
-            return;
-          }
+      const callback: TestBrokerRequestCallback = (err, payload): void => {
+        if (!this.requestCallbacks.delete(id)) {
+          return;
+        }
 
-          clearTimeout(timeout);
+        clearTimeout(timeout);
 
-          if (err) {
-            reject(err);
-            return;
-          }
+        if (err || !payload) {
+          reject(err);
+          return;
+        }
 
-          resolve(payload);
-        };
+        resolve(payload);
+      };
 
-        timeout = setTimeout(
-          callback,
-          this.timeout,
-          new InternalException('Request timed out'),
-        );
+      timeout = setTimeout(
+        callback,
+        this.timeout,
+        new InternalException('Request timed out'),
+      );
 
-        this.requestCallbacks.set(id, callback);
+      this.requestCallbacks.set(id, callback);
 
-        this.publishMessage({
-          kind: 'request',
-          payload,
-          topic,
-          context: {
-            id,
-          },
-        }).catch(callback);
-      });
-    },
-  );
+      this.publishMessage({
+        kind: 'request',
+        payload,
+        topic,
+        context: {
+          id,
+        },
+      }).catch(callback);
+    });
+  });
 
   sendEvent = mock(async (topic: string, payload: Payload): Promise<boolean> => {
     await this.publishMessage({

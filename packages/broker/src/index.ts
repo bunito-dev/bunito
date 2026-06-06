@@ -9,5 +9,5 @@ export {
   NatsBrokerModule,
 } from './bundled';
 export { OnMessage } from './decorators';
-export { Context, Data, Subject, Topic } from './injections';
+export { Context, CustomInjection, Data, Subject, Topic } from './injections';
 export { Payload } from './utils';

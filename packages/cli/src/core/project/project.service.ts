@@ -173,6 +173,19 @@ export class ProjectService {
       }
     }
 
+    const oldPaths = tsConfig?.compilerOptions?.paths;
+
+    if (oldPaths) {
+      for (const [key, value] of Object.entries(oldPaths)) {
+        if (key === '@app' || key.startsWith('@apps/') || key.startsWith('@libs/')) {
+          continue;
+        }
+
+        paths ??= {};
+        paths[key] = value;
+      }
+    }
+
     tsConfig.compilerOptions ??= {};
     tsConfig.compilerOptions.paths = paths;
 
