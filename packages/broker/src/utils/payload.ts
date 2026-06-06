@@ -31,7 +31,7 @@ export class Payload {
 
   decode<TValue = unknown>(): TValue {
     if (this.decoded === undefined) {
-      this.decoded = Payload.decoder.decode(this.data);
+      this.decoded = this.data.length ? Payload.decoder.decode(this.data) : null;
     }
 
     return this.decoded as TValue;
